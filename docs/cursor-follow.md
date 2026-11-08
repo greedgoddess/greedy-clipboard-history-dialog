@@ -28,9 +28,12 @@ grep -rn "\[cursor-follow:" feature/
 `build.sh` gets a release, hands it to `scripts/patch_release.py`, checks the
 result and puts it in `build/`:
 
-1. **Get the release.** By default, the newest release on
-   extensions.gnome.org that supports the running GNOME Shell version.
-   `--version N`, `--zip FILE` and `--from-git [REF]` choose another one.
+1. **Get the release.** By default, the newest release in
+   `tested-releases.json` that supports the running GNOME Shell, downloaded
+   from extensions.gnome.org and compared with the tested one by a hash of
+   its files (without `metadata.json`, which the website regenerates).
+   `--latest`, `--version N`, `--zip FILE` and `--from-git [REF]` choose
+   another one.
 2. **Keep the original entry points under new names.** `extension.js`
    becomes `upstream-extension.js` and `prefs.js` becomes `upstream-prefs.js`,
    both unchanged. This project's `extension.js` and `prefs.js` take their
@@ -53,8 +56,12 @@ result and puts it in `build/`:
 
 A build that fails any required step leaves `build/` as it was. Warnings are
 listed in `build/BUILD-INFO`, together with where the release came from, its
-version and its SHA-256 checksum. The previous build is kept in
-`build/previous/`.
+version and its hash. The previous build is kept in `build/previous/`, and
+the release zip in `build/release.zip` for the tests.
+
+A release enters `tested-releases.json` only through
+`update-test-and-push.sh`, after the build has no warnings and
+`tests/run-tests.sh` passes.
 
 ### What can break, and what happens then
 
@@ -67,8 +74,8 @@ version and its SHA-256 checksum. The previous build is kept in
 | GNOME Shell renames `_boxPointer`, `_userArrowSide` or `_arrowSide` | Build warns; the panel opens below its icon or in the wrong place |
 | The original adds its own `cursor-follow` setting | Build warns and keeps the original's key |
 
-In every case, `./build.sh --version N` rebuilds from an older release, and
-`build/previous/` holds the last build.
+In every case, the installed copy keeps running, `./build.sh` keeps building
+the last tested release, and `build/previous/` holds the build before.
 
 <a id="cursor-follow-entry-point"></a>
 ## `cursor-follow:entry-point`

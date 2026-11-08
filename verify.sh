@@ -36,6 +36,15 @@ gnome-extensions info "$UUID" 2>/dev/null | grep -E '^\s*(Enabled|State|Version)
     || say "GNOME Shell does not know the extension yet (log out and back in)."
 
 say
+say "== Mode =="
+if [[ "$(current_mode)" == dev ]]; then
+    say "dev"
+    "$ROOT/upstream-notifications.sh" status | sed 's/^/  /'
+else
+    say "user"
+fi
+
+say
 say "== Open at mouse pointer =="
 value="$(dconf read "$CURSOR_FOLLOW_KEY" 2>/dev/null || true)"
 case "$value" in

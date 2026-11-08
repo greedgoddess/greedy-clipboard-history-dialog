@@ -29,6 +29,11 @@ LEGACY_HISTORY_DIR="$CACHE_HOME/$LEGACY_UUID"
 WORK_DIR="$DATA_HOME/greedy-clipboard-history-dialog"
 BACKUP_DIR="$WORK_DIR/backup"
 
+# Whether this machine is set up for users only or also for development
+# (release notifications, ./update-test-and-push.sh). Set by install.sh.
+MODE_FILE="$WORK_DIR/mode"
+current_mode() { cat "$MODE_FILE" 2>/dev/null || say user; }
+
 say() { printf '%s\n' "$*"; }
 warn() { printf 'WARNING: %s\n' "$*" >&2; }
 fail() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }

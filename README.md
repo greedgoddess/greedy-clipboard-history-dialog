@@ -3,30 +3,26 @@
 ![License: GPL-2.0-or-later](https://img.shields.io/badge/license-GPL--2.0--or--later-blue)
 ![Status: personal build](https://img.shields.io/badge/status-personal%20build-orange)
 
-**Clipboard History for GNOME Shell, built from the latest release with an option to open the panel at the mouse pointer.**
+**Clipboard History for GNOME Shell, with an option to open the panel at the mouse pointer.**
 
 This project adds one setting to
 [Clipboard History](https://extensions.gnome.org/extension/10613/clipboard-history/)
 by Manouchehr Ghalevand: **Open at mouse pointer**, under **Placement** in
 the extension preferences. With it on, the panel opens to the right of the
 pointer with its bottom edge level with it, or to the left when there is no
-room on the right. With it off, the panel opens below its icon.
+room on the right.
 
-The repository holds only the addition. `./build.sh` downloads the latest
-release of Clipboard History from extensions.gnome.org and adds the setting
-to it, without editing the original code; see
-[how the build works](docs/cursor-follow.md#how-the-build-works).
+The repository holds only the addition. `./build.sh` downloads a tested
+release of Clipboard History and adds the setting without editing the
+original code; see [how it works](docs/cursor-follow.md).
 
-- **Follows the original.** Each build uses the newest release, including
-  its fixes and newly supported GNOME Shell versions.
-- **Installed separately.** The build has its own ID
+- **Installed separately**, with its own ID
   (`greedy-clipboard-history-dialog@greedgoddess`), settings and clipboard
-  history, so the original's updates never overwrite it.
-- **Can break.** It relies on GNOME Shell internals and on how the original
-  builds its panel button. The build checks for both and refuses or warns;
-  at worst the panel opens below its icon. See
+  history. Updates of the original never overwrite it.
+- **Can break** when GNOME Shell or the original changes. Builds check for
+  this, and at worst the panel opens below its icon. See
   [what can break](docs/cursor-follow.md#what-can-break-and-what-happens-then).
-- **Personal use.** Used on Fedora 45 with GNOME Shell 51. Not for
+- **Personal use**, on Fedora 45 with GNOME Shell 51. Not for
   extensions.gnome.org.
 
 The addition was written largely by an AI assistant (Claude, by Anthropic),
@@ -37,45 +33,68 @@ directed and tested by the author. It has had no independent review.
 ```bash
 git clone git@github.com:greedgoddess/greedy-clipboard-history-dialog.git
 cd greedy-clipboard-history-dialog
-./build.sh
-./install.sh
+./build.sh && ./install.sh
 ```
 
 Log out and back in, then check with `./verify.sh`. The first install
 switches **Open at mouse pointer** on.
 
-**Coming from Clipboard History or an earlier version of this project:** run
+**Developer machine:** `./install.sh --dev` installs the same build and also
+sets up the [developer tools](#development). `./install.sh --user` removes
+them again; without either flag, a machine keeps its mode.
+
+**From Clipboard History or an earlier version of this project:** run
 `./uninstall-previous-version.sh` before `./install.sh`. It copies your
-clipboard history and settings, including the keyboard shortcut, then
-removes the old extension.
+history and settings over, then removes the old extension.
 
-**Update** (this project and the original): `./update.sh`, then log out and
-back in. If the new build fails, the installed copy is left alone.
+**Update:** `./update.sh` (pulls this repository, builds the newest tested
+release, installs), then log out and back in.
 
-**Uninstall:** `./uninstall.sh`. Clipboard history and settings are kept;
-`./uninstall.sh --purge` deletes them too.
+**Uninstall:** `./uninstall.sh` keeps history and settings; add `--purge`
+to delete them too.
 
-## Build options
+## Tested releases
 
-| Command | Builds from |
-| --- | --- |
-| `./build.sh` | Latest release for the running GNOME Shell, from extensions.gnome.org |
-| `./build.sh --version 3` | Release 3 from extensions.gnome.org |
-| `./build.sh --zip FILE` | A release zip already downloaded |
-| `./build.sh --from-git [REF]` | The author's GitHub repository |
+`./build.sh` builds the newest of these that supports the running GNOME
+Shell, and refuses a download that differs from what was tested.
 
-Each build writes `build/BUILD-INFO`: source, version, checksum, checks and
-warnings. The previous build is kept in `build/previous/`.
+<!-- tested-releases:start -->
+| Release | GNOME Shell (release) | Tested on | Date |
+| --- | --- | --- | --- |
+<!-- tested-releases:end -->
+
+Other sources: `--latest` (newest release, untested), `--version N`,
+`--zip FILE`, `--from-git [REF]`. Each build is described in
+`build/BUILD-INFO`; the previous one is kept in `build/previous/`.
+
+## Development
+
+Needs a machine set up with `./install.sh --dev`.
+
+**New release of Clipboard History:** `./update-test-and-push.sh` builds the
+newest release, runs the tests, and if they pass, adds it to the table above
+and pushes over SSH. Nothing is committed if anything fails.
+
+**Tests:** `tests/run-tests.sh` checks the build against its release
+(original code unchanged, identity, settings schema, build warnings), then
+loads it in a headless GNOME Shell and checks that it becomes active
+without errors and that Open at mouse pointer hooks in.
+
+**Release notifications** (switched on by `--dev`): a daily check shows a
+desktop notification, once per release, when Clipboard History publishes a
+release that is not tested yet. `./upstream-notifications.sh off|on|status`
+toggles it or shows the last check.
 
 ## Troubleshooting
 
 | Problem | Fix |
 | --- | --- |
-| No change after installing or updating | Log out and back in; GNOME Shell only loads extension code at login |
-| Build stops: release does not support this GNOME Shell | Wait for a release that does, or `./build.sh --force` and test |
-| Build stops for another reason | Keep the installed copy, or build an older release: `./build.sh --version N` |
+| No change after installing or updating | Log out and back in |
+| `update-test-and-push.sh`: machine set up for users | `./install.sh --dev` |
+| Build: no tested release for this GNOME Shell | Run `./update-test-and-push.sh`, or build untested with `./build.sh --latest` |
+| Build: release differs from the tested one | The download changed; run `./update-test-and-push.sh --force` to test it again |
 | Build warns, or the panel opens below its icon | See [what can break](docs/cursor-follow.md#what-can-break-and-what-happens-then) |
-| `install.sh` reports the old extension | Run `./uninstall-previous-version.sh` first |
+| Smoke test cannot start GNOME Shell | `tests/smoke-test.sh` shows the log; `--no-smoke-test` runs the static checks only, without pushing |
 | Two clipboard icons in the panel | The old extension is enabled again; run `./uninstall-previous-version.sh` |
 | Anything else | `journalctl -f -o cat /usr/bin/gnome-shell` |
 

@@ -6,17 +6,36 @@
 # clipboard history or existing settings, with one exception: the first time
 # it is installed, "Open at mouse pointer" is switched on (later choices in
 # the preferences are respected).
+#
+# Both modes install the same build. --dev also sets up the developer tools
+# (daily release notifications, ./update-test-and-push.sh); --user removes
+# them. Without either flag, the machine keeps its current mode (user on a
+# first install).
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=scripts/common.sh
 source "$ROOT/scripts/common.sh"
 
 usage() {
-    say "Usage: ./install.sh [--yes]"
+    say "Usage: ./install.sh [--dev | --user] [--yes]"
     say "Installs the build in build/ for the current user. Run ./build.sh first."
+    say "  --dev       also set up the developer tools (release notifications,"
+    say "              ./update-test-and-push.sh)"
+    say "  --user      remove the developer tools"
+    say "              (without either, the machine keeps its current mode)"
     say "  -y, --yes   answer yes to every question"
 }
-parse_common_options "$@"
+
+MODE="$(current_mode)"
+other_args=()
+for arg in "$@"; do
+    case "$arg" in
+        --dev) MODE=dev ;;
+        --user) MODE=user ;;
+        *) other_args+=("$arg") ;;
+    esac
+done
+parse_common_options "${other_args[@]+"${other_args[@]}"}"
 
 # ---- Checks before anything is changed -------------------------------------
 
@@ -116,6 +135,21 @@ if ! gnome-extensions enable "$UUID" >/dev/null 2>&1; then
     enable_at_next_login
 fi
 
+# ---- Mode: developer tools on or off ------------------------------------------
+
+mkdir -p "$WORK_DIR"
+echo "$MODE" > "$MODE_FILE"
+if [[ "$MODE" == dev ]]; then
+    "$ROOT/upstream-notifications.sh" on
+    remote_url="$(git -C "$ROOT" remote get-url origin 2>/dev/null || true)"
+    [[ "$remote_url" == git@github.com:* || "$remote_url" == ssh://* ]] \
+        || warn "This checkout's origin is not an SSH remote; ./update-test-and-push.sh will refuse to push."
+    gnome-shell --help 2>&1 | grep -q -- '--headless' \
+        || warn "This GNOME Shell has no --headless mode; the smoke test cannot run here."
+else
+    "$ROOT/upstream-notifications.sh" off >/dev/null
+fi
+
 # ---- Summary ----------------------------------------------------------------
 
 say
@@ -126,6 +160,7 @@ if (( MOVED_OLD_COPY == 1 )); then
     say "  $BACKUP_DIR"
 fi
 say "Clipboard history and settings were not changed."
+say "Mode: $MODE$([[ "$MODE" == dev ]] && echo " (release notifications on; ./update-test-and-push.sh available)")"
 say
 say "Log out and back in now. GNOME Shell keeps running the code it loaded"
 say "at login until then. Afterwards, check the result with ./verify.sh"

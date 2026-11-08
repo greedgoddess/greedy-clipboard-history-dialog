@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# build.sh — downloads the latest release of the original Clipboard History
-# extension and turns it into Greedy Clipboard History Dialog, in build/.
+# build.sh — builds Greedy Clipboard History Dialog in build/ from a release of
+# the original Clipboard History extension.
 #
-# The original code is not edited: this project's files extend it (see
-# scripts/patch_release.py and docs/cursor-follow.md#how-the-build-works).
+# By default it uses the newest release listed in tested-releases.json for
+# the running GNOME Shell, and checks that the download matches what was
+# tested. The original code is not edited: this project's files extend it
+# (see scripts/patch_release.py and docs/cursor-follow.md#how-the-build-works).
 # A new build replaces build/ only when every step succeeded; the previous
 # build is kept in build/previous/.
 set -euo pipefail
@@ -12,16 +14,17 @@ ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$ROOT/scripts/common.sh"
 
 UPSTREAM_GIT_URL="https://github.com/M-ghalevand/gnome-shell-extension-clipboard-history.git"
-EGO="https://extensions.gnome.org"
+UPSTREAM="$ROOT/scripts/upstream.py"
 
 usage() {
     cat <<USAGE
 Usage: ./build.sh [options]
 Builds the extension in build/ from a release of Clipboard History.
 
-Where the release comes from (default: the latest release on
-extensions.gnome.org for the running GNOME Shell version):
-  --version N        release N from extensions.gnome.org (e.g. 3)
+Release (default: the newest tested release for the running GNOME Shell,
+see tested-releases.json):
+  --latest           newest release on extensions.gnome.org, tested or not
+  --version N        release N from extensions.gnome.org
   --zip FILE         a release zip already downloaded
   --from-git [REF]   the author's GitHub repository, default branch or REF
 
@@ -31,14 +34,15 @@ extensions.gnome.org for the running GNOME Shell version):
 USAGE
 }
 
-SOURCE=ego
+SOURCE=tested
 PIN_VERSION=""
 ZIP_FILE=""
 GIT_REF=""
 FORCE=0
 while (( $# > 0 )); do
     case "$1" in
-        --version) PIN_VERSION="${2:?--version needs a number}"; shift 2 ;;
+        --latest) SOURCE=latest; shift ;;
+        --version) SOURCE=version; PIN_VERSION="${2:?--version needs a number}"; shift 2 ;;
         --zip) SOURCE=zip; ZIP_FILE="${2:?--zip needs a file}"; shift 2 ;;
         --from-git)
             SOURCE=git
@@ -52,6 +56,7 @@ done
 
 require_command python3 "Install it with: sudo dnf install python3"
 require_command unzip "Install it with: sudo dnf install unzip"
+require_command zip "Install it with: sudo dnf install zip"
 require_command glib-compile-schemas "Install it with: sudo dnf install glib2"
 
 SHELL_MAJOR="$(gnome-shell --version 2>/dev/null | grep -oE '[0-9]+' | head -n1 || true)"
@@ -62,56 +67,46 @@ mkdir -p "$WORK/release"
 
 # ---- 1. Get the release -----------------------------------------------------
 
+EXPECTED_HASH=""
+case "$SOURCE" in
+    tested)
+        read -r PIN_VERSION EXPECTED_HASH < <(python3 "$UPSTREAM" tested --shell "${SHELL_MAJOR:-}") \
+            || fail "No tested release for GNOME Shell ${SHELL_MAJOR:-?} in tested-releases.json. Use --latest to build an untested one."
+        ;;
+    latest)
+        say "Looking up the latest release on extensions.gnome.org…"
+        PIN_VERSION="$(python3 "$UPSTREAM" latest --shell "${SHELL_MAJOR:-}")" ;;
+esac
+
 case "$SOURCE" in
     zip)
         [[ -f "$ZIP_FILE" ]] || fail "No such file: $ZIP_FILE"
         cp -- "$ZIP_FILE" "$WORK/release.zip"
         SOURCE_DESC="zip file $(basename -- "$ZIP_FILE")" ;;
-    ego)
-        require_command curl "Install it with: sudo dnf install curl"
-        version="$PIN_VERSION"
-        if [[ -z "$version" ]]; then
-            say "Looking up the latest release on extensions.gnome.org…"
-            info="$(curl -fsSL "$EGO/extension-info/?uuid=$LEGACY_UUID&shell_version=${SHELL_MAJOR:-0}")" \
-                || fail "Could not reach extensions.gnome.org. Try again later, or use --zip or --from-git."
-            # The newest release that lists the running GNOME Shell version,
-            # or the newest release overall.
-            version="$(python3 -c '
-import json, sys
-info = json.loads(sys.argv[1]); major = sys.argv[2]
-versions = info.get("shell_version_map", {})
-if major in versions:
-    print(versions[major]["version"])
-elif versions:
-    print(max(v["version"] for v in versions.values()))
-else:
-    print(info.get("version", ""))
-' "$info" "${SHELL_MAJOR:-0}")"
-            [[ -n "$version" ]] || fail "extensions.gnome.org did not report a release."
-        fi
-        say "Downloading release $version…"
-        curl -fsSL -o "$WORK/release.zip" \
-            "$EGO/extension-data/${LEGACY_UUID//@/}.v$version.shell-extension.zip" \
-            || fail "Could not download release $version."
-        SOURCE_DESC="extensions.gnome.org, release $version" ;;
     git)
         require_command git "Install it with: sudo dnf install git"
         say "Cloning $UPSTREAM_GIT_URL${GIT_REF:+ at $GIT_REF}…"
         git clone -q --depth 1 ${GIT_REF:+--branch "$GIT_REF"} "$UPSTREAM_GIT_URL" "$WORK/clone" \
             || fail "Could not clone the author's repository."
+        meta="$(grep -rl --include=metadata.json "\"$LEGACY_UUID\"" "$WORK/clone" | head -n1 || true)"
+        [[ -n "$meta" ]] || fail "No metadata.json for $LEGACY_UUID in the repository."
+        (cd "$(dirname -- "$meta")" && zip -qr "$WORK/release.zip" . -x '.git/*')
         SOURCE_DESC="GitHub, $(git -C "$WORK/clone" rev-parse --abbrev-ref HEAD) at $(git -C "$WORK/clone" rev-parse --short HEAD)" ;;
+    *)
+        say "Downloading release $PIN_VERSION…"
+        python3 "$UPSTREAM" download "$PIN_VERSION" "$WORK/release.zip"
+        SOURCE_DESC="extensions.gnome.org, release $PIN_VERSION" ;;
 esac
 
-if [[ -f "$WORK/release.zip" ]]; then
-    unzip -q "$WORK/release.zip" -d "$WORK/release"
-    RELEASE_SHA256="$(sha256sum "$WORK/release.zip" | cut -d' ' -f1)"
-else
-    # The extension's folder is the one whose metadata.json has the UUID.
-    meta="$(grep -rl --include=metadata.json "\"$LEGACY_UUID\"" "$WORK/clone" | head -n1 || true)"
-    [[ -n "$meta" ]] || fail "No metadata.json for $LEGACY_UUID in the repository."
-    cp -a -- "$(dirname -- "$meta")/." "$WORK/release/"
-    RELEASE_SHA256="(git checkout)"
+CONTENT_HASH="$(python3 "$UPSTREAM" content-hash "$WORK/release.zip")"
+if [[ -n "$EXPECTED_HASH" && "$CONTENT_HASH" != "$EXPECTED_HASH" ]]; then
+    fail "Release $PIN_VERSION differs from the tested one (content hash $CONTENT_HASH, expected $EXPECTED_HASH)."
 fi
+if [[ -z "$EXPECTED_HASH" ]] && grep -q "\"$CONTENT_HASH\"" "$ROOT/tested-releases.json" 2>/dev/null; then
+    EXPECTED_HASH="$CONTENT_HASH"
+fi
+TESTED_DESC="$([[ -n "$EXPECTED_HASH" ]] && echo yes || echo "no (not in tested-releases.json)")"
+unzip -q "$WORK/release.zip" -d "$WORK/release"
 
 # ---- 2. Patch it ---------------------------------------------------------------
 
@@ -160,7 +155,8 @@ fi
     echo "Built:            $(date -Iseconds)"
     echo "Source:           $SOURCE_DESC"
     echo "Original version: $UPSTREAM_VERSION"
-    echo "Release SHA-256:  $RELEASE_SHA256"
+    echo "Content SHA-256:  $CONTENT_HASH"
+    echo "Tested release:   $TESTED_DESC"
     echo "GNOME Shell:      running ${SHELL_MAJOR:-unknown}; release supports $SHELL_VERSIONS"
     echo "Internals check:  $INTERNALS_CHECK"
     echo "Feature commit:   $(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
@@ -177,10 +173,13 @@ mkdir -p "$BUILD_DIR"
 rm -rf -- "$BUILD_DIR/previous"
 if [[ -d "$BUILD_DIR/$UUID" ]]; then
     mkdir -p "$BUILD_DIR/previous"
-    mv -- "$BUILD_DIR/$UUID" "$BUILD_DIR/BUILD-INFO" "$BUILD_DIR/previous/" 2>/dev/null || true
+    mv -- "$BUILD_DIR/$UUID" "$BUILD_DIR/BUILD-INFO" "$BUILD_DIR/release.zip" \
+        "$BUILD_DIR/report.json" "$BUILD_DIR/previous/" 2>/dev/null || true
 fi
 mv -- "$WORK/$UUID" "$BUILD_DIR/$UUID"
 mv -- "$WORK/BUILD-INFO" "$BUILD_DIR/BUILD-INFO"
+mv -- "$WORK/release.zip" "$BUILD_DIR/release.zip"   # Kept for the tests
+cp -- "$WORK/report.json" "$BUILD_DIR/report.json"
 
 say
 cat "$BUILD_DIR/BUILD-INFO"

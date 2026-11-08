@@ -39,7 +39,9 @@ if [[ -d "$INSTALL_DIR" ]]; then
 
     gnome-extensions disable "$UUID" >/dev/null 2>&1 || true
     rm -rf -- "$INSTALL_DIR"
-    say "Extension removed."
+    "$ROOT/upstream-notifications.sh" off >/dev/null
+    rm -f -- "$MODE_FILE"
+    say "Extension removed (and release notifications, if they were on)."
 else
     say "No installed copy found in $INSTALL_DIR."
     (( PURGE == 1 )) || exit 0
