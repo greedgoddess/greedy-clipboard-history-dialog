@@ -4,7 +4,7 @@
 # current version can be installed cleanly with ./install.sh.
 #
 # Keeps: clipboard history (~/.cache/clipboard-history@manouchehr/) and all
-# extension settings. See docs/installation.md#migrating-from-the-previous-version
+# extension settings.
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=scripts/common.sh

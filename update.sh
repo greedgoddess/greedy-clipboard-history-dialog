@@ -2,7 +2,7 @@
 # update.sh — pulls the latest commits from GitHub and reinstalls.
 #
 # Only fast-forwards: if this checkout has local commits or changes that are
-# not on GitHub, it stops instead of merging. See docs/installation.md#updating
+# not on GitHub, it stops instead of merging.
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=scripts/common.sh
@@ -20,7 +20,7 @@ require_command git "Install it with: sudo dnf install git"
 remote_url="$(git -C "$ROOT" remote get-url origin 2>/dev/null || true)"
 [[ -n "$remote_url" ]] || fail "This checkout has no 'origin' remote."
 if [[ "$remote_url" != git@github.com:* && "$remote_url" != ssh://* ]]; then
-    warn "origin is not an SSH remote ($remote_url). This project uses SSH; see docs/maintenance.md"
+    warn "origin is not an SSH remote ($remote_url). This project is pushed and pulled over SSH."
 fi
 
 [[ -z "$(git -C "$ROOT" status --porcelain)" ]] \

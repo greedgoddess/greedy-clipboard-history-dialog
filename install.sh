@@ -5,7 +5,7 @@
 # ~/.local/share/greedy-clipboard-history-dialog/backup/. Never touches the
 # clipboard history or existing settings, with one exception: the first time
 # it is installed, "Open at mouse pointer" is switched on (later choices in
-# the preferences are respected). See docs/installation.md
+# the preferences are respected).
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE_DIR="$ROOT/src"

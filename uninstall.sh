@@ -3,7 +3,7 @@
 #
 # By default keeps the clipboard history and settings, so a later install
 # picks up where you left off. With --purge, also deletes those and the
-# installer's backup. See docs/installation.md#uninstalling
+# installer's backup.
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=scripts/common.sh

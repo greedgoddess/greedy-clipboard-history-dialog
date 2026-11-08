@@ -1,9 +1,8 @@
 # scripts/common.sh — settings and helpers shared by the scripts in the
-# repository root. Sourced, not run. See docs/installation.md.
+# repository root. Sourced, not run.
 
 # The extension keeps the stock extension's UUID on purpose, so that its
-# settings and clipboard history carry over. See README.md, "Why the UUID is
-# unchanged".
+# settings and clipboard history carry over.
 UUID="clipboard-history@manouchehr"
 
 DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"

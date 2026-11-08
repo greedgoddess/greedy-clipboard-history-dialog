@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # verify.sh — shows what is installed and whether it is working.
 # Changes nothing. Exits non-zero if the current version is not installed.
-# See docs/installation.md#checking-the-installation
 set -uo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=scripts/common.sh

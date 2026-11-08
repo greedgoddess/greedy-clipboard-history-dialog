@@ -1,113 +1,69 @@
-# Greedy Clipboard History Dialog
+# greedy-clipboard-history-dialog
 
-A personal fork of
-[Clipboard History](https://extensions.gnome.org/extension/10613/clipboard-history/)
-by Manouchehr Ghalevand, a Windows-style clipboard history panel for GNOME
-Shell.
+![License: GPL-2.0-or-later](https://img.shields.io/badge/license-GPL--2.0--or--later-blue)
+![Status: personal fork](https://img.shields.io/badge/status-personal%20fork-orange)
 
-It is the stock extension, release 1.0 (3), with one addition:
+**Clipboard History for GNOME Shell, with an option to open the panel at the mouse pointer.**
 
-**Open at mouse pointer.** An optional setting that opens the panel next to
-the mouse pointer instead of below its panel icon: to the right of the
-pointer, with its bottom edge level with it, or to the left when there is no
-room on the right. Switch it on or off in the extension preferences, under
-**Placement**.
+This is [Clipboard History](https://extensions.gnome.org/extension/10613/clipboard-history/)
+by Manouchehr Ghalevand, release 1.0 (3), with one added setting:
+**Open at mouse pointer**, under **Placement** in the extension preferences.
+With it on, the panel opens to the right of the pointer with its bottom edge
+level with it, or to the left when there is no room on the right. With it
+off, the panel opens below its icon as usual.
 
-Everything else is unchanged from the stock release. The addition is written
-so that it can be proposed to the original author; see
-[Upstream proposal](#upstream-proposal).
+- **Personal fork.** Used on Fedora 45 with GNOME Shell 51. The stock
+  extension supports GNOME Shell 46 to 51.
+- **Replaces the stock extension.** It keeps the stock UUID,
+  `clipboard-history@manouchehr`, so it uses the same settings and clipboard
+  history, and the two can't be installed side by side.
 
-## Quick start
+The added setting was written largely by an AI assistant (Claude, by
+Anthropic), directed and tested by the author. It has had no independent
+review.
 
-All commands run from a checkout of this repository. GitHub is accessed over
-SSH (see [docs/maintenance.md](docs/maintenance.md#ssh-access)).
+## Changes from the stock release
 
-**New machine:**
+| File | Change |
+| --- | --- |
+| `src/extension.js` | Open at mouse pointer |
+| `src/prefs.js` | **Placement → Open at mouse pointer** switch |
+| `src/schemas/…gschema.xml` | `cursor-follow` key, off by default |
+| `src/metadata.json` | Name, version 5 |
+
+Each changed section is tagged `[cursor-follow:…]` in the code and explained
+in [docs/cursor-follow.md](docs/cursor-follow.md).
+
+## Install
 
 ```bash
-git clone git@github.com:greedgoddess/greedy-clipboard-history-dialog.git ~/Projects/greedy-clipboard-history-dialog
-cd ~/Projects/greedy-clipboard-history-dialog
+git clone git@github.com:greedgoddess/greedy-clipboard-history-dialog.git
+cd greedy-clipboard-history-dialog
 ./install.sh
 ```
 
-**Machine with the previous version of this fork (version 4):**
+Log out and back in, then check with `./verify.sh`. The first install
+switches **Open at mouse pointer** on.
 
-```bash
-cd ~/Projects/greedy-clipboard-history-dialog
-git pull --ff-only
-./uninstall-previous-version.sh
-./install.sh
-```
+**Coming from version 4** (pointer placement built in, no setting): run
+`./uninstall-previous-version.sh` before `./install.sh`.
 
-**Later updates:**
+**Update:** `./update.sh`, then log out and back in.
 
-```bash
-cd ~/Projects/greedy-clipboard-history-dialog
-./update.sh
-```
+**Uninstall:** `./uninstall.sh`. Clipboard history and settings are kept;
+`./uninstall.sh --purge` deletes them too.
 
-After installing or updating, **log out and back in**, then run `./verify.sh`.
+## Troubleshooting
 
-The scripts never delete your clipboard history or settings unless you ask
-for it with `./uninstall.sh --purge`.
-
-## Documentation
-
-| Document | Contents |
+| Problem | Fix |
 | --- | --- |
-| [docs/installation.md](docs/installation.md) | Installing, migrating from version 4, updating, checking, uninstalling, troubleshooting |
-| [docs/cursor-follow.md](docs/cursor-follow.md) | How Open at mouse pointer works, section by section, linked from the code |
-| [docs/maintenance.md](docs/maintenance.md) | Git and SSH, comparing with the stock release, following new stock releases |
-| [upstream-patches/README.md](upstream-patches/README.md) | The proposal for the original author: patch, how to check it, merge-request text |
+| No change after installing or updating | Log out and back in; GNOME Shell only loads extension code at login |
+| `install.sh` reports the previous version | Run `./uninstall-previous-version.sh` first |
+| Extension missing after logging in | Run `./verify.sh`; `gsettings get org.gnome.shell disable-user-extensions` must print `false` |
+| GNOME offers an update for Clipboard History | Decline it: a stock release would replace the fork |
+| Anything else | `journalctl -f -o cat /usr/bin/gnome-shell` |
 
-## Repository layout
+## License
 
-```text
-src/                            The extension, as installed
-  extension.js                  Panel, menu and Open at mouse pointer
-  prefs.js                      Preferences window
-  schemas/                      Settings schema
-  metadata.json                 Name, UUID, version, supported GNOME versions
-docs/                           Documentation
-upstream-patches/               Proposal for the original author
-scripts/common.sh               Shared settings for the scripts below
-install.sh                      Install or reinstall
-uninstall.sh                    Remove (optionally with history and settings)
-uninstall-previous-version.sh   Remove version 4 of this fork before installing
-update.sh                       git pull, then install
-verify.sh                       Show what is installed and whether it works
-```
-
-## How this fork differs from the stock release
-
-| File | Difference |
-| --- | --- |
-| `src/extension.js` | Open at mouse pointer: one constant, two methods, one call, one cleanup block, all tagged `[cursor-follow:…]` |
-| `src/prefs.js` | **Placement** group with the **Open at mouse pointer** switch |
-| `src/schemas/…gschema.xml` | `cursor-follow` key |
-| `src/metadata.json` | Fork name, version 5, version name `1.0+cursor-follow` |
-
-To check this against the stock release yourself, see
-[docs/maintenance.md](docs/maintenance.md#comparing-with-the-stock-release).
-
-## Why the UUID is unchanged
-
-The fork keeps the stock UUID, `clipboard-history@manouchehr`. This makes it
-a drop-in replacement: it uses the same settings and the same clipboard
-history (`~/.cache/clipboard-history@manouchehr/`). The flip side is that the
-fork and the stock extension cannot be installed side by side, and GNOME may
-offer to replace the fork once the stock extension publishes a version higher
-than 5; see [docs/installation.md](docs/installation.md#gnome-offers-an-update-for-the-extension).
-
-## Upstream proposal
-
-Open at mouse pointer is prepared as a patch for the original extension,
-switched off by default so that it changes nothing for existing users. The
-proposal is a **draft** and has not been submitted. Until the author decides,
-this fork is the way to use the feature.
-
-## Credits and license
-
-Clipboard History is © 2025 Manouchehr Ghalevand, licensed under
-GPL-2.0-or-later; see [src/LICENSE](src/LICENSE). The additions in this fork
-are under the same license.
+GPL-2.0-or-later, like the stock extension; see [src/LICENSE](src/LICENSE).
+Clipboard History is © 2025 Manouchehr Ghalevand.
