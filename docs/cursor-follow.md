@@ -232,7 +232,9 @@ extension's files, history and settings are never touched.
 works on a GNOME desktop. On headless systems (servers, CI containers)
 GNOME Shell may not start, and the smoke test then fails. It says so in its
 output, with exit status 2 instead of 1, and shows GNOME Shell's log. A
-release is recorded as tested only when the smoke test passes.
+release is recorded as tested only when the smoke test passes. In CI the
+container gets a real system D-Bus, the one service a desktop would have
+started; `.github/workflows/ci.yml` lists what the job provides.
 
 **By hand,** before marking a GNOME Shell version as verified in the README:
 

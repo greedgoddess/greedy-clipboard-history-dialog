@@ -3,6 +3,14 @@
 Versions of this project. The Clipboard History release each build is based
 on is listed in the README under "Tested releases".
 
+## Unreleased
+
+- CI: the smoke-test container starts a real system D-Bus, which GNOME Shell
+  needs at startup; no services are replaced by stand-ins. The workflow
+  file lists what the job provides.
+- CI: actions updated to versions running on Node.js 24; jobs pinned to
+  Ubuntu 24.04.
+
 ## 1.0.2 — 2026-11-08
 
 - Switching update notifications off now stops a check that is already
