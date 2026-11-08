@@ -21,14 +21,18 @@
       <default>false</default>
       <summary>Switch to 1Password Quick Access with the shortcut</summary>
     </key>
+    <key name="quick-access-rounded" type="b">
+      <default>true</default>
+      <summary>Round the corners of the Quick Access window</summary>
+    </key>
 
-    <!-- [touch-mode:setting]
+    <!-- [large-spacing:setting]
          Added by Greedy Clipboard History Dialog. Larger tabs, and icon
          buttons instead of the menu entries at the bottom.
-         See docs/touch-mode.md#touch-mode-setting -->
-    <key name="touch-mode" type="b">
+         See docs/large-spacing.md#large-spacing-setting -->
+    <key name="large-spacing" type="b">
       <default>false</default>
-      <summary>Touch mode: larger tabs and icon buttons</summary>
+      <summary>Large spacing: larger tabs and icon buttons</summary>
     </key>
 
     <!-- [update-notify:settings]

@@ -13,7 +13,7 @@
 # Optional features are left out unless asked for, and removed again with the
 # matching --without-… flag; without either flag, a machine keeps what it has:
 #   --with-1password    switching to 1Password Quick Access (third-party)
-#   --with-touch-mode   touch mode: taller tabs and icon buttons
+#   --with-large-spacing   large spacing: taller tabs and icon buttons
 #
 # Both modes install the same build. --dev makes this a developer machine:
 # update notifications then watch Clipboard History releases, and
@@ -36,11 +36,11 @@ usage() {
     say "              left out by default; kept on later installs)"
     say "  --without-1password"
     say "              leave the 1Password integration out (the default)"
-    say "  --with-touch-mode"
-    say "              include touch mode (taller tabs, icon buttons; left out by"
+    say "  --with-large-spacing"
+    say "              include large spacing (taller tabs, icon buttons; left out by"
     say "              default; kept on later installs)"
-    say "  --without-touch-mode"
-    say "              leave touch mode out (the default)"
+    say "  --without-large-spacing"
+    say "              leave large spacing out (the default)"
     say "  --allow-untested"
     say "              install a build of a release not in tested-releases.json"
     say "              without asking (--yes alone does not allow that)"
@@ -52,7 +52,8 @@ MODE="$(current_mode)"
 ALLOW_UNTESTED=0
 # Keep what the installed copy has, unless a flag says otherwise.
 WITH_1PASSWORD="$(grep -q 'quickAccess: true' "$INSTALL_DIR/features.js" 2>/dev/null && echo true || echo false)"
-WITH_TOUCH_MODE="$(grep -q 'touchMode: true' "$INSTALL_DIR/features.js" 2>/dev/null && echo true || echo false)"
+# (Large spacing was called touch mode, touchMode, before 1.2.0.)
+WITH_LARGE_SPACING="$(grep -qE '(largeSpacing|touchMode): true' "$INSTALL_DIR/features.js" 2>/dev/null && echo true || echo false)"
 other_args=()
 for arg in "$@"; do
     case "$arg" in
@@ -61,8 +62,8 @@ for arg in "$@"; do
         --allow-untested) ALLOW_UNTESTED=1 ;;
         --with-1password) WITH_1PASSWORD=true ;;
         --without-1password) WITH_1PASSWORD=false ;;
-        --with-touch-mode) WITH_TOUCH_MODE=true ;;
-        --without-touch-mode) WITH_TOUCH_MODE=false ;;
+        --with-large-spacing) WITH_LARGE_SPACING=true ;;
+        --without-large-spacing) WITH_LARGE_SPACING=false ;;
         *) other_args+=("$arg") ;;
     esac
 done
@@ -131,19 +132,19 @@ trap on_exit EXIT
 
 cp -a -- "$BUILT_DIR/." "$STAGE_DIR/"
 
-# [quick-access:install] [touch-mode:install-option] Include each optional
+# [quick-access:install] [large-spacing:install-option] Include each optional
 # feature, or leave its files out entirely.
 # See docs/quick-access.md#quick-access-install and
-# docs/touch-mode.md#touch-mode-install-option
+# docs/large-spacing.md#large-spacing-install-option
 cat > "$STAGE_DIR/features.js" <<FEATURES
 // Written by install.sh; see feature/features.js.
-export const FEATURES = {quickAccess: $WITH_1PASSWORD, touchMode: $WITH_TOUCH_MODE};
+export const FEATURES = {quickAccess: $WITH_1PASSWORD, largeSpacing: $WITH_LARGE_SPACING};
 FEATURES
 if [[ "$WITH_1PASSWORD" != true ]]; then
-    rm -f -- "$STAGE_DIR/quickAccess.js" "$STAGE_DIR/onePassword.js"
+    rm -f -- "$STAGE_DIR/quickAccess.js" "$STAGE_DIR/onePassword.js" "$STAGE_DIR/roundedCorners.js"
 fi
-if [[ "$WITH_TOUCH_MODE" != true ]]; then
-    rm -f -- "$STAGE_DIR/touchMode.js" "$STAGE_DIR/touchMode.css"
+if [[ "$WITH_LARGE_SPACING" != true ]]; then
+    rm -f -- "$STAGE_DIR/largeSpacing.js" "$STAGE_DIR/largeSpacing.css"
 fi
 
 # ---- Swap the installed copy -----------------------------------------------
@@ -207,7 +208,15 @@ fi
 # Without the integration, its setting is switched off, so that installing
 # it again later starts from off.
 [[ "$WITH_1PASSWORD" == true ]] || dconf write "${SETTINGS_PATH}quick-access" false
-[[ "$WITH_TOUCH_MODE" == true ]] || dconf write "${SETTINGS_PATH}touch-mode" false
+# Large spacing was called touch mode before: carry its switch over once. The
+# old key only exists until the first install with the new name, so it holds
+# the current choice.
+old_touch_mode="$(dconf read "${SETTINGS_PATH}touch-mode")"
+if [[ -n "$old_touch_mode" ]]; then
+    dconf write "${SETTINGS_PATH}large-spacing" "$old_touch_mode"
+    dconf reset "${SETTINGS_PATH}touch-mode"
+fi
+[[ "$WITH_LARGE_SPACING" == true ]] || dconf write "${SETTINGS_PATH}large-spacing" false
 
 # The extension reads these settings; see docs/update-notifications.md.
 # GVariant text accepts a JSON string literal for a string value.
@@ -255,7 +264,7 @@ else
     say "Mode: user. Update notifications watch this project's repository."
 fi
 say "1Password integration: $([[ "$WITH_1PASSWORD" == true ]] && echo "installed (switch it on in Preferences → Cursor-Follow)" || echo "not installed (add it with --with-1password)")"
-say "Touch mode: $([[ "$WITH_TOUCH_MODE" == true ]] && echo "installed (switch it on in Preferences → Cursor-Follow)" || echo "not installed (add it with --with-touch-mode)")"
+say "Large spacing: $([[ "$WITH_LARGE_SPACING" == true ]] && echo "installed (switch it on in Preferences → Cursor-Follow)" || echo "not installed (add it with --with-large-spacing)")"
 say "Notifications: $([[ "$(dconf read "${SETTINGS_PATH}update-notifications")" == true ]] && echo on || echo off) (Preferences → Cursor-Follow)"
 say
 say "Log out and back in now. GNOME Shell keeps running the code it loaded"

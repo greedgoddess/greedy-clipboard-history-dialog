@@ -52,18 +52,29 @@ export default class GreedyClipboardHistoryPreferences extends UpstreamPreferenc
         settings.bind('cursor-follow', cursorFollowRow, 'active', Gio.SettingsBindFlags.DEFAULT);
         group.add(cursorFollowRow);
 
-        if (FEATURES.quickAccess)
+        if (FEATURES.quickAccess) {
             group.add(this._quickAccessRow(settings));
 
-        // [touch-mode:preference] Only when installed with --with-touch-mode.
-        // See docs/touch-mode.md#touch-mode-preference
-        if (FEATURES.touchMode) {
-            const touchRow = new Adw.SwitchRow({
-                title: 'Touch mode',
-                subtitle: 'Larger text, tabs and entries in a fixed-size panel, and icon buttons instead of the menu entries at the bottom.',
+            // [quick-access:rounded-preference]
+            // See docs/quick-access.md#quick-access-rounded-corners
+            const roundedRow = new Adw.SwitchRow({
+                title: 'Round Quick Access corners',
+                subtitle: 'Drawn by GNOME Shell; 1Password itself is not changed.',
             });
-            settings.bind('touch-mode', touchRow, 'active', Gio.SettingsBindFlags.DEFAULT);
-            group.add(touchRow);
+            settings.bind('quick-access-rounded', roundedRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+            settings.bind('quick-access', roundedRow, 'sensitive', Gio.SettingsBindFlags.GET);
+            group.add(roundedRow);
+        }
+
+        // [large-spacing:preference] Only when installed with --with-large-spacing.
+        // See docs/large-spacing.md#large-spacing-preference
+        if (FEATURES.largeSpacing) {
+            const spacingRow = new Adw.SwitchRow({
+                title: 'Large spacing',
+                subtitle: 'A compact fixed-size panel with icon tabs, and icon buttons instead of the menu entries at the bottom.',
+            });
+            settings.bind('large-spacing', spacingRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+            group.add(spacingRow);
         }
 
         // [update-notify:preference]

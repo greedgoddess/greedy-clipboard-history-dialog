@@ -55,11 +55,11 @@ else
 fi
 
 say
-say "== Touch mode =="
-if grep -q 'touchMode: true' "$INSTALL_DIR/features.js" 2>/dev/null; then
-    say "Installed; switch: $([[ "$(dconf read "${SETTINGS_PATH}touch-mode" 2>/dev/null)" == true ]] && echo on || echo off)"
+say "== Large spacing =="
+if grep -q 'largeSpacing: true' "$INSTALL_DIR/features.js" 2>/dev/null; then
+    say "Installed; switch: $([[ "$(dconf read "${SETTINGS_PATH}large-spacing" 2>/dev/null)" == true ]] && echo on || echo off)"
 else
-    say "Not installed (./install.sh --with-touch-mode adds it)"
+    say "Not installed (./install.sh --with-large-spacing adds it)"
 fi
 
 say

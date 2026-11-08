@@ -5,13 +5,17 @@ on is listed in the README under "Tested releases".
 
 ## 1.2.0 — not released yet
 
-- Touch mode, optional and not installed by default
-  (`./install.sh --with-touch-mode`; then Preferences → Cursor-Follow):
-  a fixed-size panel, the same on every tab, with twice the font size, tall
-  tabs and taller entries, and icon buttons instead of the menu entries at
-  the bottom: 1Password (with the integration installed and on), settings,
-  and clear. The buttons trigger the original entries. All sizes are fixed
-  in touchMode.css.
+- Large spacing, optional and not installed by default
+  (`./install.sh --with-large-spacing`; then Preferences → Cursor-Follow):
+  a compact panel with one fixed size on every tab, icons instead of names
+  in the tab bar, compact entries, and icon buttons instead of the menu
+  entries at the bottom: 1Password (with the integration installed and on),
+  settings, and clear. The buttons trigger the original entries. All sizes
+  are fixed in largeSpacing.css. (Called touch mode during development; an
+  earlier choice carries over.)
+- 1Password integration: rounded corners for the Quick Access window, drawn
+  by GNOME Shell without changing 1Password (Preferences → Cursor-Follow →
+  Round Quick Access corners, on by default).
 
 ## 1.1.0 — 2026-11-08
 

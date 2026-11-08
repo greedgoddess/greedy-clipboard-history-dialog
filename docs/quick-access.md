@@ -41,8 +41,8 @@ grep -rn "\[quick-access:" feature/
 ./install.sh --without-1password   # leave it out again (the default)
 ```
 
-Without `--with-1password`, `install.sh` leaves `quickAccess.js` and
-`onePassword.js` out of the installed copy and writes
+Without `--with-1password`, `install.sh` leaves `quickAccess.js`,
+`onePassword.js` and `roundedCorners.js` out of the installed copy and writes
 `FEATURES = {quickAccess: false}` into its `features.js`, so no 1Password
 code is installed at all: no shortcut takeover, no switch in the
 preferences, no 1Password rows in About. The choice is kept by later installs
@@ -137,17 +137,37 @@ instead, with its bottom-right corner at the pointer. It is then moved only
 as far as needed to stay inside the monitor's work area, for example when the
 pointer is near the top of the screen.
 
+<a id="quick-access-rounded-corners"></a>
+## `quick-access:rounded-corners`
+
+`feature/roundedCorners.js`. With **Round Quick Access corners** on (the
+default; Preferences → Cursor-Follow, below the Quick Access switch), the
+Quick Access window gets rounded corners with GNOME's usual 12 px radius.
+
+1Password is not changed or asked for anything: GNOME Shell draws every
+window itself, and a small shader effect on the Quick Access window, as GNOME
+Shell draws it, makes the pixels outside the rounded corners transparent.
+`cornerBounds()` finds the window's visible frame inside what GNOME Shell
+draws, which can include invisible borders, so only the frame's four corners
+are cut. The effect follows size changes and is removed when the window
+closes or the extension is disabled. If the effect cannot be added, the
+window simply keeps square corners and a warning is logged.
+
+The switch only applies while Quick Access is switched on, and takes effect
+the next time Quick Access opens.
+
 <a id="quick-access-cleanup"></a>
 ## `quick-access:cleanup`
 
-On `disable()`: cancels a running availability check and stops waiting for a
-window. The shortcut itself is removed by the original's `disable()`, which
+On `disable()`: cancels a running availability check, stops waiting for a
+window, and removes the rounded corners. The shortcut itself is removed by the original's `disable()`, which
 runs next.
 
 ## Testing
 
 `tests/js/quickAccess.test.mjs` covers the shortcut decision, the placement
-and the availability checks. Whether Quick Access really opens at the
+and the availability checks; `tests/js/roundedCorners.test.mjs` the corner
+bounds and adding, updating and removing the effect. Whether Quick Access really opens at the
 pointer can only be checked by hand, on a GNOME desktop with 1Password:
 
 1. Setting off: the shortcut toggles the panel as before.
@@ -159,3 +179,5 @@ pointer can only be checked by hand, on a GNOME desktop with 1Password:
    pointer. Near the top: it stays on screen.
 5. Quit 1Password with the setting on: the second press shows a notification
    instead of Quick Access.
+6. With **Round Quick Access corners** on, Quick Access has rounded corners;
+   switched off, square ones (from the next time it opens).

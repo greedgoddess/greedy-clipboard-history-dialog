@@ -41,26 +41,33 @@ rm -rf "$LEGACY_EXT_DIR"
 # ---- 1Password integration: left out unless asked for ----------------------------
 make_build true plain
 run "$REPO/install.sh" --yes
-check "1Password integration left out by default" '[[ ! -e "$EXT_DIR/quickAccess.js" && ! -e "$EXT_DIR/onePassword.js" ]] && grep -q "quickAccess: false" "$EXT_DIR/features.js"'
+check "1Password integration left out by default" '[[ ! -e "$EXT_DIR/quickAccess.js" && ! -e "$EXT_DIR/onePassword.js" && ! -e "$EXT_DIR/roundedCorners.js" ]] && grep -q "quickAccess: false" "$EXT_DIR/features.js"'
 run "$REPO/install.sh" --yes --with-1password
-check "--with-1password includes it" '[[ -f "$EXT_DIR/quickAccess.js" && -f "$EXT_DIR/onePassword.js" ]] && grep -q "quickAccess: true" "$EXT_DIR/features.js"'
+check "--with-1password includes it" '[[ -f "$EXT_DIR/quickAccess.js" && -f "$EXT_DIR/onePassword.js" && -f "$EXT_DIR/roundedCorners.js" ]] && grep -q "quickAccess: true" "$EXT_DIR/features.js"'
 run "$REPO/install.sh" --yes
 check "a plain install keeps it" 'grep -q "quickAccess: true" "$EXT_DIR/features.js"'
 dconf write "${NEW_PATH}quick-access" true
 run "$REPO/install.sh" --yes --without-1password
 check "--without-1password removes it and switches its setting off" '[[ ! -e "$EXT_DIR/quickAccess.js" ]] && grep -q "quickAccess: false" "$EXT_DIR/features.js" && [[ $(setting "$NEW_PATH" quick-access) == false ]]'
 
-# ---- Touch mode: left out unless asked for, independent of 1Password ------------
+# ---- Large spacing: left out unless asked for, independent of 1Password ------------
 run "$REPO/install.sh" --yes
-check "touch mode left out by default" '[[ ! -e "$EXT_DIR/touchMode.js" && ! -e "$EXT_DIR/touchMode.css" ]] && grep -q "touchMode: false" "$EXT_DIR/features.js"'
-run "$REPO/install.sh" --yes --with-touch-mode
-check "--with-touch-mode includes it, 1Password stays out" '[[ -f "$EXT_DIR/touchMode.js" && -f "$EXT_DIR/touchMode.css" && ! -e "$EXT_DIR/quickAccess.js" ]] && grep -q "touchMode: true" "$EXT_DIR/features.js"'
+check "large spacing left out by default" '[[ ! -e "$EXT_DIR/largeSpacing.js" && ! -e "$EXT_DIR/largeSpacing.css" ]] && grep -q "largeSpacing: false" "$EXT_DIR/features.js"'
+run "$REPO/install.sh" --yes --with-large-spacing
+check "--with-large-spacing includes it, 1Password stays out" '[[ -f "$EXT_DIR/largeSpacing.js" && -f "$EXT_DIR/largeSpacing.css" && ! -e "$EXT_DIR/quickAccess.js" ]] && grep -q "largeSpacing: true" "$EXT_DIR/features.js"'
 run "$REPO/install.sh" --yes --with-1password
-check "adding 1Password keeps touch mode" 'grep -q "quickAccess: true, touchMode: true" "$EXT_DIR/features.js"'
-dconf write "${NEW_PATH}touch-mode" true
-run "$REPO/install.sh" --yes --without-touch-mode
-check "--without-touch-mode removes it and switches it off, 1Password stays" '[[ ! -e "$EXT_DIR/touchMode.js" && -f "$EXT_DIR/quickAccess.js" && $(setting "$NEW_PATH" touch-mode) == false ]]'
+check "adding 1Password keeps large spacing" 'grep -q "quickAccess: true, largeSpacing: true" "$EXT_DIR/features.js"'
+dconf write "${NEW_PATH}large-spacing" true
+run "$REPO/install.sh" --yes --without-large-spacing
+check "--without-large-spacing removes it and switches it off, 1Password stays" '[[ ! -e "$EXT_DIR/largeSpacing.js" && -f "$EXT_DIR/quickAccess.js" && $(setting "$NEW_PATH" large-spacing) == false ]]'
 run "$REPO/install.sh" --yes --without-1password
+
+# An installation from before the rename (touch mode) keeps its choice and switch.
+echo "export const FEATURES = {quickAccess: false, touchMode: true};" > "$EXT_DIR/features.js"
+dconf write "${NEW_PATH}touch-mode" true
+run "$REPO/install.sh" --yes
+check "touch mode carries over as large spacing" 'grep -q "largeSpacing: true" "$EXT_DIR/features.js" && [[ $(setting "$NEW_PATH" large-spacing) == true && -z $(setting "$NEW_PATH" touch-mode) ]]'
+run "$REPO/install.sh" --yes --without-large-spacing
 
 # Interrupted install: moving the new copy into place fails.
 make_build true third

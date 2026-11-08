@@ -22,6 +22,7 @@ import Shell from 'gi://Shell';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import {quickAccessAvailability} from './onePassword.js';
+import {CornerRounder} from './roundedCorners.js';
 
 // The original extension's keybinding, in its settings schema.
 const SHORTCUT_KEY = 'toggle-shortcut';
@@ -78,6 +79,7 @@ export class QuickAccessSwitch {
         this._cancellable = new Gio.Cancellable();
         this._windowCreatedId = 0;
         this._waitTimeoutId = 0;
+        this._cornerRounder = new CornerRounder();
         this.active = false;
         if (!menu)
             return;
@@ -90,7 +92,7 @@ export class QuickAccessSwitch {
     }
 
     /** Opens Quick Access at the pointer, as the second press of the shortcut
-     * does; used by the 1Password button in touch mode. */
+     * does; used by the 1Password button in large spacing. */
     openQuickAccess() {
         this._switchToQuickAccess().catch(error => console.warn(`Quick Access: ${error.message}`));
     }
@@ -134,6 +136,13 @@ export class QuickAccessSwitch {
                     return;
                 this._stopWaiting();
                 this._keepInPlace(window, pointer);
+                if (this._settings.get_boolean('quick-access-rounded')) {
+                    try {
+                        this._cornerRounder.round(window);
+                    } catch (error) {
+                        console.warn(`Quick Access: corners not rounded: ${error.message}`);
+                    }
+                }
             });
         });
         this._waitTimeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, WINDOW_WAIT_SECONDS, () => {
@@ -201,6 +210,7 @@ export class QuickAccessSwitch {
         this._cancellable.cancel();
         this._stopWaiting();
         this._stopKeeping?.();
+        this._cornerRounder.destroy();
         this._menu = null;
         this._settings = null;
     }

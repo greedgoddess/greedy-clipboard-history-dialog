@@ -16,13 +16,14 @@ preferences:
 - **1Password Quick Access** (optional, not installed by default):
   pressing the shortcut again while the panel is open switches to
   [1Password](https://1password.com/) Quick Access, placed at the pointer
-  like the panel. Install it with `./install.sh --with-1password`; see
+  like the panel, optionally with rounded corners. Install it with
+  `./install.sh --with-1password`; see
   [1Password Quick Access](docs/quick-access.md). Thanks to 1Password for
   a native Linux app.
-- **Touch mode** (optional, not installed by default): a fixed-size panel
-  with twice the font size, tall tabs and taller entries, and icon buttons
-  (1Password, settings, clear) instead of the menu entries at the bottom. Install it with `./install.sh --with-touch-mode`; see
-  [touch mode](docs/touch-mode.md).
+- **Large spacing** (optional, not installed by default): a compact
+  fixed-size panel with icon tabs, and icon buttons (1Password, settings,
+  clear) instead of the menu entries at the bottom. Install it with
+  `./install.sh --with-large-spacing`; see [large spacing](docs/large-spacing.md).
 - **Update notifications:** a notification when there is an update to
   install; see [update notifications](docs/update-notifications.md).
 
@@ -74,8 +75,8 @@ the preferences can switch them off.
 history and settings over, then removes the old extension.
 
 **Optional features:** `./install.sh --with-1password` adds the 1Password
-integration and `--with-touch-mode` adds touch mode; `--without-…` removes
-them. Both are left out by default, and each is kept by later installs.
+integration and `--with-large-spacing` adds large spacing; `--without-…`
+removes them. Both are left out by default, and each is kept by later installs.
 
 **Update:** `./update.sh` (pulls this repository, builds the newest tested
 release, installs), then log out and back in.
@@ -105,7 +106,7 @@ installing it.
 | Source syntax, ShellCheck, unit tests, build integrity | GitHub Actions (CI), on every push | Automatically; a green CI run means only this |
 | The extension loads in GNOME Shell without errors | A GNOME desktop | Smoke test; required before a release is recorded as tested |
 | Opens at the pointer, flips at screen edges | A GNOME desktop | By hand, with the [testing checklist](docs/cursor-follow.md#testing) |
-| Touch mode: taller tabs, icon buttons that work | A GNOME desktop | By hand, with [its checklist](docs/touch-mode.md#testing) |
+| Large spacing: taller tabs, icon buttons that work | A GNOME desktop | By hand, with [its checklist](docs/large-spacing.md#testing) |
 | Switches to 1Password Quick Access, placed at the pointer | A GNOME desktop with 1Password | By hand, with [its checklist](docs/quick-access.md#testing) |
 
 ### Verified GNOME Shell versions

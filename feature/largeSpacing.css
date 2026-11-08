@@ -1,0 +1,86 @@
+/* largeSpacing.css — styles for large spacing; loaded only while the extension
+ * runs with large spacing installed, and applied only while large spacing is on
+ * (the panel's box then has the class greedy-large-spacing).
+ * All sizes are fixed here; nothing is measured or adjusted at run time.
+ * See docs/large-spacing.md#large-spacing-layout
+ *
+ * SPDX-License-Identifier: GPL-2.0-or-later */
+
+/* [large-spacing:layout] The whole panel: one fixed size on every tab. Text tab
+ * content: tab bar (about 54 px), search row, the list (which takes all
+ * remaining height, and the search row's height on the other tabs),
+ * separator, button row. */
+.greedy-large-spacing {
+    width: 300px;
+    height: 410px;
+    font-size: 1em;
+}
+
+/* Tab bar: icons instead of names, about 54 px tall (20 px above and below
+ * the icon, which keeps it centred). */
+.greedy-large-spacing .clipboard-history-tab {
+    padding: 20px 0;
+}
+
+.greedy-spacing-tab-icon {
+    icon-size: 24px;
+}
+
+.greedy-large-spacing .clipboard-history-search {
+    width: 278px;
+}
+
+.greedy-large-spacing .clipboard-history-scrollview {
+    width: 292px;
+    max-height: 10000px;    /* The panel's fixed height limits it instead. */
+}
+
+/* Clipboard entries: little vertical padding. */
+.greedy-large-spacing .clipboard-history-item {
+    padding: 3px 6px;
+    spacing: 6px;
+}
+
+.greedy-large-spacing .clipboard-history-icon-button {
+    padding: 5px;
+}
+
+.greedy-large-spacing .clipboard-history-icon-button .popup-menu-icon {
+    icon-size: 12px;
+}
+
+/* The original sets these in pixels; kept at the same scale as the rest. */
+.greedy-large-spacing .clipboard-history-emoji-button {
+    font-size: 20px;
+    min-width: 32px;
+}
+
+.greedy-large-spacing .clipboard-history-kaomoji-button {
+    font-size: 13px;
+}
+
+/* Button row at the bottom. */
+.greedy-spacing-buttons {
+    spacing: 6px;
+    padding: 2px 4px;
+}
+
+.greedy-spacing-button {
+    min-width: 32px;
+    min-height: 32px;
+    padding: 6px;
+    border-radius: 6px;
+}
+
+.greedy-spacing-icon {
+    icon-size: 18px;
+}
+
+.greedy-spacing-button:hover,
+.greedy-spacing-button:focus {
+    background-color: rgba(128, 128, 128, 0.2);
+}
+
+.greedy-spacing-button:active {
+    background-color: rgba(128, 128, 128, 0.35);
+}

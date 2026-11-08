@@ -13,7 +13,7 @@ const STUBS = {
             set_position(x, y) { this.x = x; this.y = y; }
             destroy() { this.destroyed = true; globalThis.__uiGroup.delete(this); }
         }
-        // A minimal actor tree for touch mode: children, style classes, heights.
+        // A minimal actor tree for large spacing: children, style classes, heights.
         class Actor {
             constructor(props = {}) {
                 Object.assign(this, props);
@@ -36,13 +36,32 @@ const STUBS = {
             emit(signal, ...args) { (this.handlers[signal] ?? []).forEach(h => h(this, ...args)); }
             destroy() { this.destroyed = true; this.parent?.remove_child(this); }  // As Clutter does
         }
-        class Button extends Actor {}
+        // St.Button: setting label replaces the child with a label, as St does.
+        class Button extends Actor {
+            set_child(child) { this.child = child; }
+            get label() { return this._label; }
+            set label(text) { this._label = text; this.child = {text}; }
+        }
         class Icon extends Actor {}
         class BoxLayout extends Actor {}
         const theme = {loaded: [], load_stylesheet(f) { this.loaded.push(f); }, unload_stylesheet(f) { this.loaded = this.loaded.filter(x => x !== f); }};
         globalThis.__theme = theme;
         const ThemeContext = {get_for_stage: () => ({get_theme: () => theme})};
         export default {Widget, Actor, Button, Icon, BoxLayout, ThemeContext, Side: {TOP: 0, RIGHT: 1, BOTTOM: 2, LEFT: 3}};`,
+    'gi://GObject': `
+        export default {registerClass: (meta, klass) => klass ?? meta};`,
+    'gi://Cogl': `
+        export default {SnippetHook: {FRAGMENT: 1}};`,
+    // Shell.GLSLEffect records what it is given, so tests can check it.
+    'gi://Shell': `
+        class GLSLEffect {
+            constructor() { this.uniforms = {}; this.snippets = []; }
+            add_glsl_snippet(...args) { this.snippets.push(args); }
+            get_uniform_location(name) { return name; }
+            set_uniform_float(location, components, value) { this.uniforms[location] = value; }
+            queue_repaint() {}
+        }
+        export default {GLSLEffect, ActionMode: {NORMAL: 1, OVERVIEW: 2, POPUP: 4}};`,
     'resource:///org/gnome/shell/ui/popupMenu.js': `
         import St from 'gi://St';
         export class PopupBaseMenuItem extends St.Actor {}`,
@@ -96,7 +115,10 @@ const STUBS = {
                 return true;
             }
         }
-        class ThemedIcon { constructor(props) { Object.assign(this, props); } }
+        class ThemedIcon {
+            constructor(props) { Object.assign(this, props); }
+            static new_from_names(names) { return new ThemedIcon({names}); }
+        }
         export default {
             _promisify() {},
             Cancellable,
