@@ -24,6 +24,7 @@ const STUBS = {
             insert_child_at_index(child, index) { this.children.splice(index, 0, child); child.parent = this; }
             remove_child(child) { this.children = this.children.filter(c => c !== child); child.parent = null; }
             get_children() { return [...this.children]; }
+            get_parent() { return this.parent ?? null; }
             has_style_class_name(name) { return (this.style_class ?? '').split(' ').includes(name); }
             add_style_class_name(name) { this.style_class = [this.style_class, name].filter(Boolean).join(' '); }
             remove_style_class_name(name) {

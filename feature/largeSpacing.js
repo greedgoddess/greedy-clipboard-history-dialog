@@ -25,6 +25,8 @@ import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 const CLEAR_LABEL = /^Clear\b/;
 const SETTINGS_LABEL = /^Extension Settings/;
 const SCROLL_VIEW_CLASS = 'clipboard-history-scrollview';
+const SEARCH_CLASS = 'clipboard-history-search';
+const SEARCH_ROW_CLASS = 'greedy-spacing-search-row';
 const TAB_BAR_CLASS = 'clipboard-history-tabbar';
 const PANEL_CLASS = 'greedy-large-spacing-panel';
 const LARGE_SPACING_CLASS = 'greedy-large-spacing';
@@ -162,6 +164,10 @@ export class LargeSpacing {
         // [large-spacing:corners] The panel's rounded corners, matching the
         // Quick Access window. See docs/large-spacing.md#large-spacing-corners
         this._menu.actor?.add_style_class_name(PANEL_CLASS);
+        // The search field's row has no class of its own; it gets one so that
+        // its side padding can go and the field spans the list's width.
+        this._searchRow = findByStyleClass(this._menu.box, SEARCH_CLASS)?.get_parent() ?? null;
+        this._searchRow?.add_style_class_name(SEARCH_ROW_CLASS);
         this._swapTabLabels();
         this._scrollView = findByStyleClass(this._menu.box, SCROLL_VIEW_CLASS);
         if (this._scrollView) {
@@ -223,6 +229,8 @@ export class LargeSpacing {
         this._tabLabels = null;
         this._menu.box.remove_style_class_name(LARGE_SPACING_CLASS);
         this._menu.actor?.remove_style_class_name(PANEL_CLASS);
+        this._searchRow?.remove_style_class_name(SEARCH_ROW_CLASS);
+        this._searchRow = null;
         if (this._scrollView)
             this._scrollView.y_expand = this._scrollViewExpand;
         this._scrollView = null;

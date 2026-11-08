@@ -25,13 +25,15 @@ function fakeMenu() {
     }
     tabRow.add_child(tabBar);
     const scrollView = new St.Actor({style_class: 'clipboard-history-scrollview', y_expand: false});
+    const searchRow = new St.Actor({style_class: 'popup-menu-item'});
+    searchRow.add_child(new St.Actor({style_class: 'clipboard-history-search'}));
     const separator = new St.Actor({name: 'separator'});
     const clear = item('Clear (except pinned)');
     const settings = item('Extension Settings…');
     const box = new St.Actor();
-    [tabRow, scrollView, separator, clear, settings].forEach(c => box.add_child(c));
+    [tabRow, searchRow, scrollView, separator, clear, settings].forEach(c => box.add_child(c));
     const menu = new St.Actor({box, isOpen: false, actor: new St.Actor({style_class: 'popup-menu-boxpointer'})});
-    return {menu, box, clear, settings, scrollView, tabBar};
+    return {menu, box, clear, settings, scrollView, tabBar, searchRow};
 }
 const fakeSettings = values => ({
     handlers: {},
@@ -65,7 +67,7 @@ test('large spacing on: buttons replace the entries, in their place, and trigger
     const {menu, box, clear, settings} = fakeMenu();
     const mode = new LargeSpacing(menu, fakeSettings({'large-spacing': true, 'quick-access': false}), 'css', () => null);
     assert.ok(!box.children.includes(clear) && !box.children.includes(settings));
-    assert.equal(box.children[3].children[0].has_style_class_name('greedy-spacing-buttons'), true);
+    assert.equal(box.children[4].children[0].has_style_class_name('greedy-spacing-buttons'), true);
     const [gear, trash] = buttonsOf(box);
     assert.equal(gear.accessible_name, 'Extension Settings');
     assert.equal(trash.accessible_name, 'Clear (except pinned)');
@@ -132,6 +134,16 @@ test('tabs show icons instead of names, and keep their names for screen readers'
         assert.equal(tab.accessible_name, tab.label);
     }
     assert.deepEqual(tabBar.children[2].child.gicon.names, TAB_ICONS.Emoji);
+    mode.destroy();
+});
+
+test("the search field's row gets the full-width class, and loses it again", () => {
+    const {menu, searchRow} = fakeMenu();
+    const settings = fakeSettings({'large-spacing': true, 'quick-access': false});
+    const mode = new LargeSpacing(menu, settings, 'css', () => null);
+    assert.ok(searchRow.has_style_class_name('greedy-spacing-search-row'));
+    settings.set('large-spacing', false);
+    assert.ok(!searchRow.has_style_class_name('greedy-spacing-search-row'));
     mode.destroy();
 });
 
