@@ -1,20 +1,19 @@
 #!/usr/bin/env bash
-# install.sh — installs this extension for the current user.
+# install.sh — installs the build made by ./build.sh for the current user.
 #
-# Replaces any installed copy with the same UUID, keeping one backup of it in
+# Replaces an installed copy of this extension, keeping one backup of it in
 # ~/.local/share/greedy-clipboard-history-dialog/backup/. Never touches the
 # clipboard history or existing settings, with one exception: the first time
 # it is installed, "Open at mouse pointer" is switched on (later choices in
 # the preferences are respected).
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-SOURCE_DIR="$ROOT/src"
 # shellcheck source=scripts/common.sh
 source "$ROOT/scripts/common.sh"
 
 usage() {
     say "Usage: ./install.sh [--yes]"
-    say "Installs the extension from src/ for the current user."
+    say "Installs the build in build/ for the current user. Run ./build.sh first."
     say "  -y, --yes   answer yes to every question"
 }
 parse_common_options "$@"
@@ -22,29 +21,22 @@ parse_common_options "$@"
 # ---- Checks before anything is changed -------------------------------------
 
 require_command gnome-extensions "It is part of GNOME Shell."
-require_command glib-compile-schemas "Install it with: sudo dnf install glib2"
 require_command gsettings "Install it with: sudo dnf install glib2"
 require_command dconf "Install it with: sudo dnf install dconf"
 require_command python3 "Install it with: sudo dnf install python3"
 
-for file in extension.js prefs.js metadata.json stylesheet.css \
-            schemas/org.gnome.shell.extensions.clipboard-history.gschema.xml; do
-    [[ -f "$SOURCE_DIR/$file" ]] || fail "Missing src/$file. Is this a complete checkout?"
+[[ -f "$BUILT_DIR/metadata.json" ]] || fail "Nothing built yet. Run ./build.sh first."
+for file in extension.js upstream-extension.js cursorFollow.js prefs.js; do
+    [[ -f "$BUILT_DIR/$file" ]] || fail "The build is incomplete (no $file). Run ./build.sh again."
 done
+built_uuid="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["uuid"])' "$BUILT_DIR/metadata.json")"
+[[ "$built_uuid" == "$UUID" ]] || fail "The build has UUID '$built_uuid', expected '$UUID'."
 
-source_uuid="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["uuid"])' "$SOURCE_DIR/metadata.json")"
-[[ "$source_uuid" == "$UUID" ]] || fail "src/metadata.json has UUID '$source_uuid', expected '$UUID'."
-grep -Fq "$CURRENT_VERSION_MARKER" "$SOURCE_DIR/extension.js" \
-    || fail "src/extension.js does not contain the cursor-follow code."
-
-case "$(installed_variant)" in
-    previous-fork)
-        fail "The previous fork version is installed. Run ./uninstall-previous-version.sh first." ;;
-    other)
-        say "Another copy of the extension (probably the stock one) is installed."
-        say "It will be backed up to $BACKUP_DIR and replaced."
-        confirm "Continue?" || { say "Cancelled. Nothing was changed."; exit 0; } ;;
-esac
+# The original extension, or an earlier version of this fork, must not run
+# alongside: both would record the clipboard and show a panel icon.
+if legacy_enabled; then
+    fail "$LEGACY_UUID is still enabled. Run ./uninstall-previous-version.sh first."
+fi
 
 # ---- Build the new copy in a staging folder --------------------------------
 
@@ -66,9 +58,7 @@ on_exit() {
 }
 trap on_exit EXIT
 
-cp -a -- "$SOURCE_DIR/." "$STAGE_DIR/"
-rm -f -- "$STAGE_DIR/schemas/gschemas.compiled"
-glib-compile-schemas --strict "$STAGE_DIR/schemas"
+cp -a -- "$BUILT_DIR/." "$STAGE_DIR/"
 
 # ---- Swap the installed copy -----------------------------------------------
 
@@ -129,7 +119,7 @@ fi
 # ---- Summary ----------------------------------------------------------------
 
 say
-say "Installed $UUID, version $(metadata_version "$INSTALL_DIR/metadata.json"), to:"
+say "Installed $UUID ($(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version-name"])' "$INSTALL_DIR/metadata.json")) to:"
 say "  $INSTALL_DIR"
 if (( MOVED_OLD_COPY == 1 )); then
     say "The copy it replaced is kept in:"

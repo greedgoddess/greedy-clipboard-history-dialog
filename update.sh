@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
-# update.sh — pulls the latest commits from GitHub and reinstalls.
+# update.sh — pulls this project's latest commits, builds from the latest
+# release of the original extension, and installs the result.
 #
 # Only fast-forwards: if this checkout has local commits or changes that are
-# not on GitHub, it stops instead of merging.
+# not on GitHub, it stops instead of merging. If the build fails, the
+# installed extension is left as it is.
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=scripts/common.sh
@@ -10,7 +12,7 @@ source "$ROOT/scripts/common.sh"
 
 usage() {
     say "Usage: ./update.sh [--yes]"
-    say "Runs 'git pull --ff-only', then ./install.sh."
+    say "Runs 'git pull --ff-only', ./build.sh, then ./install.sh."
     say "  -y, --yes   passed on to ./install.sh"
 }
 parse_common_options "$@"
@@ -27,4 +29,5 @@ fi
     || fail "This checkout has uncommitted changes. Commit or discard them first."
 
 git -C "$ROOT" pull --ff-only
+"$ROOT/build.sh"
 "$ROOT/install.sh" "$@"

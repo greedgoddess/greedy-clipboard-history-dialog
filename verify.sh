@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # verify.sh — shows what is installed and whether it is working.
-# Changes nothing. Exits non-zero if the current version is not installed.
+# Changes nothing. Exits non-zero if the extension is not installed.
 set -uo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=scripts/common.sh
@@ -17,13 +17,18 @@ gnome-shell --version 2>/dev/null || say "(gnome-shell not found)"
 
 say
 say "== Installed copy =="
-variant="$(installed_variant)"
-case "$variant" in
-    current)       say "Current version, metadata version $(metadata_version "$INSTALL_DIR/metadata.json")" ;;
-    previous-fork) say "PREVIOUS fork version. Run ./uninstall-previous-version.sh, then ./install.sh" ;;
-    other)         say "Not this fork (probably the stock extension)" ;;
-    none)          say "Not installed" ;;
-esac
+if [[ -f "$INSTALL_DIR/metadata.json" ]]; then
+    say "$UUID, $(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("version-name","?"))' "$INSTALL_DIR/metadata.json")"
+    if [[ -f "$BUILT_DIR/metadata.json" ]] && ! diff -rq "$BUILT_DIR" "$INSTALL_DIR" >/dev/null 2>&1; then
+        say "Note: build/ holds a different build than the installed one; run ./install.sh to install it."
+    fi
+else
+    say "Not installed"
+fi
+if legacy_enabled; then
+    say "WARNING: the old $LEGACY_UUID is still enabled; two clipboard panels"
+    say "are running. Run ./uninstall-previous-version.sh"
+fi
 
 say
 say "== Extension state =="
@@ -41,9 +46,13 @@ case "$value" in
 esac
 
 say
+say "== Last build =="
+if [[ -f "$ROOT/build/BUILD-INFO" ]]; then cat "$ROOT/build/BUILD-INFO"; else say "No build yet."; fi
+
+say
 say "== Recent GNOME Shell messages about this extension (this boot) =="
 messages="$(journalctl -b --no-pager -o cat /usr/bin/gnome-shell 2>/dev/null \
-    | grep -iE 'clipboard[- ]history' | tail -n 10)"
+    | grep -iE 'clipboard[- ]history|greedy' | tail -n 10)"
 say "${messages:-None.}"
 
-[[ "$variant" == current ]]
+[[ -f "$INSTALL_DIR/metadata.json" ]]
