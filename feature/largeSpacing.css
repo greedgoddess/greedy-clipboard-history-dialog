@@ -26,8 +26,10 @@
     icon-size: 24px;
 }
 
+/* The search field: a small preferred width; it fills the row anyway (it
+ * expands), and never runs past the panel's right edge. */
 .greedy-large-spacing .clipboard-history-search {
-    width: 278px;
+    width: 200px;
 }
 
 .greedy-large-spacing .clipboard-history-scrollview {
@@ -35,10 +37,11 @@
     max-height: 10000px;    /* The panel's fixed height limits it instead. */
 }
 
-/* Clipboard entries: little vertical padding. */
+/* Clipboard entries: little vertical padding, text a quarter larger. */
 .greedy-large-spacing .clipboard-history-item {
     padding: 3px 6px;
     spacing: 6px;
+    font-size: 1.25em;
 }
 
 .greedy-large-spacing .clipboard-history-icon-button {
@@ -66,14 +69,15 @@
 }
 
 .greedy-spacing-button {
-    min-width: 32px;
-    min-height: 32px;
+    min-width: 40px;
+    min-height: 40px;
     padding: 6px;
     border-radius: 6px;
 }
 
+/* Same size as the tab icons at the top. */
 .greedy-spacing-icon {
-    icon-size: 18px;
+    icon-size: 24px;
 }
 
 .greedy-spacing-button:hover,

@@ -63,10 +63,17 @@ const STUBS = {
     'gi://Clutter': `
         class ShaderEffect {
             constructor() { this.uniforms = {}; }
-            vfunc_get_static_snippet() { return null; }
             set_uniform_float(name, components, value) { this.uniforms[name] = value; }
             queue_repaint() {}
         }
+        // As GJS does on GNOME 51: looking up the unimplemented virtual
+        // function on ShaderEffect itself throws.
+        Object.defineProperty(ShaderEffect.prototype, 'vfunc_get_static_snippet', {
+            configurable: true,
+            get() {
+                throw new Error("Virtual function not implemented: Class ClutterShaderEffect doesn't implement get_static_snippet");
+            },
+        });
         export default {ShaderEffect};`,
     'resource:///org/gnome/shell/ui/popupMenu.js': `
         import St from 'gi://St';

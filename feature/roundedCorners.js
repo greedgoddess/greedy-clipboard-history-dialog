@@ -55,7 +55,10 @@ export function cornerBounds(frame, buffer) {
  * Shell.GLSLEffect, removed in 51), or null (neither; corners stay square).
  * See docs/quick-access.md#quick-access-rounded-corners */
 export function shaderApi(shell, clutter) {
-    if (typeof clutter?.ShaderEffect?.prototype?.vfunc_get_static_snippet === 'function')
+    // Detected by set_uniform_float(), a plain method new in GNOME 51. Not by
+    // looking up vfunc_get_static_snippet: GNOME declares it for subclasses
+    // to implement, and GJS throws when an unimplemented one is looked up.
+    if (typeof clutter?.ShaderEffect?.prototype?.set_uniform_float === 'function')
         return 'clutter-snippet';
     if (typeof shell?.GLSLEffect === 'function')
         return 'shell-glsl';

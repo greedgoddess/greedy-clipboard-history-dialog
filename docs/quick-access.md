@@ -154,7 +154,9 @@ closes or the extension is disabled.
 
 GNOME Shell 51 removed the shader API older versions used (`Shell.GLSLEffect`)
 in favour of `Clutter.ShaderEffect` with a shader snippet. `shaderApi()`
-picks whichever the running GNOME Shell has; the effect class is only created
+picks whichever the running GNOME Shell has, recognising GNOME 51's by the
+`set_uniform_float()` method it added (looking up the snippet function itself
+on GNOME's class throws, because only subclasses implement it); the effect class is only created
 on first use, so a GNOME Shell with neither cannot stop the rest of the
 1Password integration from loading. In that case, or if the effect cannot be
 added, the window simply keeps square corners and a warning is logged.

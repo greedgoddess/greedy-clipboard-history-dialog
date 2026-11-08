@@ -123,9 +123,10 @@ adjusted while the extension runs. Large spacing adds the class
 | Panel | 300 × 410 px, the same on every tab |
 | Font | normal size (`font-size: 1em`) |
 | Tab bar | about 54 px tall (20 px above and below the icon); 24 px icons |
-| Clipboard entries | 3 px above and below the text; 12 px pin and delete icons |
+| Clipboard entries | text 1.25 × normal; 3 px above and below it; 12 px pin and delete icons |
+| Search field | fills its row, within the panel |
 | Emoji, kaomoji | 20 px and 13 px |
-| Button row | 18 px icons in buttons of at least 32 × 32 px |
+| Button row | 24 px icons, like the tabs, in buttons of at least 40 × 40 px |
 
 The list takes all the height the other parts leave. On tabs without the
 search row, the list gets that row's height, so the panel keeps its size.

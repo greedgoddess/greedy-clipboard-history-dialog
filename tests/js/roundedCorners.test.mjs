@@ -9,8 +9,12 @@ import assert from 'node:assert/strict';
 const {cornerBounds, shaderApi, CornerRounder, CORNER_RADIUS} = await import('../../feature/roundedCorners.js');
 
 test('shader API: Clutter snippet on 51, Shell.GLSLEffect before, none otherwise', () => {
-    const clutter51 = {ShaderEffect: class { vfunc_get_static_snippet() {} }};
-    const clutterOld = {ShaderEffect: class {}};
+    class ShaderEffect51 { set_uniform_float() {} }
+    Object.defineProperty(ShaderEffect51.prototype, 'vfunc_get_static_snippet', {
+        get() { throw new Error('Virtual function not implemented'); },
+    });
+    const clutter51 = {ShaderEffect: ShaderEffect51};
+    const clutterOld = {ShaderEffect: class { set_uniform_value() {} }};
     const shellOld = {GLSLEffect: class {}};
     assert.equal(shaderApi({}, clutter51), 'clutter-snippet');
     assert.equal(shaderApi(shellOld, clutter51), 'clutter-snippet');
