@@ -31,6 +31,7 @@ export class CursorFollow {
      * See docs/cursor-follow.md#cursor-follow-install */
     constructor(menu, settings) {
         this._settings = settings;
+        this._active = false;
 
         const boxPointer = menu?._boxPointer;
         if (typeof boxPointer?.setPosition !== 'function')
@@ -48,15 +49,31 @@ export class CursorFollow {
         Main.uiGroup.add_child(this._pointerAnchor);
 
         this._boxPointer = boxPointer;
-        this._originalSetPosition = boxPointer.setPosition;
         this._panelArrowSide = boxPointer._userArrowSide;
-        boxPointer.setPosition = (sourceActor, alignment) =>
-            this._positionMenu(sourceActor, alignment);
+
+        // The wrapper keeps working even after destroy(): if another extension
+        // wrapped it in the meantime, it stays in their chain and simply passes
+        // every call on to the original.
+        const originalSetPosition = boxPointer.setPosition;
+        this._originalSetPosition = originalSetPosition;
+        this._wrapper = (sourceActor, alignment) => this._active
+            ? this._positionMenu(sourceActor, alignment)
+            : originalSetPosition.call(boxPointer, sourceActor, alignment);
+        boxPointer.setPosition = this._wrapper;
+        this._active = true;
+
+        // If GNOME destroys the BoxPointer first, forget it instead of
+        // touching a destroyed object later.
+        this._boxPointerDestroyId = boxPointer.connect('destroy', () => {
+            this._active = false;
+            this._boxPointer = null;
+            this._boxPointerDestroyId = 0;
+        });
     }
 
     /** True when the hook is in place. */
     get active() {
-        return Boolean(this._boxPointer);
+        return this._active;
     }
 
     /** [cursor-follow:positioning]
@@ -87,14 +104,19 @@ export class CursorFollow {
     }
 
     /** [cursor-follow:cleanup]
-     * Restores the original method and arrow side, and removes the anchor.
+     * Stops pointer placement, restores the original method if nothing else
+     * replaced it since, restores the arrow side and removes the anchor.
      * See docs/cursor-follow.md#cursor-follow-cleanup */
     destroy() {
-        if (this._boxPointer) {
-            this._boxPointer.setPosition = this._originalSetPosition;
-            this._boxPointer._userArrowSide = this._panelArrowSide;
+        this._active = false;
+        const boxPointer = this._boxPointer;
+        if (boxPointer) {
+            boxPointer.disconnect(this._boxPointerDestroyId);
+            if (boxPointer.setPosition === this._wrapper)
+                boxPointer.setPosition = this._originalSetPosition;
+            boxPointer._userArrowSide = this._panelArrowSide;
+            boxPointer._arrowSide = this._panelArrowSide;
             this._boxPointer = null;
-            this._originalSetPosition = null;
         }
         if (this._pointerAnchor) {
             this._pointerAnchor.destroy();

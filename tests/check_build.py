@@ -32,15 +32,23 @@ original_meta = json.loads(original['metadata.json'])
 built_meta = json.loads((EXT / 'metadata.json').read_text(encoding='utf-8'))
 report = json.loads((BUILD / 'report.json').read_text(encoding='utf-8'))
 
-# The original code is carried over unchanged, only renamed.
+# The original code is carried over unchanged, only renamed. The one change
+# the build may make is replacing the original's UUID and schema ID, written
+# out literally, in JavaScript; the expected bytes include exactly that.
 renamed = {'extension.js': 'upstream-extension.js', 'prefs.js': 'upstream-prefs.js'}
-legacy_ids = (LEGACY_UUID, original_meta.get('settings-schema', LEGACY_UUID))
+replacements = {LEGACY_UUID: UUID}
+if original_meta.get('settings-schema'):
+    replacements[original_meta['settings-schema']] = SCHEMA_ID
+legacy_ids = tuple(replacements)
 for name, data in original.items():
     if name == 'metadata.json' or name.startswith('schemas/'):
         continue
+    expected = data
+    if name.endswith('.js'):
+        for old, new in replacements.items():
+            expected = expected.replace(old.encode(), new.encode())
     target = EXT / renamed.get(name, name)
-    literal = name.endswith('.js') and any(i.encode() in data for i in legacy_ids)
-    check(f'original {name} carried over unchanged', target.is_file() and (literal or target.read_bytes() == data))
+    check(f'original {name} carried over unchanged', target.is_file() and target.read_bytes() == expected)
 
 # This project's files are the repository's.
 for name in ('extension.js', 'prefs.js', 'cursorFollow.js', 'updateNotifier.js'):
@@ -69,8 +77,10 @@ for key in ('update-notifications', 'developer-mode', 'checkout-path', 'update-l
     check(f'{key} key', f'<key name="{key}"' in xml)
 info_file = EXT / 'build-info.json'
 info = json.loads(info_file.read_text(encoding='utf-8')) if info_file.is_file() else {}
-check('build-info.json records the release and feature commit',
-      info.get('upstream_version') == original_meta.get('version') and 'feature_commit' in info)
+provenance = ('project_version', 'feature_commit', 'upstream_url', 'upstream_version', 'source_url',
+              'content_sha256', 'tested_release', 'built_at', 'built_on_gnome_shell')
+check('build-info.json records the provenance',
+      info.get('upstream_version') == original_meta.get('version') and all(k in info for k in provenance))
 original_keys = set(re.findall(rb'<key name="([^"]+)"', b''.join(
     d for n, d in original.items() if n.startswith('schemas/') and n.endswith('.xml'))))
 built_keys = set(re.findall(r'<key name="([^"]+)"', xml))

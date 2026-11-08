@@ -55,7 +55,6 @@ while (( $# > 0 )); do
 done
 
 require_command python3 "Install it with: sudo dnf install python3"
-require_command unzip "Install it with: sudo dnf install unzip"
 require_command zip "Install it with: sudo dnf install zip"
 require_command glib-compile-schemas "Install it with: sudo dnf install glib2"
 
@@ -82,7 +81,8 @@ case "$SOURCE" in
     zip)
         [[ -f "$ZIP_FILE" ]] || fail "No such file: $ZIP_FILE"
         cp -- "$ZIP_FILE" "$WORK/release.zip"
-        SOURCE_DESC="zip file $(basename -- "$ZIP_FILE")" ;;
+        SOURCE_DESC="zip file $(basename -- "$ZIP_FILE")"
+        SOURCE_URL="file://$(realpath -- "$ZIP_FILE")" ;;
     git)
         require_command git "Install it with: sudo dnf install git"
         say "Cloning $UPSTREAM_GIT_URL${GIT_REF:+ at $GIT_REF}…"
@@ -91,11 +91,13 @@ case "$SOURCE" in
         meta="$(grep -rl --include=metadata.json "\"$LEGACY_UUID\"" "$WORK/clone" | head -n1 || true)"
         [[ -n "$meta" ]] || fail "No metadata.json for $LEGACY_UUID in the repository."
         (cd "$(dirname -- "$meta")" && zip -qr "$WORK/release.zip" . -x '.git/*')
-        SOURCE_DESC="GitHub, $(git -C "$WORK/clone" rev-parse --abbrev-ref HEAD) at $(git -C "$WORK/clone" rev-parse --short HEAD)" ;;
+        SOURCE_DESC="GitHub, $(git -C "$WORK/clone" rev-parse --abbrev-ref HEAD) at $(git -C "$WORK/clone" rev-parse --short HEAD)"
+        SOURCE_URL="$UPSTREAM_GIT_URL@$(git -C "$WORK/clone" rev-parse HEAD)" ;;
     *)
         say "Downloading release $PIN_VERSION…"
         python3 "$UPSTREAM" download "$PIN_VERSION" "$WORK/release.zip"
-        SOURCE_DESC="extensions.gnome.org, release $PIN_VERSION" ;;
+        SOURCE_DESC="extensions.gnome.org, release $PIN_VERSION"
+        SOURCE_URL="https://extensions.gnome.org/extension-data/${LEGACY_UUID//@/}.v$PIN_VERSION.shell-extension.zip" ;;
 esac
 
 CONTENT_HASH="$(python3 "$UPSTREAM" content-hash "$WORK/release.zip")"
@@ -105,23 +107,14 @@ fi
 if [[ -z "$EXPECTED_HASH" ]] && grep -q "\"$CONTENT_HASH\"" "$ROOT/tested-releases.json" 2>/dev/null; then
     EXPECTED_HASH="$CONTENT_HASH"
 fi
-TESTED_DESC="$([[ -n "$EXPECTED_HASH" ]] && echo yes || echo "no (not in tested-releases.json)")"
-unzip -q "$WORK/release.zip" -d "$WORK/release"
+TESTED=$([[ -n "$EXPECTED_HASH" ]] && echo true || echo false)
+python3 "$UPSTREAM" extract "$WORK/release.zip" "$WORK/release"
 
 # ---- 2. Patch it ---------------------------------------------------------------
 
 say "Adding Open at mouse pointer…"
 python3 "$ROOT/scripts/patch_release.py" "$WORK/release" "$WORK/$UUID" \
     "$ROOT/feature" "$WORK/report.json"
-# Recorded in the build for the update notifications (docs/update-notifications.md).
-python3 - "$WORK/report.json" "$CONTENT_HASH" \
-    "$(git -C "$ROOT" log -1 --format=%H -- feature 2>/dev/null || true)" > "$WORK/$UUID/build-info.json" <<'PY'
-import json, sys
-report, content_hash, feature_commit = sys.argv[1:]
-r = json.load(open(report))
-print(json.dumps({'upstream_version': r['upstream_version'], 'content_sha256': content_hash,
-                  'feature_commit': feature_commit}, indent=2))
-PY
 glib-compile-schemas --strict "$WORK/$UUID/schemas" \
     || fail "The settings schema does not compile."
 
@@ -129,7 +122,6 @@ glib-compile-schemas --strict "$WORK/$UUID/schemas" \
 
 mapfile -t WARNINGS < <(python3 -c 'import json,sys; print("\n".join(json.load(open(sys.argv[1]))["warnings"]))' "$WORK/report.json" | sed '/^$/d')
 SHELL_VERSIONS="$(python3 -c 'import json,sys; print(" ".join(json.load(open(sys.argv[1]))["shell_versions"]))' "$WORK/report.json")"
-UPSTREAM_VERSION="$(python3 -c 'import json,sys; r=json.load(open(sys.argv[1])); print(str(r["upstream_version_name"]) + " (" + str(r["upstream_version"]) + ")")' "$WORK/report.json")"
 
 if [[ -n "$SHELL_MAJOR" ]] && ! grep -qw -- "$SHELL_MAJOR" <<<"$SHELL_VERSIONS"; then
     message="The release supports GNOME Shell $SHELL_VERSIONS, not $SHELL_MAJOR; GNOME would not enable it."
@@ -137,8 +129,9 @@ if [[ -n "$SHELL_MAJOR" ]] && ! grep -qw -- "$SHELL_MAJOR" <<<"$SHELL_VERSIONS";
     WARNINGS+=("$message")
 fi
 
-# The GNOME Shell internals Open at mouse pointer relies on, checked in the
-# running GNOME Shell's own code where it can be found.
+# Structural compatibility: the GNOME Shell internals Open at mouse pointer
+# relies on, looked up in the running GNOME Shell's own code. Finding them
+# does not prove they behave as before; see docs/cursor-follow.md.
 shell_lib="$(ls /usr/lib64/gnome-shell/libshell-*.so /usr/lib/gnome-shell/libshell-*.so 2>/dev/null | head -n1 || true)"
 if [[ -n "$shell_lib" ]] && command -v gresource >/dev/null; then
     boxpointer="$(gresource extract "$shell_lib" /org/gnome/shell/ui/boxpointer.js 2>/dev/null || true)"
@@ -158,24 +151,64 @@ else
     INTERNALS_CHECK="skipped (GNOME Shell library or gresource not found)"
 fi
 
-# ---- 4. Put the build in place ---------------------------------------------------
+# ---- 4. Provenance ---------------------------------------------------------------
 
-{
-    echo "Built:            $(date -Iseconds)"
-    echo "Source:           $SOURCE_DESC"
-    echo "Original version: $UPSTREAM_VERSION"
-    echo "Content SHA-256:  $CONTENT_HASH"
-    echo "Tested release:   $TESTED_DESC"
-    echo "GNOME Shell:      running ${SHELL_MAJOR:-unknown}; release supports $SHELL_VERSIONS"
-    echo "Internals check:  $INTERNALS_CHECK"
-    echo "Feature commit:   $(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
-    if (( ${#WARNINGS[@]} > 0 )); then
-        echo "Warnings:"
-        printf '  - %s\n' "${WARNINGS[@]}"
-    else
-        echo "Warnings:         none"
-    fi
-} > "$WORK/BUILD-INFO"
+# build-info.json is the machine-readable record of this build, shipped inside
+# it (the update notifications read it too); BUILD-INFO is the same for people.
+printf '%s\n' "${WARNINGS[@]+"${WARNINGS[@]}"}" > "$WORK/warnings.txt"
+B_PROJECT_VERSION="$(cat "$ROOT/VERSION")" \
+B_FEATURE_COMMIT="$(git -C "$ROOT" log -1 --format=%H -- feature 2>/dev/null || true)" \
+B_CHECKOUT_COMMIT="$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || true)" \
+B_SOURCE="$SOURCE_DESC" B_SOURCE_URL="$SOURCE_URL" B_CONTENT_HASH="$CONTENT_HASH" \
+B_TESTED="$TESTED" B_INTERNALS="$INTERNALS_CHECK" \
+B_SHELL="$(gnome-shell --version 2>/dev/null | grep -oE '[0-9]+(\.[0-9]+)*' | head -n1 || true)" \
+python3 - "$WORK/report.json" "$WORK/warnings.txt" > "$WORK/$UUID/build-info.json" <<'PY'
+import datetime, json, os, sys
+report = json.load(open(sys.argv[1]))
+env = os.environ
+print(json.dumps({
+    'project': 'greedy-clipboard-history-dialog',
+    'project_version': env['B_PROJECT_VERSION'].strip(),
+    'project_url': 'https://github.com/greedgoddess/greedy-clipboard-history-dialog',
+    'feature_commit': env['B_FEATURE_COMMIT'],
+    'checkout_commit': env['B_CHECKOUT_COMMIT'],
+    'upstream_project': 'Clipboard History by Manouchehr Ghalevand',
+    'upstream_url': 'https://github.com/M-ghalevand/gnome-shell-extension-clipboard-history',
+    'upstream_version': report['upstream_version'],
+    'upstream_version_name': report['upstream_version_name'],
+    'upstream_shell_versions': report['shell_versions'],
+    'source': env['B_SOURCE'],
+    'source_url': env['B_SOURCE_URL'],
+    'content_sha256': env['B_CONTENT_HASH'],
+    'tested_release': env['B_TESTED'] == 'true',
+    'built_at': datetime.datetime.now().astimezone().isoformat(timespec='seconds'),
+    'built_on_gnome_shell': env['B_SHELL'],
+    'internals_check': env['B_INTERNALS'],
+    'warnings': [w for w in open(sys.argv[2]).read().splitlines() if w],
+}, indent=2))
+PY
+
+python3 - "$WORK/$UUID/build-info.json" > "$WORK/BUILD-INFO" <<'PY'
+import json, sys
+b = json.load(open(sys.argv[1]))
+rows = [
+    ('Built', b['built_at']),
+    ('Project', f"{b['project']} {b['project_version']}, feature commit {b['feature_commit'][:7] or 'unknown'}"),
+    ('Original', f"{b['upstream_project']}, {b['upstream_version_name']} ({b['upstream_version']})"),
+    ('Source', f"{b['source']} <{b['source_url']}>"),
+    ('Content SHA-256', b['content_sha256']),
+    ('Tested release', 'yes' if b['tested_release'] else 'NO - not in tested-releases.json; install.sh asks before installing it'),
+    ('GNOME Shell', f"built on {b['built_on_gnome_shell'] or 'unknown'}; release supports {' '.join(b['upstream_shell_versions'])}"),
+    ('Internals check', b['internals_check']),
+]
+for label, value in rows:
+    print(f'{label + ":":17} {value}')
+print('Warnings:' + ('' if b['warnings'] else '         none'))
+for w in b['warnings']:
+    print(f'  - {w}')
+PY
+
+# ---- 5. Put the build in place ---------------------------------------------------
 
 BUILD_DIR="$ROOT/build"
 mkdir -p "$BUILD_DIR"

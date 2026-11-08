@@ -17,6 +17,7 @@ import re
 import shutil
 import sys
 from pathlib import Path
+from xml.etree import ElementTree
 
 LEGACY_UUID = 'clipboard-history@manouchehr'
 UUID = 'greedy-clipboard-history-dialog@greedgoddess'
@@ -36,6 +37,66 @@ warnings = []
 def fatal(message):
     print(f'ERROR: {message}', file=sys.stderr)
     sys.exit(1)
+
+
+def parse_xml(text, what):
+    try:
+        return ElementTree.fromstring(text)
+    except ElementTree.ParseError as error:
+        fatal(f'{what} is not valid XML: {error}')
+
+
+def key_names(schema_element):
+    return [key.get('name') for key in schema_element.findall('key')]
+
+
+def read_project_keys(path):
+    """This project's keys: their names, and their text with the comment above
+    each, so that they can be added one by one."""
+    text = path.read_text(encoding='utf-8')
+    names = key_names(parse_xml(f'<schema>{text}</schema>', path.name))
+    texts = re.findall(r'((?:[ \t]*<!--.*?-->\s*)?[ \t]*<key name="[^"]+".*?</key>\n)', text, re.S)
+    if len(names) != len(set(names)) or len(texts) != len(names):
+        fatal(f'{path.name}: keys are duplicated or not one per <key> element')
+    return names, texts
+
+
+def find_upstream_schema(schemas_dir, schema_id):
+    """The one schema file and element with the original's schema ID, and its
+    key names. (None, []) if the release has no schemas at all."""
+    files = sorted(schemas_dir.glob('*.gschema.xml'))
+    if not files:
+        return None, []
+    found = []
+    for path in files:
+        root = parse_xml(path.read_text(encoding='utf-8'), path.name)
+        if root.tag != 'schemalist':
+            fatal(f'{path.name}: expected <schemalist>, found <{root.tag}>')
+        for schema in root.findall('schema'):
+            if schema.get('id') == schema_id:
+                found.append((path, schema))
+            elif schema.get('id', '').startswith(f'{schema_id}.'):
+                warnings.append(f'{path.name} has a further schema, {schema.get("id")}; it keeps its ID')
+    if len(found) != 1:
+        fatal(f'expected exactly one settings schema with ID {schema_id}, found {len(found)}')
+    path, schema = found[0]
+    names = key_names(schema)
+    if len(names) != len(set(names)) or None in names:
+        fatal(f'{path.name}: the original schema has duplicated or unnamed keys')
+    return path, names
+
+
+def verify_final_schema(xml, upstream_names, added_names):
+    root = parse_xml(xml, 'the patched schema')
+    schemas = [s for s in root.findall('schema') if s.get('id') == SCHEMA_ID]
+    if len(schemas) != 1 or schemas[0].get('path') != SCHEMA_PATH:
+        fatal('the patched schema does not have exactly one schema with this project\'s ID and path')
+    names = key_names(schemas[0])
+    if len(names) != len(set(names)):
+        fatal('the patched schema has duplicated keys')
+    missing = (set(upstream_names) | set(added_names)) - set(names)
+    if missing:
+        fatal(f'the patched schema lacks keys: {", ".join(sorted(missing))}')
 
 
 def main(upstream, out, feature, report_path):
@@ -88,45 +149,46 @@ def main(upstream, out, feature, report_path):
             warnings.append(f'{js.relative_to(out)} names the original UUID or schema literally; replaced')
 
     # ---- Settings schema: own ID and path, plus this project's keys ----------------
-    keys_xml = (feature / 'settings-keys.xml').read_text(encoding='utf-8')
-    # Each key with the comment above it, so that keys can be added one by one.
-    key_blocks = re.findall(r'(?:[ \t]*<!--.*?-->\s*)?[ \t]*<key name="([^"]+)".*?</key>\n', keys_xml, re.S)
-    key_texts = re.findall(r'((?:[ \t]*<!--.*?-->\s*)?[ \t]*<key name="[^"]+".*?</key>\n)', keys_xml, re.S)
-    key_xml = ''.join(key_texts)
+    # The schema is checked with an XML parser before and after the change; the
+    # change itself is made on the text, so that the original's comments and
+    # layout stay as they are.
+    our_names, our_texts = read_project_keys(feature / 'settings-keys.xml')
     schemas_dir = out / 'schemas'
     schemas_dir.mkdir(exist_ok=True)
-    schema_file = None
-    for candidate in schemas_dir.glob('*.gschema.xml'):
-        if legacy_schema_id and f'id="{legacy_schema_id}"' in candidate.read_text(encoding='utf-8'):
-            schema_file = candidate
-            break
+    schema_file, upstream_names = find_upstream_schema(schemas_dir, legacy_schema_id)
 
     if schema_file is None:
-        warnings.append('the release has no settings schema; one is created with only the cursor-follow key')
+        warnings.append('the release has no settings schema; one is created with only this project\'s keys')
         xml = ('<?xml version="1.0" encoding="UTF-8"?>\n<schemalist>\n'
-               f'  <schema id="{SCHEMA_ID}" path="{SCHEMA_PATH}">\n{key_xml}  </schema>\n</schemalist>\n')
+               f'  <schema id="{SCHEMA_ID}" path="{SCHEMA_PATH}">\n'
+               + '\n'.join(our_texts) + '  </schema>\n</schemalist>\n')
+        added = our_names
     else:
         xml = schema_file.read_text(encoding='utf-8')
-        schema_open = re.compile(r'<schema\b[^>]*\bid="' + re.escape(legacy_schema_id) + r'"[^>]*>', re.S)
-        match = schema_open.search(xml)
-        tag = match.group(0)
-        new_tag = re.sub(r'\bid="[^"]*"', f'id="{SCHEMA_ID}"', tag)
+        openings = list(re.finditer(r'<schema\b[^>]*\bid="' + re.escape(legacy_schema_id) + r'"[^>]*>', xml))
+        if len(openings) != 1:
+            fatal(f'expected one <schema id="{legacy_schema_id}"> tag in {schema_file.name}, found {len(openings)}')
+        match = openings[0]
+        new_tag = re.sub(r'\bid="[^"]*"', f'id="{SCHEMA_ID}"', match.group(0))
         if re.search(r'\bpath="[^"]*"', new_tag):
             new_tag = re.sub(r'\bpath="[^"]*"', f'path="{SCHEMA_PATH}"', new_tag)
         else:
             new_tag = new_tag[:-1] + f' path="{SCHEMA_PATH}">'
         xml = xml[:match.start()] + new_tag + xml[match.end():]
 
-        added = []
-        for name, text in zip(key_blocks, key_texts):
-            if f'name="{name}"' in xml:
+        added, texts = [], []
+        for name, text in zip(our_names, our_texts):
+            if name in upstream_names:
                 warnings.append(f'the release already has a {name} key; it was kept and ours not added')
             else:
-                added.append(text)
+                added.append(name)
+                texts.append(text)
         close = xml.find('</schema>', match.start())
         line_start = xml.rfind('\n', 0, close) + 1
-        xml = xml[:line_start] + '\n'.join(added) + '\n' + xml[line_start:]
+        xml = xml[:line_start] + '\n'.join(texts) + '\n' + xml[line_start:]
         schema_file.unlink()
+
+    verify_final_schema(xml, upstream_names, added)
     (schemas_dir / f'{SCHEMA_ID}.gschema.xml').write_text(xml, encoding='utf-8')
 
     # ---- Checks on how the original builds its panel button -------------------------
@@ -142,21 +204,24 @@ def main(upstream, out, feature, report_path):
         shutil.copy2(feature / name, out / name)
 
     # ---- metadata.json: own identity, the original's version and GNOME versions ----
+    project_version = (feature.parent / 'VERSION').read_text(encoding='utf-8').strip()
     upstream_version = metadata.get('version')
     upstream_version_name = metadata.get('version-name', str(upstream_version))
     new_metadata = {
         'uuid': UUID,
         'name': NAME,
-        'description': ('Personal build of Clipboard History by Manouchehr Ghalevand, with an option '
-                        'to open the panel at the mouse pointer. When update notifications are on, it '
-                        'contacts GitHub and, on developer machines, extensions.gnome.org once a day '
-                        'to look for updates; nothing else is sent.\n\n'
+        'description': ('Based on Clipboard History by Manouchehr Ghalevand, adding an option to open '
+                        'the panel at the mouse pointer and optional update notifications. Not '
+                        'affiliated with or endorsed by the original author. When update '
+                        'notifications are on, it contacts GitHub (and, on developer machines, '
+                        'extensions.gnome.org) at most once a day; see docs/update-notifications.md.\n\n'
                         + metadata.get('description', '').replace(LEGACY_UUID, UUID)),
         'settings-schema': SCHEMA_ID,
         'shell-version': metadata.get('shell-version', []),
         'url': URL,
         'version': upstream_version,
-        'version-name': f'{upstream_version_name}+cursor-follow',
+        # This project's own version, with the original release it is built on.
+        'version-name': f'{project_version} (Clipboard History {upstream_version_name}, release {upstream_version})',
     }
     for key in ('gettext-domain', 'session-modes'):
         if key in metadata:

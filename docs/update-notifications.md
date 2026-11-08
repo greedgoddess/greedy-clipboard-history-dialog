@@ -10,9 +10,21 @@ once per update. What it watches depends on the machine's mode, set by
 | user | this project's repository on GitHub | it has a newer tested release, or newer `feature/` code, than the installed build | `./update.sh` |
 | dev | Clipboard History on extensions.gnome.org | it has a release for this GNOME Shell that is not in `tested-releases.json` | `./update-test-and-push.sh` |
 
-Only these requests are made, at most once a day, and only while the
-setting is on. Nothing else is sent. When a site is unreachable, the check
-is skipped until the next day.
+When the setting is off, no request is made at all. When it is on, a check
+runs at most once a day and makes these requests:
+
+| Mode | Requests (HTTPS GET) |
+| --- | --- |
+| user | `raw.githubusercontent.com/greedgoddess/greedy-clipboard-history-dialog/main/tested-releases.json`, and `api.github.com/repos/greedgoddess/greedy-clipboard-history-dialog/commits?path=feature&per_page=1` |
+| dev | the same `tested-releases.json`, and `extensions.gnome.org/extension-info/?uuid=clipboard-history@manouchehr&shell_version=N` |
+
+The requests contain no identifier of the installation or the user, and no
+clipboard content. Like any web request, they reveal the usual connection
+details to those servers: your IP address, the time, and request headers,
+with the user agent `greedy-clipboard-history-dialog` and, for
+extensions.gnome.org, your GNOME Shell major version `N`. When a site is
+unreachable, the check is skipped until the next day. To stop all requests,
+switch off **Update notifications** in Preferences → Cursor-Follow.
 
 The code is `feature/updateNotifier.js`; each section starts with a tag:
 

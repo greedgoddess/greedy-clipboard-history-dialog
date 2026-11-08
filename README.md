@@ -1,13 +1,14 @@
 # greedy-clipboard-history-dialog
 
 ![License: GPL-2.0-or-later](https://img.shields.io/badge/license-GPL--2.0--or--later-blue)
-![Status: personal build](https://img.shields.io/badge/status-personal%20build-orange)
+![Maintained for personal use](https://img.shields.io/badge/maintained-for%20personal%20use-orange)
 
 **Clipboard History for GNOME Shell, with an option to open the panel at the mouse pointer.**
 
-This project adds a **Cursor-Follow** section to the preferences of
-[Clipboard History](https://extensions.gnome.org/extension/10613/clipboard-history/)
-by Manouchehr Ghalevand:
+An independently maintained GNOME Shell extension based on
+[Clipboard History](https://github.com/M-ghalevand/gnome-shell-extension-clipboard-history)
+by Manouchehr Ghalevand. It adds a **Cursor-Follow** section to the
+preferences:
 
 - **Open at mouse pointer:** the panel opens to the right of the pointer
   with its bottom edge level with it, or to the left when there is no room
@@ -15,21 +16,30 @@ by Manouchehr Ghalevand:
 - **Update notifications:** a notification when there is an update to
   install; see [update notifications](docs/update-notifications.md).
 
-The repository holds only the addition. `./build.sh` downloads a tested
-release of Clipboard History and adds the setting without editing the
-original code; see [how it works](docs/cursor-follow.md).
+The repository holds only these additions. `./install.sh` downloads a tested
+release of Clipboard History and adds them without editing the original
+code; see [how it works](docs/cursor-follow.md).
 
-- **Installed separately**, with its own ID
-  (`greedy-clipboard-history-dialog@greedgoddess`), settings and clipboard
-  history. Updates of the original never overwrite it.
-- **Can break** when GNOME Shell or the original changes. Builds check for
-  this, and at worst the panel opens below its icon. See
-  [what can break](docs/cursor-follow.md#what-can-break-and-what-happens-then).
-- **Personal use**, on Fedora 45 with GNOME Shell 51. Not for
-  extensions.gnome.org.
+## Relationship with Clipboard History
 
-The addition was written largely by an AI assistant (Claude, by Anthropic),
-directed and tested by the author. It has had no independent review.
+- Built from releases of Clipboard History; all of its functionality is kept
+  as released.
+- The additions are maintained here, independently.
+- Installed under its own ID (`greedy-clipboard-history-dialog@greedgoddess`),
+  with its own settings and clipboard history; the two never share data.
+- **Not affiliated with or endorsed by the original author.** Attribution and
+  licensing: [NOTICE](NOTICE).
+
+**Where to report problems:**
+
+| Problem | Where |
+| --- | --- |
+| Open at mouse pointer, update notifications, building, installing, GNOME Shell compatibility | [This repository](https://github.com/greedgoddess/greedy-clipboard-history-dialog/issues) |
+| History, search, pinning, emoji, pasting: anything that also happens with the original | [Clipboard History](https://github.com/M-ghalevand/gnome-shell-extension-clipboard-history/issues) |
+| Not sure | Here first; check whether the original shows the same problem |
+
+Maintained for the author's own use and shared as is: issues are welcome,
+fixes are best effort.
 
 ## Install
 
@@ -40,13 +50,8 @@ cd greedy-clipboard-history-dialog
 ```
 
 `install.sh` builds first if needed. Log out and back in, then check with
-`./verify.sh`. The first install switches both Cursor-Follow settings on.
-
-**Developer machine:** `./install.sh --dev` installs the same build, lets
-[`./update-test-and-push.sh`](#development) run, and makes the update
-notifications watch Clipboard History releases instead of this repository.
-`./install.sh --user` switches back; without either flag, a machine keeps
-its mode.
+`./verify.sh`. The first install switches both Cursor-Follow settings on;
+the preferences can switch them off.
 
 **From Clipboard History or an earlier version of this project:** run
 `./uninstall-previous-version.sh` before `./install.sh`. It copies your
@@ -58,10 +63,14 @@ release, installs), then log out and back in.
 **Uninstall:** `./uninstall.sh` keeps history and settings; add `--purge`
 to delete them too.
 
-## Tested releases
+## Compatibility
+
+### Tested releases
 
 `./build.sh` builds the newest of these that supports the running GNOME
-Shell, and refuses a download that differs from what was tested.
+Shell, and refuses a download that differs from what was tested. A build of
+any other release is marked untested, and `install.sh` asks before
+installing it.
 
 <!-- tested-releases:start -->
 | Release | GNOME Shell (release) | Tested on | Date |
@@ -69,42 +78,47 @@ Shell, and refuses a download that differs from what was tested.
 | 1.0 (3) | 46, 47, 48, 49, 50, 51 | GNOME Shell 51.1 | 2026-11-08 |
 <!-- tested-releases:end -->
 
-Other sources: `--latest` (newest release, untested), `--version N`,
-`--zip FILE`, `--from-git [REF]`. Each build is described in
-`build/BUILD-INFO`; the previous one is kept in `build/previous/`.
+### Verified GNOME Shell versions
+
+A release lists the GNOME Shell versions the *original* supports. This
+project is verified only where marked here:
+
+| GNOME Shell | Builds | Activates (smoke test) | Opens at pointer | Flips at screen edge |
+| --- | --- | --- | --- | --- |
+| 51 | yes | yes | yes, by hand | yes, by hand |
+| 46–50 | not tested | not tested | not tested | not tested |
+
+The manual checks are in [the testing checklist](docs/cursor-follow.md#testing).
+
+## Versions
+
+This project's version is in [`VERSION`](VERSION) and the
+[changelog](CHANGELOG.md). The installed extension shows both, for example
+`1.0.0 (Clipboard History 1.0, release 3)`; `build/BUILD-INFO` and the
+`build-info.json` inside each build record the full provenance.
 
 ## Development
 
-Needs a developer machine (`./install.sh --dev`).
+See [CONTRIBUTING.md](CONTRIBUTING.md): developer machines
+(`./install.sh --dev`), testing, and adding a tested release with
+`./update-test-and-push.sh`. Security issues: [SECURITY.md](SECURITY.md).
 
-**New release of Clipboard History:** `./update-test-and-push.sh` builds the
-newest release, runs the tests, and if they pass, adds it to the table above
-and pushes over SSH. Nothing is committed if anything fails.
-
-**Tests:** `tests/run-tests.sh` checks the build against its release
-(original code unchanged, identity, settings schema, build warnings), then
-loads it in a headless GNOME Shell and checks that it becomes active
-without errors and that Open at mouse pointer hooks in.
-
-**Release notifications:** on a developer machine, the extension's update
-notifications report each new Clipboard History release that is not tested
-yet.
+The additions were written largely by an AI assistant (Claude, by
+Anthropic), directed and tested by the author.
 
 ## Troubleshooting
 
 | Problem | Fix |
 | --- | --- |
 | No change after installing or updating | Log out and back in |
-| `update-test-and-push.sh`: machine set up for users | `./install.sh --dev` |
-| No update notifications | Check Preferences → Cursor-Follow, and the last check in `./verify.sh` |
-| Build: no tested release for this GNOME Shell | Run `./update-test-and-push.sh`, or build untested with `./build.sh --latest` |
-| Build: release differs from the tested one | The download changed; run `./update-test-and-push.sh --force` to test it again |
+| Build: no tested release for this GNOME Shell | Wait for one, or `./build.sh --latest` and test it |
+| Build: release differs from the tested one | The download changed; a developer machine re-tests it with `./update-test-and-push.sh --force` |
 | Build warns, or the panel opens below its icon | See [what can break](docs/cursor-follow.md#what-can-break-and-what-happens-then) |
-| Smoke test cannot start GNOME Shell | `tests/smoke-test.sh` shows the log; `--no-smoke-test` runs the static checks only, without pushing |
 | Two clipboard icons in the panel | The old extension is enabled again; run `./uninstall-previous-version.sh` |
+| No update notifications | Check Preferences → Cursor-Follow, and the last check in `./verify.sh` |
 | Anything else | `journalctl -f -o cat /usr/bin/gnome-shell` |
 
 ## License
 
-GPL-2.0-or-later, like Clipboard History, © 2025 Manouchehr Ghalevand. Each
-build includes the original's `LICENSE`.
+GPL-2.0-or-later, like Clipboard History; see [NOTICE](NOTICE). Each build
+includes the original's `LICENSE` and copyright notices unchanged.

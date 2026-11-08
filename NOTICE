@@ -1,0 +1,28 @@
+Greedy Clipboard History Dialog
+https://github.com/greedgoddess/greedy-clipboard-history-dialog
+
+This project builds a GNOME Shell extension from releases of:
+
+  Clipboard History
+  Copyright 2025 Manouchehr Ghalevand
+  https://github.com/M-ghalevand/gnome-shell-extension-clipboard-history
+  https://extensions.gnome.org/extension/10613/clipboard-history/
+  License: GPL-2.0-or-later
+
+This repository contains none of Clipboard History's code. Each build
+downloads a release and includes its files, its LICENSE and its copyright
+notices unchanged, except for:
+
+  - extension.js and prefs.js, renamed to upstream-extension.js and
+    upstream-prefs.js;
+  - the extension's UUID and settings schema ID, replaced in metadata.json,
+    in the settings schema, and wherever the original code writes them out
+    literally;
+  - the settings schema, which gets this project's keys added;
+  - metadata.json, which gets this project's name, description, URL and
+    version name.
+
+This project's own files (feature/, scripts/, tests/ and the scripts in the
+root folder) are by greedgoddess, also under GPL-2.0-or-later.
+
+This project is not affiliated with or endorsed by Manouchehr Ghalevand.

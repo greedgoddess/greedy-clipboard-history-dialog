@@ -26,16 +26,21 @@ usage() {
     say "  --dev       developer machine: notifications watch Clipboard History"
     say "              releases; ./update-test-and-push.sh may run"
     say "  --user      user machine: notifications watch this project's repository"
+    say "  --allow-untested"
+    say "              install a build of a release not in tested-releases.json"
+    say "              without asking (--yes alone does not allow that)"
     say "              (without either, the machine keeps its current mode)"
     say "  -y, --yes   answer yes to every question"
 }
 
 MODE="$(current_mode)"
+ALLOW_UNTESTED=0
 other_args=()
 for arg in "$@"; do
     case "$arg" in
         --dev) MODE=dev ;;
         --user) MODE=user ;;
+        --allow-untested) ALLOW_UNTESTED=1 ;;
         *) other_args+=("$arg") ;;
     esac
 done
@@ -63,6 +68,16 @@ fi
 for file in extension.js upstream-extension.js cursorFollow.js prefs.js; do
     [[ -f "$BUILT_DIR/$file" ]] || fail "The build is incomplete (no $file). Run ./build.sh again."
 done
+# A build of a release that has not been through ./update-test-and-push.sh is
+# installed only on explicit request.
+if [[ "$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("tested_release", False))' "$BUILT_DIR/build-info.json" 2>/dev/null)" != True ]]; then
+    warn "The build in build/ is of a release that is NOT tested (see build/BUILD-INFO)."
+    if (( ALLOW_UNTESTED == 0 )); then
+        [[ "${ASSUME_YES:-0}" == 1 ]] && fail "Not installing an untested build with --yes alone. Add --allow-untested."
+        read -r -p "Install the untested build anyway? [y/N] " answer || answer=""
+        [[ "$answer" =~ ^[Yy]([Ee][Ss])?$ ]] || { say "Cancelled. Nothing was changed."; exit 0; }
+    fi
+fi
 built_uuid="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["uuid"])' "$BUILT_DIR/metadata.json")"
 [[ "$built_uuid" == "$UUID" ]] || fail "The build has UUID '$built_uuid', expected '$UUID'."
 

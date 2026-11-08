@@ -21,6 +21,7 @@ grep -rn "\[cursor-follow:" feature/
 | [`cursor-follow:cleanup`](#cursor-follow-cleanup) | `feature/cursorFollow.js` |
 | [`cursor-follow:preference`](#cursor-follow-preference) | `feature/prefs.js` |
 | [`cursor-follow:setting`](#cursor-follow-setting) | `feature/settings-keys.xml` |
+| [`about:attribution`](#about-attribution) | `feature/prefs.js` |
 
 <a id="how-the-build-works"></a>
 ## How the build works
@@ -33,7 +34,9 @@ result and puts it in `build/`:
    from extensions.gnome.org and compared with the tested one by a hash of
    its files (without `metadata.json`, which the website regenerates).
    `--latest`, `--version N`, `--zip FILE` and `--from-git [REF]` choose
-   another one.
+   another one; such a build is marked untested. The release is unpacked
+   only if it contains nothing but ordinary files inside its own folder,
+   within size limits.
 2. **Keep the original entry points under new names.** `extension.js`
    becomes `upstream-extension.js` and `prefs.js` becomes `upstream-prefs.js`,
    both unchanged. This project's `extension.js` and `prefs.js` take their
@@ -46,21 +49,27 @@ result and puts it in `build/`:
    UUID differs, the build keeps its own settings and clipboard history,
    and extensions.gnome.org never offers to replace it.
 4. **Add the settings** from `feature/settings-keys.xml` to the schema, key
-   by key; a key the original already has is kept and reported.
+   by key; a key the original already has is kept and reported. The schema
+   is checked with an XML parser before (exactly one schema with the
+   original's ID, no duplicated keys) and after the change (own ID and
+   path, every original key kept, no duplicates); anything unexpected stops
+   the build.
 5. **Write `metadata.json`** with this identity, the original's version and
    the original's list of supported GNOME Shell versions. When a new release
-   adds a GNOME Shell version, the next build supports it too. `build.sh`
-   also writes `build-info.json` for the
-   [update notifications](update-notifications.md#update-notify-build-info).
+   adds a GNOME Shell version, the next build supports it too. The version
+   name combines this project's version with the original's release.
 6. **Check** that the schema compiles, that the release supports the running
    GNOME Shell, and, in the running GNOME Shell's own code, that the
    internals described under [positioning](#cursor-follow-positioning)
    exist.
 
-A build that fails any required step leaves `build/` as it was. Warnings are
-listed in `build/BUILD-INFO`, together with where the release came from, its
-version and its hash. The previous build is kept in `build/previous/`, and
-the release zip in `build/release.zip` for the tests.
+A build that fails any required step leaves `build/` as it was. Each build
+contains `build-info.json`, its provenance: this project's version and
+feature commit, the original's URL, release and version, where the release
+was downloaded, its content hash, whether it is tested, when and on which
+GNOME Shell it was built, and any warnings. `build/BUILD-INFO` shows the
+same for people. The previous build is kept in `build/previous/`, and the
+release zip in `build/release.zip` for the tests.
 
 A release enters `tested-releases.json` only through
 `update-test-and-push.sh`, after the build has no warnings and
@@ -116,8 +125,11 @@ The `CursorFollow` constructor, given the panel menu and the settings:
   at coordinates;
 - keeps a reference to the `BoxPointer`, saves its original `setPosition`
   and its arrow side (`St.Side.TOP` for a panel menu), then replaces
-  `setPosition` on that one instance with a call to
-  [`_positionMenu()`](#cursor-follow-positioning).
+  `setPosition` on that one instance with a wrapper that calls
+  [`_positionMenu()`](#cursor-follow-positioning) while active, and the
+  original otherwise;
+- follows the `BoxPointer`'s `destroy` signal, so that it never touches a
+  destroyed object.
 
 The hook is installed whether the setting is on or off, so switching the
 setting needs no extra code.
@@ -159,9 +171,16 @@ all three in the running GNOME Shell's `boxpointer.js` and `popupMenu.js`.
 ## `cursor-follow:cleanup`
 
 `CursorFollow.destroy()`, called from `disable()` before the original's
-`disable()`, which also runs on every screen lock: restores the original
-`setPosition` and arrow side on the `BoxPointer` reference kept at install
-time, and destroys the anchor. Each step only runs if its install step did.
+`disable()`, which also runs on every screen lock:
+
+- stops pointer placement;
+- puts the original `setPosition` back, but only if the wrapper is still the
+  one in place. If another extension has wrapped it since, their wrapper is
+  left alone, and ours passes every call straight on to the original;
+- restores the arrow side and destroys the anchor.
+
+Each step only runs if its install step did, and nothing is done to a
+`BoxPointer` that GNOME has already destroyed.
 
 <a id="cursor-follow-preference"></a>
 ## `cursor-follow:preference`
@@ -181,3 +200,39 @@ Cursor-Follow switches are shown.
 Boolean key `cursor-follow`, default `false`, in `feature/settings-keys.xml`,
 inserted into the original's settings schema by the build. It is read each time the panel opens, so it
 needs no change handler. `install.sh` switches it on at the first install.
+
+<a id="about-attribution"></a>
+## `about:attribution`
+
+An **About** group in the preferences, under Cursor-Follow: Clipboard History
+and its author, with links to its repository and its extensions.gnome.org
+page, and this project with a link to its repository. It shows the installed
+versions from `build-info.json`, the license, and that this project is not
+affiliated with the original author.
+
+<a id="testing"></a>
+## Testing
+
+`tests/run-tests.sh` covers three levels:
+
+| Level | What | How |
+| --- | --- | --- |
+| Structural | The original is unchanged; identity, schema and provenance are right; the GNOME Shell internals exist | Build checks; `build.sh` looks in the running GNOME Shell |
+| Runtime | The extension loads without errors and hooks into the panel menu | Headless GNOME Shell smoke test |
+| Behavioural | The panel really opens at the pointer and flips | By hand, below |
+
+The patcher, the installer and the hook also have unit tests with made-up
+releases and stand-ins for GNOME.
+
+**By hand,** before marking a GNOME Shell version as verified in the README:
+
+1. Setting off: the panel opens below its icon, by click and by shortcut.
+2. Setting on, pointer mid-screen: the panel opens right of the pointer,
+   bottom edge level with it.
+3. Pointer near the right edge: it opens left of the pointer.
+4. Pointer near the left and top edges: it stays on screen.
+5. Two monitors, if available: it opens on the pointer's monitor.
+6. Switch the setting off without logging out: the next open is below the
+   icon again.
+7. Lock and unlock the screen, and disable and enable the extension, while
+   watching `journalctl -f -o cat /usr/bin/gnome-shell`: no errors.

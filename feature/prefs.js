@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  *
  * The original preferences are unchanged, in upstream-prefs.js. This class
- * extends them and adds the "Cursor-Follow" group.
+ * extends them and adds the "Cursor-Follow" and "About" groups.
  * See docs/cursor-follow.md#cursor-follow-preference
  */
 
@@ -13,6 +13,8 @@
 
 import Adw from 'gi://Adw';
 import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
+import Gtk from 'gi://Gtk';
 
 import UpstreamPreferences from './upstream-prefs.js';
 
@@ -20,9 +22,13 @@ export default class GreedyClipboardHistoryPreferences extends UpstreamPreferenc
     fillPreferencesWindow(window) {
         // The original may fill the window synchronously or asynchronously.
         const result = super.fillPreferencesWindow(window);
+        const addGroups = () => {
+            const page = this._addCursorFollowGroup(window);
+            this._addAboutGroup(page);
+        };
         if (typeof result?.then === 'function')
-            return result.then(() => this._addCursorFollowGroup(window));
-        this._addCursorFollowGroup(window);
+            return result.then(addGroups);
+        addGroups();
         return result;
     }
 
@@ -62,5 +68,53 @@ export default class GreedyClipboardHistoryPreferences extends UpstreamPreferenc
             window.add(page);
         }
         page.add(group);
+        return page;
+    }
+
+    /** [about:attribution]
+     * Who made what: the original extension and its author, and this project,
+     * with links and the versions of the installed build.
+     * See docs/cursor-follow.md#about-attribution */
+    _addAboutGroup(page) {
+        const build = this._readBuildInfo();
+        const group = new Adw.PreferencesGroup({
+            title: 'About',
+            description: 'Not affiliated with or endorsed by the author of Clipboard History.',
+        });
+
+        group.add(this._linkRow(
+            'Clipboard History',
+            `Original extension by Manouchehr Ghalevand · ${build.upstream_version_name ?? '?'} ` +
+            `(release ${build.upstream_version ?? '?'}) · GPL-2.0-or-later`,
+            'https://github.com/M-ghalevand/gnome-shell-extension-clipboard-history'));
+        group.add(this._linkRow(
+            'Clipboard History on extensions.gnome.org',
+            'Where the original is published',
+            'https://extensions.gnome.org/extension/10613/clipboard-history/'));
+        group.add(this._linkRow(
+            'Greedy Clipboard History Dialog',
+            `Cursor-Follow and update notifications by greedgoddess · ${build.project_version ?? '?'} · ` +
+            'GPL-2.0-or-later',
+            'https://github.com/greedgoddess/greedy-clipboard-history-dialog'));
+
+        page.add(group);
+    }
+
+    _linkRow(title, subtitle, uri) {
+        const row = new Adw.ActionRow({title, subtitle, activatable: true, tooltip_text: uri});
+        row.add_suffix(new Gtk.Image({icon_name: 'adw-external-link-symbolic'}));
+        row.connect('activated', () => {
+            new Gtk.UriLauncher({uri}).launch(row.get_root(), null, null);
+        });
+        return row;
+    }
+
+    _readBuildInfo() {
+        try {
+            const [, contents] = GLib.file_get_contents(GLib.build_filenamev([this.path, 'build-info.json']));
+            return JSON.parse(new TextDecoder().decode(contents));
+        } catch {
+            return {};
+        }
     }
 }

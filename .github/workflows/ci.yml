@@ -1,0 +1,49 @@
+# Continuous integration. "checks" must pass; "smoke-test" is experimental
+# (a headless GNOME Shell inside a container) and may fail without the code
+# being at fault.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # build-info.json records the feature commit
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Tools
+        run: sudo apt-get update && sudo apt-get install -y shellcheck libglib2.0-bin zip
+      - name: Syntax
+        run: |
+          python3 -m py_compile scripts/*.py tests/*.py
+          for f in *.sh scripts/*.sh tests/*.sh; do bash -n "$f"; done
+          for f in feature/*.js; do cp "$f" /tmp/check.mjs; node --check /tmp/check.mjs; done
+          for f in feature/settings-keys.xml; do python3 -c "import sys, xml.etree.ElementTree as E; E.fromstring('<s>' + open(sys.argv[1]).read() + '</s>')" "$f"; done
+      - name: ShellCheck
+        run: shellcheck -x --severity=error *.sh scripts/*.sh tests/*.sh
+      - name: Unit tests
+        run: tests/run-tests.sh --unit-only
+      - name: Build the newest tested release and check it
+        run: ./build.sh && python3 tests/check_build.py
+
+  smoke-test:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    container: fedora:45
+    steps:
+      - name: Tools
+        run: dnf install -y --setopt=install_weak_deps=False git gnome-shell dbus-daemon python3 zip glib2 mesa-dri-drivers
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build and smoke test on GNOME Shell from Fedora 45
+        run: |
+          git config --global --add safe.directory "$PWD"
+          ./build.sh
+          tests/smoke-test.sh

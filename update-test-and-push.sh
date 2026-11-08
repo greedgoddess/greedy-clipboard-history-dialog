@@ -125,5 +125,6 @@ else
 fi
 
 if (( INSTALL == 1 )); then
-    "$ROOT/install.sh" --yes
+    # The build has just passed the tests; it is recorded as tested from now on.
+    "$ROOT/install.sh" --yes --allow-untested
 fi

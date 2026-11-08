@@ -7,6 +7,8 @@ Shared by build.sh, install.sh and update-test-and-push.sh.
                                          that supports GNOME Shell N (or the
                                          newest overall); prints its number
   upstream.py download VERSION FILE     downloads release VERSION to FILE
+  upstream.py extract ZIP DIR           unpacks a release safely (no absolute or
+                                         ".." paths, no links, size limits)
   upstream.py content-hash ZIP          SHA-256 of the release's files, without
                                          metadata.json (which the website
                                          regenerates without a new release)
@@ -30,6 +32,9 @@ ROOT = Path(__file__).resolve().parent.parent
 TESTED_FILE = ROOT / 'tested-releases.json'
 README = ROOT / 'README.md'
 TABLE_START = '<!-- tested-releases:start -->'
+# Limits for unpacking a downloaded release; the real one is about 30 kB.
+MAX_FILES = 2000
+MAX_UNPACKED_BYTES = 50 * 1024 * 1024
 TABLE_END = '<!-- tested-releases:end -->'
 
 
@@ -58,6 +63,32 @@ def download(version, target):
     url = f"{EGO}/extension-data/{LEGACY_UUID.replace('@', '')}.v{version}.shell-extension.zip"
     with urllib.request.urlopen(url, timeout=60) as response:
         Path(target).write_bytes(response.read())
+
+
+def extract(zip_path, target):
+    """Unpacks only regular files and folders inside target; refuses anything else."""
+    target = Path(target).resolve()
+    with zipfile.ZipFile(zip_path) as archive:
+        entries = archive.infolist()
+        if len(entries) > MAX_FILES:
+            fail(f'the release has {len(entries)} entries (limit {MAX_FILES})')
+        if sum(e.file_size for e in entries) > MAX_UNPACKED_BYTES:
+            fail(f'the release would unpack to more than {MAX_UNPACKED_BYTES // 1024 // 1024} MB')
+        for entry in entries:
+            name = entry.filename
+            mode = entry.external_attr >> 16
+            if name.startswith(('/', '\\')) or '..' in Path(name).parts or ':' in name:
+                fail(f'the release contains an unsafe path: {name}')
+            if mode and (mode & 0o170000) not in (0, 0o100000, 0o040000):
+                fail(f'the release contains a link or special file: {name}')
+            destination = (target / name).resolve()
+            if target not in destination.parents and destination != target:
+                fail(f'the release contains a path outside its folder: {name}')
+            if entry.is_dir():
+                destination.mkdir(parents=True, exist_ok=True)
+            else:
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                destination.write_bytes(archive.read(entry))
 
 
 def content_hash(zip_path):
@@ -110,6 +141,8 @@ def main(args):
         print(latest(option(rest, '--shell')))
     elif command == 'download' and len(rest) == 2:
         download(*rest)
+    elif command == 'extract' and len(rest) == 2:
+        extract(*rest)
     elif command == 'content-hash' and len(rest) == 1:
         print(content_hash(rest[0]))
     elif command == 'tested':
@@ -125,5 +158,5 @@ def main(args):
 if __name__ == '__main__':
     try:
         main(sys.argv[1:])
-    except OSError as error:  # Network and file errors
+    except (OSError, zipfile.BadZipFile) as error:  # Network, file and archive errors
         fail(str(error))
