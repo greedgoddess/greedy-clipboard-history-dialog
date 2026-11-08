@@ -19,9 +19,9 @@ preferences:
   like the panel. Install it with `./install.sh --with-1password`; see
   [1Password Quick Access](docs/quick-access.md). Thanks to 1Password for
   a native Linux app.
-- **Touch mode** (optional, not installed by default): twice as tall tabs,
-  and icon buttons (1Password, settings, clear) instead of the menu entries
-  at the bottom. Install it with `./install.sh --with-touch-mode`; see
+- **Touch mode** (optional, not installed by default): a fixed-size panel
+  with twice the font size, tall tabs and taller entries, and icon buttons
+  (1Password, settings, clear) instead of the menu entries at the bottom. Install it with `./install.sh --with-touch-mode`; see
   [touch mode](docs/touch-mode.md).
 - **Update notifications:** a notification when there is an update to
   install; see [update notifications](docs/update-notifications.md).

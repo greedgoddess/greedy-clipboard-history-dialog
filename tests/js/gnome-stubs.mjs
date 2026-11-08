@@ -25,6 +25,10 @@ const STUBS = {
             remove_child(child) { this.children = this.children.filter(c => c !== child); child.parent = null; }
             get_children() { return [...this.children]; }
             has_style_class_name(name) { return (this.style_class ?? '').split(' ').includes(name); }
+            add_style_class_name(name) { this.style_class = [this.style_class, name].filter(Boolean).join(' '); }
+            remove_style_class_name(name) {
+                this.style_class = (this.style_class ?? '').split(' ').filter(c => c && c !== name).join(' ');
+            }
             set_height(height) { this.height = height; }
             get_preferred_height() { return [0, this.natural ?? 30]; }
             connect(signal, handler) { (this.handlers[signal] ??= []).push(handler); return signal + this.handlers[signal].length; }

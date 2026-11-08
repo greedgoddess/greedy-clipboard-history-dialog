@@ -2,9 +2,10 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  *
- * With the 'touch-mode' setting on, the tab bar at the top is twice as tall,
- * and the menu entries at the bottom ("Extension Settings…", "Clear (except
- * pinned)") are replaced by a row of icon buttons. The buttons trigger the
+ * With the 'touch-mode' setting on, the panel gets one fixed size on every
+ * tab, twice the font size, a taller tab bar and taller entries (all set in
+ * touchMode.css), and the menu entries at the bottom ("Extension Settings…",
+ * "Clear (except pinned)") are replaced by a row of icon buttons. The buttons trigger the
  * original entries, so they behave exactly as before. Optional entries, such
  * as 1Password Quick Access, come first.
  * Explained section by section in docs/touch-mode.md.
@@ -21,9 +22,9 @@ import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
 const CLEAR_LABEL = /^Clear\b/;
 const SETTINGS_LABEL = /^Extension Settings/;
-const TAB_BAR_CLASS = 'clipboard-history-tabbar';
-const TAB_HEIGHT_FACTOR = 2;
-const ICON_SIZE = 24;
+const SCROLL_VIEW_CLASS = 'clipboard-history-scrollview';
+const TOUCH_MODE_CLASS = 'greedy-touch-mode';
+const ICON_SIZE = 36;
 const ONE_PASSWORD_DESKTOP_IDS = ['1password.desktop', 'com.onepassword.OnePassword.desktop'];
 
 /** [touch-mode:find-actions]
@@ -40,11 +41,6 @@ export function findMenuActions(items) {
  * See docs/touch-mode.md#touch-mode-button-order */
 export function orderButtons(optional, settings, clear) {
     return [...optional, settings, clear];
-}
-
-/** Twice the measured height, for each tab. */
-export function enlargedHeights(naturalHeights) {
-    return naturalHeights.map(height => height * TAB_HEIGHT_FACTOR);
 }
 
 function findByStyleClass(actor, styleClass) {
@@ -77,7 +73,6 @@ export class TouchMode {
         this._settings = settings;
         this._quickAccess = quickAccess;
         this._applied = false;
-        this._tabHeights = new Map();
         this.active = Boolean(menu);
         if (!menu)
             return;
@@ -88,10 +83,6 @@ export class TouchMode {
 
         this._settingsIds = ['changed::touch-mode', 'changed::quick-access']
             .map(signal => settings.connect(signal, () => this._update()));
-        this._openId = menu.connect('open-state-changed', (_menu, open) => {
-            if (open && this._applied)
-                this._enlargeTabs();
-        });
         this._update();
     }
 
@@ -142,10 +133,18 @@ export class TouchMode {
         this._row = new PopupMenu.PopupBaseMenuItem({reactive: false, can_focus: false});
         this._row.add_child(buttons);
         this._menu.box.insert_child_at_index(this._row, this._originals[0].index);
-        this._tabBar = findByStyleClass(this._menu.box, TAB_BAR_CLASS);
+
+        // [touch-mode:layout] Fixed size and larger everything, from
+        // touchMode.css; the list takes the remaining height, so the panel
+        // keeps its size when a tab hides the search row.
+        // See docs/touch-mode.md#touch-mode-layout
+        this._menu.box.add_style_class_name(TOUCH_MODE_CLASS);
+        this._scrollView = findByStyleClass(this._menu.box, SCROLL_VIEW_CLASS);
+        if (this._scrollView) {
+            this._scrollViewExpand = this._scrollView.y_expand;
+            this._scrollView.y_expand = true;
+        }
         this._applied = true;
-        if (this._menu.isOpen)
-            this._enlargeTabs();
     }
 
     _button(gicon, name, onClick) {
@@ -160,24 +159,9 @@ export class TouchMode {
         return button;
     }
 
-    /** [touch-mode:tabs]
-     * Makes each tab twice as tall as it naturally is, measured the first
-     * time the panel opens in touch mode.
-     * See docs/touch-mode.md#touch-mode-tabs */
-    _enlargeTabs() {
-        const tabs = this._tabBar?.get_children() ?? [];
-        const unmeasured = tabs.filter(tab => !this._tabHeights.has(tab));
-        for (const tab of unmeasured) {
-            tab.set_height(-1);
-            this._tabHeights.set(tab, tab.get_preferred_height(-1)[1]);
-        }
-        const heights = enlargedHeights(tabs.map(tab => this._tabHeights.get(tab)));
-        tabs.forEach((tab, i) => tab.set_height(heights[i]));
-    }
-
     /** [touch-mode:unapply]
-     * Puts the original entries back in their places and the tabs back to
-     * their natural height.
+     * Puts the original entries back in their places and the panel back to
+     * the original's sizes.
      * See docs/touch-mode.md#touch-mode-unapply */
     _unapply() {
         if (this._clearItem && this._clearVisibleId)
@@ -189,9 +173,10 @@ export class TouchMode {
         for (const {item, index} of this._originals ?? [])
             this._menu.box.insert_child_at_index(item, index);
         this._originals = null;
-        for (const tab of this._tabHeights.keys())
-            tab.set_height(-1);
-        this._tabHeights.clear();
+        this._menu.box.remove_style_class_name(TOUCH_MODE_CLASS);
+        if (this._scrollView)
+            this._scrollView.y_expand = this._scrollViewExpand;
+        this._scrollView = null;
         this._applied = false;
     }
 
@@ -203,7 +188,6 @@ export class TouchMode {
         if (this._applied)
             this._unapply();
         this._settingsIds.forEach(id => this._settings.disconnect(id));
-        this._menu.disconnect(this._openId);
         this._theme.unload_stylesheet(this._stylesheet);
         this._menu = null;
         this._settings = null;

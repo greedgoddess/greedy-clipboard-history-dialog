@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import St from 'gi://St';
-const {TouchMode, findMenuActions, orderButtons, enlargedHeights} = await import('../../feature/touchMode.js');
+const {TouchMode, findMenuActions, orderButtons} = await import('../../feature/touchMode.js');
 
 globalThis.global = {...globalThis.global, stage: {}};
 
@@ -16,18 +16,15 @@ function fakeMenu() {
         entry.activate = () => { entry.activations += 1; };
         return entry;
     };
-    const tab = natural => new St.Actor({style_class: 'clipboard-history-tab', natural});
     const tabRow = new St.Actor();
-    const tabBar = new St.Actor({style_class: 'clipboard-history-tabbar'});
-    [tab(30), tab(30), tab(32)].forEach(t => tabBar.add_child(t));
-    tabRow.add_child(tabBar);
+    const scrollView = new St.Actor({style_class: 'clipboard-history-scrollview', y_expand: false});
     const separator = new St.Actor({name: 'separator'});
     const clear = item('Clear (except pinned)');
     const settings = item('Extension Settings…');
     const box = new St.Actor();
-    [tabRow, new St.Actor({name: 'list'}), separator, clear, settings].forEach(c => box.add_child(c));
+    [tabRow, scrollView, separator, clear, settings].forEach(c => box.add_child(c));
     const menu = new St.Actor({box, isOpen: false});
-    return {menu, box, clear, settings, tabBar};
+    return {menu, box, clear, settings, scrollView};
 }
 const fakeSettings = values => ({
     handlers: {},
@@ -47,10 +44,6 @@ test('the original entries are found by their labels', () => {
 test('order: optional entries first, then settings, then clear', () => {
     assert.deepEqual(orderButtons(['1password'], 'settings', 'clear'), ['1password', 'settings', 'clear']);
     assert.deepEqual(orderButtons([], 'settings', 'clear'), ['settings', 'clear']);
-});
-
-test('tabs become exactly twice as tall', () => {
-    assert.deepEqual(enlargedHeights([30, 32]), [60, 64]);
 });
 
 test('touch mode off: the menu is untouched', () => {
@@ -98,16 +91,23 @@ test("the clear button follows the original entry's visibility", () => {
     mode.destroy();
 });
 
-test('switching off, or disabling, puts the entries and tabs back exactly', () => {
-    const {menu, box, tabBar} = fakeMenu();
+test('touch mode on: fixed-size layout class on the panel, the list takes the remaining height', () => {
+    const {menu, box, scrollView} = fakeMenu();
+    const mode = new TouchMode(menu, fakeSettings({'touch-mode': true, 'quick-access': false}), 'css', () => null);
+    assert.ok(box.has_style_class_name('greedy-touch-mode'));
+    assert.equal(scrollView.y_expand, true);
+    mode.destroy();
+});
+
+test('switching off, or disabling, puts the entries and layout back exactly', () => {
+    const {menu, box, scrollView} = fakeMenu();
     const before = box.get_children();
     const settings = fakeSettings({'touch-mode': true, 'quick-access': false});
     const mode = new TouchMode(menu, settings, 'css', () => null);
-    menu.isOpen = true; menu.emit('open-state-changed', true);
-    assert.deepEqual(tabBar.children.map(t => t.height), [60, 60, 64]);
     settings.set('touch-mode', false);
     assert.deepEqual(box.get_children(), before);
-    assert.deepEqual(tabBar.children.map(t => t.height), [-1, -1, -1]);
+    assert.ok(!box.has_style_class_name('greedy-touch-mode'));
+    assert.equal(scrollView.y_expand, false);
     settings.set('touch-mode', true);
     mode.destroy();
     assert.deepEqual(box.get_children(), before);

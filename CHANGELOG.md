@@ -7,9 +7,11 @@ on is listed in the README under "Tested releases".
 
 - Touch mode, optional and not installed by default
   (`./install.sh --with-touch-mode`; then Preferences → Cursor-Follow):
-  twice as tall tabs, and icon buttons instead of the menu entries at the
-  bottom: 1Password (with the integration installed and on), settings, and
-  clear. The buttons trigger the original entries.
+  a fixed-size panel, the same on every tab, with twice the font size, tall
+  tabs and taller entries, and icon buttons instead of the menu entries at
+  the bottom: 1Password (with the integration installed and on), settings,
+  and clear. The buttons trigger the original entries. All sizes are fixed
+  in touchMode.css.
 
 ## 1.1.0 — 2026-11-08
 

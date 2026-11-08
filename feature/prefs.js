@@ -60,7 +60,7 @@ export default class GreedyClipboardHistoryPreferences extends UpstreamPreferenc
         if (FEATURES.touchMode) {
             const touchRow = new Adw.SwitchRow({
                 title: 'Touch mode',
-                subtitle: 'Twice as tall tabs, and icon buttons instead of the menu entries at the bottom.',
+                subtitle: 'Larger text, tabs and entries in a fixed-size panel, and icon buttons instead of the menu entries at the bottom.',
             });
             settings.bind('touch-mode', touchRow, 'active', Gio.SettingsBindFlags.DEFAULT);
             group.add(touchRow);

@@ -1,16 +1,70 @@
 /* touchMode.css — styles for touch mode; loaded only while the extension
- * runs with touch mode installed. See docs/touch-mode.md
+ * runs with touch mode installed, and applied only while touch mode is on
+ * (the panel's box then has the class greedy-touch-mode).
+ * All sizes are fixed here; nothing is measured or adjusted at run time.
+ * See docs/touch-mode.md#touch-mode-layout
  *
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
+/* [touch-mode:layout] The whole panel: one fixed size on every tab, and twice
+ * the font size. Text tab content: tab bar (about 108 px), search row, the
+ * list (which takes all remaining height, and the search row's height on the
+ * other tabs), separator, button row. */
+.greedy-touch-mode {
+    width: 600px;
+    height: 820px;
+    font-size: 2em;
+}
+
+/* Tab bar: twice the height it had in touch mode before (about 54 px), so
+ * about 108 px: 40 px above and below the label, which keeps it centred. */
+.greedy-touch-mode .clipboard-history-tab {
+    padding: 40px 0;
+}
+
+.greedy-touch-mode .clipboard-history-search {
+    width: 556px;
+}
+
+.greedy-touch-mode .clipboard-history-scrollview {
+    width: 584px;
+    max-height: 10000px;    /* The panel's fixed height limits it instead. */
+}
+
+/* Clipboard entries: taller, with larger pin and delete buttons. */
+.greedy-touch-mode .clipboard-history-item {
+    padding: 18px 12px;
+    spacing: 12px;
+}
+
+.greedy-touch-mode .clipboard-history-icon-button {
+    padding: 10px;
+}
+
+.greedy-touch-mode .clipboard-history-icon-button .popup-menu-icon {
+    icon-size: 24px;
+}
+
+/* The original sets these in pixels, so the panel font size does not reach
+ * them; doubled here. */
+.greedy-touch-mode .clipboard-history-emoji-button {
+    font-size: 40px;
+    min-width: 64px;
+}
+
+.greedy-touch-mode .clipboard-history-kaomoji-button {
+    font-size: 26px;
+}
+
+/* Button row at the bottom. */
 .greedy-touch-buttons {
     spacing: 12px;
     padding: 4px 8px;
 }
 
 .greedy-touch-button {
-    min-width: 48px;
-    min-height: 48px;
+    min-width: 64px;
+    min-height: 64px;
     padding: 12px;
     border-radius: 12px;
 }
