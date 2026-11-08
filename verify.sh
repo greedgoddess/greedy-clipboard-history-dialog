@@ -43,7 +43,7 @@ else
     say "Mode: user (notifications watch this project's repository)"
 fi
 say "Notifications: $([[ "$(dconf read "${SETTINGS_PATH}update-notifications" 2>/dev/null)" == true ]] && echo on || echo off)"
-last_check="$(dconf read "${SETTINGS_PATH}update-last-check" 2>/dev/null | grep -oE '[0-9]+' || true)"
+last_check="$(dconf read "${SETTINGS_PATH}update-last-check" 2>/dev/null | grep -oE '[0-9]+$' || true)"
 say "Last check: $([[ -n "$last_check" && "$last_check" != 0 ]] && date -d "@$last_check" '+%Y-%m-%d %H:%M' || echo never)"
 
 say
