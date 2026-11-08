@@ -51,17 +51,23 @@ const STUBS = {
     'gi://GObject': `
         export default {registerClass: (meta, klass) => klass ?? meta};`,
     'gi://Cogl': `
-        export default {SnippetHook: {FRAGMENT: 1}};`,
-    // Shell.GLSLEffect records what it is given, so tests can check it.
+        export default {
+            SnippetHook: {FRAGMENT: 1},
+            Snippet: {new: (hook, declarations, post) => ({hook, declarations, post})},
+        };`,
+    // As in GNOME Shell 51: no Shell.GLSLEffect.
     'gi://Shell': `
-        class GLSLEffect {
-            constructor() { this.uniforms = {}; this.snippets = []; }
-            add_glsl_snippet(...args) { this.snippets.push(args); }
-            get_uniform_location(name) { return name; }
-            set_uniform_float(location, components, value) { this.uniforms[location] = value; }
+        export default {ActionMode: {NORMAL: 1, OVERVIEW: 2, POPUP: 4}};`,
+    // As in GNOME Shell 51: Clutter.ShaderEffect with a static snippet and
+    // uniforms set by name; records what it is given, so tests can check it.
+    'gi://Clutter': `
+        class ShaderEffect {
+            constructor() { this.uniforms = {}; }
+            vfunc_get_static_snippet() { return null; }
+            set_uniform_float(name, components, value) { this.uniforms[name] = value; }
             queue_repaint() {}
         }
-        export default {GLSLEffect, ActionMode: {NORMAL: 1, OVERVIEW: 2, POPUP: 4}};`,
+        export default {ShaderEffect};`,
     'resource:///org/gnome/shell/ui/popupMenu.js': `
         import St from 'gi://St';
         export class PopupBaseMenuItem extends St.Actor {}`,

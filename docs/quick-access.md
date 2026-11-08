@@ -150,8 +150,14 @@ Shell draws it, makes the pixels outside the rounded corners transparent.
 `cornerBounds()` finds the window's visible frame inside what GNOME Shell
 draws, which can include invisible borders, so only the frame's four corners
 are cut. The effect follows size changes and is removed when the window
-closes or the extension is disabled. If the effect cannot be added, the
-window simply keeps square corners and a warning is logged.
+closes or the extension is disabled.
+
+GNOME Shell 51 removed the shader API older versions used (`Shell.GLSLEffect`)
+in favour of `Clutter.ShaderEffect` with a shader snippet. `shaderApi()`
+picks whichever the running GNOME Shell has; the effect class is only created
+on first use, so a GNOME Shell with neither cannot stop the rest of the
+1Password integration from loading. In that case, or if the effect cannot be
+added, the window simply keeps square corners and a warning is logged.
 
 The switch only applies while Quick Access is switched on, and takes effect
 the next time Quick Access opens.

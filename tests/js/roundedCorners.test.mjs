@@ -4,7 +4,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-const {cornerBounds, CornerRounder, CORNER_RADIUS} = await import('../../feature/roundedCorners.js');
+// Importing must work on GNOME Shell 51, which has no Shell.GLSLEffect (the
+// stand-ins mirror 51); this failed once and took the 1Password integration down.
+const {cornerBounds, shaderApi, CornerRounder, CORNER_RADIUS} = await import('../../feature/roundedCorners.js');
+
+test('shader API: Clutter snippet on 51, Shell.GLSLEffect before, none otherwise', () => {
+    const clutter51 = {ShaderEffect: class { vfunc_get_static_snippet() {} }};
+    const clutterOld = {ShaderEffect: class {}};
+    const shellOld = {GLSLEffect: class {}};
+    assert.equal(shaderApi({}, clutter51), 'clutter-snippet');
+    assert.equal(shaderApi(shellOld, clutter51), 'clutter-snippet');
+    assert.equal(shaderApi(shellOld, clutterOld), 'shell-glsl');
+    assert.equal(shaderApi({}, clutterOld), null);
+    assert.equal(shaderApi(undefined, undefined), null);
+});
 
 test('bounds: the frame inside the actor, which may include invisible borders', () => {
     assert.deepEqual(cornerBounds({x: 110, y: 220, width: 550, height: 412}, {x: 100, y: 200, width: 570, height: 452}),
@@ -31,14 +44,14 @@ function fakeWindow() {
 test('rounding adds one effect with the frame, size and radius, and destroy removes it', () => {
     const {window, actor} = fakeWindow();
     const rounder = new CornerRounder();
-    rounder.round(window);
+    assert.equal(rounder.round(window), true);
     rounder.round(window);
     assert.equal(actor.effects.length, 1, 'not added twice');
     const [effect] = actor.effects;
     assert.deepEqual(effect.uniforms, {bounds: [0, 0, 550, 412], size: [550, 412], radius: [CORNER_RADIUS]});
-    assert.equal(effect.snippets.length, 0, 'the shader is added when GNOME builds the pipeline');
-    effect.vfunc_build_pipeline();
-    assert.equal(effect.snippets.length, 1);
+    const snippet = effect.vfunc_get_static_snippet();
+    assert.match(snippet.declarations, /rounded_corner_alpha/);
+    assert.match(snippet.post, /cogl_color_out \*= rounded_corner_alpha/);
     rounder.destroy();
     assert.equal(actor.effects.length, 0);
 });

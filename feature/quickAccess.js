@@ -138,7 +138,8 @@ export class QuickAccessSwitch {
                 this._keepInPlace(window, pointer);
                 if (this._settings.get_boolean('quick-access-rounded')) {
                     try {
-                        this._cornerRounder.round(window);
+                        if (!this._cornerRounder.round(window))
+                            console.warn('Quick Access: this GNOME Shell has no shader API for rounded corners');
                     } catch (error) {
                         console.warn(`Quick Access: corners not rounded: ${error.message}`);
                     }

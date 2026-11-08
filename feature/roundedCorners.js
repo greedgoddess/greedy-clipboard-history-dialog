@@ -5,6 +5,8 @@
  * Part of the optional 1Password integration. GNOME Shell draws every window
  * itself; this adds a small shader effect to the Quick Access window as GNOME
  * Shell draws it, which makes the pixels outside rounded corners transparent.
+ * GNOME Shell 51 changed the shader API; both the old and the new one are
+ * supported, and without either the corners simply stay square.
  * 1Password itself is not changed or asked for anything.
  * Explained in docs/quick-access.md#quick-access-rounded-corners
  */
@@ -13,16 +15,13 @@
 // Do NOT upload to extensions.gnome.org (EGO) unless you understand JavaScript
 // and can maintain this code.
 
+import Clutter from 'gi://Clutter';
 import Cogl from 'gi://Cogl';
 import GObject from 'gi://GObject';
 import Shell from 'gi://Shell';
 
 // Same radius as GNOME's own windows.
 export const CORNER_RADIUS = 12;
-
-// GNOME Shell moved the snippet hook enum from Cogl to Shell at some point;
-// use whichever this version has.
-const FRAGMENT_HOOK = Shell.SnippetHook?.FRAGMENT ?? Cogl.SnippetHook.FRAGMENT;
 
 const DECLARATIONS = `
 uniform vec4 bounds;   // the window's frame inside its actor: x1, y1, x2, y2
@@ -50,20 +49,60 @@ export function cornerBounds(frame, buffer) {
     return [x1, y1, x1 + frame.width, y1 + frame.height];
 }
 
-const RoundedCornersEffect = GObject.registerClass(
-class RoundedCornersEffect extends Shell.GLSLEffect {
-    vfunc_build_pipeline() {
-        this.add_glsl_snippet(FRAGMENT_HOOK, DECLARATIONS, CODE, false);
-    }
+/** [quick-access:shader-api]
+ * Which shader API this GNOME Shell offers: 'clutter-snippet' (GNOME 51 and
+ * later: Clutter.ShaderEffect with a snippet), 'shell-glsl' (before 51:
+ * Shell.GLSLEffect, removed in 51), or null (neither; corners stay square).
+ * See docs/quick-access.md#quick-access-rounded-corners */
+export function shaderApi(shell, clutter) {
+    if (typeof clutter?.ShaderEffect?.prototype?.vfunc_get_static_snippet === 'function')
+        return 'clutter-snippet';
+    if (typeof shell?.GLSLEffect === 'function')
+        return 'shell-glsl';
+    return null;
+}
 
-    update(window, actor) {
-        const bounds = cornerBounds(window.get_frame_rect(), window.get_buffer_rect());
-        this.set_uniform_float(this.get_uniform_location('bounds'), 4, bounds);
-        this.set_uniform_float(this.get_uniform_location('size'), 2, [actor.width, actor.height]);
-        this.set_uniform_float(this.get_uniform_location('radius'), 1, [CORNER_RADIUS]);
+// The effect class is created on first use, not when this file loads: a
+// GNOME Shell without the expected API must not stop the 1Password
+// integration from loading. null once it is known that there is no API.
+let effectClass;
+
+function getEffectClass() {
+    if (effectClass !== undefined)
+        return effectClass;
+    const api = shaderApi(Shell, Clutter);
+    const setUniforms = (effect, bounds, width, height) => {
+        // By name on Clutter.ShaderEffect, by location on Shell.GLSLEffect.
+        const at = name => api === 'shell-glsl' ? effect.get_uniform_location(name) : name;
+        effect.set_uniform_float(at('bounds'), 4, bounds);
+        effect.set_uniform_float(at('size'), 2, [width, height]);
+        effect.set_uniform_float(at('radius'), 1, [CORNER_RADIUS]);
+    };
+    const update = function (window, actor) {
+        setUniforms(this, cornerBounds(window.get_frame_rect(), window.get_buffer_rect()), actor.width, actor.height);
         this.queue_repaint();
+    };
+
+    if (api === 'clutter-snippet') {
+        effectClass = GObject.registerClass(class GreedyRoundedCornersEffect extends Clutter.ShaderEffect {
+            vfunc_get_static_snippet() {
+                return Cogl.Snippet.new(Cogl.SnippetHook.FRAGMENT, DECLARATIONS, CODE);
+            }
+        });
+    } else if (api === 'shell-glsl') {
+        const hook = Shell.SnippetHook?.FRAGMENT ?? Cogl.SnippetHook.FRAGMENT;
+        effectClass = GObject.registerClass(class GreedyRoundedCornersEffect extends Shell.GLSLEffect {
+            vfunc_build_pipeline() {
+                this.add_glsl_snippet(hook, DECLARATIONS, CODE, false);
+            }
+        });
+    } else {
+        effectClass = null;
+        return null;
     }
-});
+    effectClass.prototype.update = update;
+    return effectClass;
+}
 
 /** [quick-access:rounded-corners]
  * Rounds the corners of the given windows while they exist, and removes the
@@ -74,11 +113,16 @@ export class CornerRounder {
         this._rounded = new Map();    // window actor -> {effect, ids}
     }
 
+    /** Rounds the window's corners; returns false, and changes nothing, when
+     * this GNOME Shell has no shader API for it. */
     round(window) {
         const actor = window.get_compositor_private();
         if (!actor || this._rounded.has(actor))
-            return;
-        const effect = new RoundedCornersEffect();
+            return true;
+        const Effect = getEffectClass();
+        if (!Effect)
+            return false;
+        const effect = new Effect();
         actor.add_effect_with_name('greedy-rounded-corners', effect);
         const update = () => effect.update(window, actor);
         const ids = [
@@ -88,6 +132,7 @@ export class CornerRounder {
         ];
         this._rounded.set(actor, {effect, ids});
         update();
+        return true;
     }
 
     destroy() {

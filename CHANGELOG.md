@@ -15,7 +15,8 @@ on is listed in the README under "Tested releases".
   earlier choice carries over.)
 - 1Password integration: rounded corners for the Quick Access window, drawn
   by GNOME Shell without changing 1Password (Preferences → Cursor-Follow →
-  Round Quick Access corners, on by default).
+  Round Quick Access corners, on by default). Uses GNOME Shell 51's
+  Clutter.ShaderEffect, or Shell.GLSLEffect on older versions.
 
 ## 1.1.0 — 2026-11-08
 
