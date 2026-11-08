@@ -5,8 +5,10 @@
 # Runs in a throwaway home folder and D-Bus session: your own session,
 # settings and clipboard history are not touched.
 #
-# Exit status: 0 passed, 1 the extension failed, 2 GNOME Shell itself could
-# not start here (a problem of the environment, not of the extension).
+# Needs GNOME Shell and is meant to run on a GNOME desktop. On headless
+# systems (servers, CI containers) GNOME Shell may not start; the test then
+# fails, with exit status 2 instead of 1, so that it is clear GNOME Shell
+# did not start, rather than that the extension failed.
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=../scripts/common.sh
@@ -72,8 +74,9 @@ show_logs() {
 # GNOME Shell never answered about any extension: it did not start, whatever
 # the extension does. Reported separately from extension failures.
 if [[ -z "$state" ]]; then
-    say "  COULD NOT RUN  GNOME Shell did not start in this environment;"
-    say "                 this says nothing about the extension."
+    report FAIL "headless GNOME Shell started"
+    say "        This test needs GNOME Shell and may fail on headless systems"
+    say "        (no graphical session), such as servers and CI containers."
     show_logs
     exit 2
 fi

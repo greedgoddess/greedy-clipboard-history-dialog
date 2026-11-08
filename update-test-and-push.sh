@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # update-test-and-push.sh — developer side. Builds the newest release of
 # Clipboard History, runs the test suite, and if everything passes, records
-# the release in tested-releases.json and README.md and pushes that to GitHub.
-# Machines running ./update.sh then build the newly tested release.
+# the release in tested-releases.json and README.md and commits that. With
+# --push it also publishes the commit to GitHub; machines running
+# ./update.sh then build the newly tested release.
 #
 # Does nothing if the newest release is already tested with the current
 # feature code. Nothing is committed or pushed if a build or test fails.
@@ -17,8 +18,8 @@ usage() {
 Usage: ./update-test-and-push.sh [options]
   --version N       test release N instead of the newest
   --force           test again even if the release is already tested
-  --no-push         commit, but do not push
-  --no-smoke-test   static checks only (implies --no-push)
+  --push            also push the commit to GitHub (only from main)
+  --no-smoke-test   skip the headless GNOME Shell test (not with --push)
   --install         also install the tested build on this machine
   -h, --help        show this help
 USAGE
@@ -26,15 +27,16 @@ USAGE
 
 VERSION=""
 FORCE=0
-PUSH=1
+PUSH=0
 SMOKE=1
 INSTALL=0
 while (( $# > 0 )); do
     case "$1" in
         --version) VERSION="${2:?--version needs a number}"; shift 2 ;;
         --force) FORCE=1; shift ;;
-        --no-push) PUSH=0; shift ;;
-        --no-smoke-test) SMOKE=0; PUSH=0; shift ;;
+        --push) PUSH=1; shift ;;
+        --no-push) PUSH=0; shift ;;   # The default; accepted for older habits
+        --no-smoke-test) SMOKE=0; shift ;;
         --install) INSTALL=1; shift ;;
         -h|--help) usage; exit 0 ;;
         *) fail "Unknown option: $1 (try --help)" ;;
@@ -52,6 +54,11 @@ remote_url="$(git remote get-url origin 2>/dev/null || true)"
 [[ "$remote_url" == git@github.com:* || "$remote_url" == ssh://* ]] \
     || fail "origin must be an SSH remote (it is '$remote_url')."
 [[ -z "$(git status --porcelain)" ]] || fail "Uncommitted changes. Commit or discard them first."
+(( PUSH == 0 || SMOKE == 1 )) || fail "--push needs the full test suite; drop --no-smoke-test."
+branch="$(git rev-parse --abbrev-ref HEAD)"
+if (( PUSH == 1 )) && [[ "$branch" != main ]]; then
+    fail "--push publishes test records only from main; this is '$branch'."
+fi
 git pull -q --ff-only
 
 # ---- Which release? --------------------------------------------------------------
@@ -102,7 +109,8 @@ print(json.dumps({
     'version_name': r['upstream_version_name'],
     'content_sha256': content_hash,
     'shell_versions': r['shell_versions'],
-    'tested_on': tested_on + ('' if smoke == '1' else ', static checks only'),
+    'tested_on': tested_on + ('' if smoke == '1' else ', without smoke test'),
+    'evidence': ['unit tests', 'build checks'] + (['headless GNOME Shell smoke test'] if smoke == '1' else []),
     'date': datetime.date.today().isoformat(),
     'feature_commit': commit,
 }))
@@ -120,7 +128,7 @@ else
         git push -q
         say "Pushed. Other machines get this release with ./update.sh"
     else
-        say "Not pushed (run 'git push' when ready)."
+        say "Committed locally, not pushed. Publish with 'git push' (or run again with --push)."
     fi
 fi
 

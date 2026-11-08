@@ -8,9 +8,10 @@ once per update. What it watches depends on the machine's mode, set by
 | Mode | Watches | Notifies when | Then run |
 | --- | --- | --- | --- |
 | user | this project's repository on GitHub | it has a newer tested release, or newer `feature/` code, than the installed build | `./update.sh` |
-| dev | Clipboard History on extensions.gnome.org | it has a release for this GNOME Shell that is not in `tested-releases.json` | `./update-test-and-push.sh` |
+| dev | Clipboard History on extensions.gnome.org | it has a release for this GNOME Shell that is not in `tested-releases.json` | `./update-test-and-push.sh --push` |
 
-When the setting is off, no request is made at all. When it is on, a check
+When the setting is off, no request is made at all, and switching it off
+stops a check that is already running. When it is on, a check
 runs at most once a day and makes these requests:
 
 | Mode | Requests (HTTPS GET) |
@@ -51,6 +52,13 @@ matters because GNOME disables and re-enables extensions on every screen
 lock. Switching the setting off stops the timer; switching it on plans the
 next check.
 
+<a id="update-notify-toggle"></a>
+## `update-notify:toggle`
+
+Each check uses its own cancellable. Switching the setting off cancels it, so
+any request still running is abandoned and the check ends without
+notifying; switching it on again plans a new check with a fresh one.
+
 <a id="update-notify-developer-check"></a>
 ## `update-notify:developer-check`
 
@@ -77,7 +85,9 @@ number, the release's content hash, and the newest commit that changed
 ## `update-notify:notify-once`
 
 Each update has a key (for example `release:4`). The notification is shown
-only if the key differs from `update-notified`, which then stores it.
+only if the key differs from `update-notified`, which then stores it, and
+only if the check was not cancelled and the setting is still on at that
+moment.
 
 <a id="update-notify-preference"></a>
 ## `update-notify:preference`
@@ -89,5 +99,7 @@ machine watches.
 <a id="update-notify-cleanup"></a>
 ## `update-notify:cleanup`
 
-On `disable()`: cancels a request in progress, removes the timer and
-disconnects from the settings.
+On `disable()`: cancels the running check, removes the timer and
+disconnects from the settings; a check that was running ends silently.
+
+The behaviour above is covered by `tests/js/updateNotifier.test.mjs`.

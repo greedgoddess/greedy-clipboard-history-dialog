@@ -1,6 +1,9 @@
-# Continuous integration. "checks" must pass; "smoke-test" is experimental
-# (a headless GNOME Shell inside a container) and may fail without the code
-# being at fault.
+# Continuous integration. "checks" must pass.
+#
+# "smoke-test" loads the extension in GNOME Shell, which needs a graphical
+# session. On a headless system such as this container, GNOME Shell may not
+# start, and the job then fails. That job is therefore allowed to fail
+# without failing the whole run; its result is shown as it is.
 name: CI
 
 on:
@@ -38,11 +41,7 @@ jobs:
     container: fedora:45
     steps:
       - name: Tools
-        run: dnf install -y --setopt=install_weak_deps=False git gnome-shell dbus-daemon python3 zip glib2 mesa-dri-drivers
-      - name: System D-Bus
-        # GNOME Shell connects to the system bus at startup (for example its
-        # time limits manager); a container has none running.
-        run: mkdir -p /run/dbus && dbus-daemon --system --fork
+        run: dnf install -y --setopt=install_weak_deps=False git gnome-shell dbus-daemon python3 zip glib2 /usr/bin/gresource mesa-dri-drivers
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -50,6 +49,7 @@ jobs:
         run: |
           git config --global --add safe.directory "$PWD"
           ./build.sh
-          status=0; tests/smoke-test.sh || status=$?
-          if (( status == 2 )); then echo "::warning::GNOME Shell could not start in the container"; fi
-          exit $status
+          # Here, unlike in "checks", GNOME Shell is installed, so the build
+          # must have checked the GNOME Shell internals the feature relies on.
+          grep -q 'Internals check: *checked' build/BUILD-INFO
+          tests/smoke-test.sh

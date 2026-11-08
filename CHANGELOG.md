@@ -3,6 +3,21 @@
 Versions of this project. The Clipboard History release each build is based
 on is listed in the README under "Tested releases".
 
+## 1.0.2 — 2026-11-08
+
+- Switching update notifications off now stops a check that is already
+  running; it can no longer notify afterwards.
+- `update-test-and-push.sh` commits locally by default; publishing needs
+  `--push`, only from `main`, and only with the full test suite. Test
+  records list which tests ran.
+- Tests for the update notifier (switching off mid-check, notify once,
+  user and developer checks, unexpected answers).
+- CI: the smoke-test job checks the GNOME Shell internals. The smoke test
+  needs GNOME and may fail on headless systems such as the CI container;
+  this is now stated in its output and the documentation.
+- Python caches are ignored by Git, so running the tests no longer blocks
+  `update-test-and-push.sh`.
+
 ## 1.0.1 — 2026-11-08
 
 - Builds are swapped in by directory renames, so a failed or interrupted

@@ -90,20 +90,23 @@ project is verified only where marked here:
 | 51 | yes | yes | yes, by hand | yes, by hand |
 | 46–50 | not tested | not tested | not tested | not tested |
 
-The manual checks are in [the testing checklist](docs/cursor-follow.md#testing).
+The smoke test needs GNOME and may fail on headless systems, such as the CI
+container; "Activates" is checked on a GNOME desktop. The manual checks are
+in [the testing checklist](docs/cursor-follow.md#testing).
 
 ## Versions
 
 This project's version is in [`VERSION`](VERSION) and the
-[changelog](CHANGELOG.md). The installed extension shows both, for example
-`1.0.1 (Clipboard History 1.0, release 3)`; `build/BUILD-INFO` and the
+[changelog](CHANGELOG.md); releases are tagged `vX.Y.Z` on GitHub. The
+installed extension shows both versions, for example
+`1.0.2 (Clipboard History 1.0, release 3)`; `build/BUILD-INFO` and the
 `build-info.json` inside each build record the full provenance.
 
 ## Development
 
 See [CONTRIBUTING.md](CONTRIBUTING.md): developer machines
 (`./install.sh --dev`), testing, and adding a tested release with
-`./update-test-and-push.sh`. Security issues: [SECURITY.md](SECURITY.md).
+`./update-test-and-push.sh --push`. Security issues: [SECURITY.md](SECURITY.md).
 
 The additions were written largely by an AI assistant (Claude, by
 Anthropic), directed and tested by the author.
@@ -114,7 +117,7 @@ Anthropic), directed and tested by the author.
 | --- | --- |
 | No change after installing or updating | Log out and back in |
 | Build: no tested release for this GNOME Shell | Wait for one, or `./build.sh --latest` and test it |
-| Build: release differs from the tested one | The download changed; a developer machine re-tests it with `./update-test-and-push.sh --force` |
+| Build: release differs from the tested one | The download changed; a developer machine re-tests it with `./update-test-and-push.sh --force --push` |
 | Build warns, or the panel opens below its icon | See [what can break](docs/cursor-follow.md#what-can-break-and-what-happens-then) |
 | Two clipboard icons in the panel | The old extension is enabled again; run `./uninstall-previous-version.sh` |
 | No update notifications | Check Preferences → Cursor-Follow, and the last check in `./verify.sh` |

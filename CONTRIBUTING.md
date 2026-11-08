@@ -21,9 +21,10 @@ tests/run-tests.sh         # unit tests, build checks, headless smoke test
 ```
 
 `tests/run-tests.sh --unit-only` needs no build; `--no-smoke-test` skips the
-headless GNOME Shell. The smoke test exits with 2 when GNOME Shell itself
-cannot start (for example in a container), which is not a failure of the
-extension. The cursor-follow unit tests need Node.js
+headless GNOME Shell. The smoke test needs GNOME Shell and may fail on
+headless systems, where GNOME Shell may not start; run it on a GNOME
+desktop. In CI, the smoke-test job may fail for that reason without failing
+the whole run. The cursor-follow unit tests need Node.js
 (`sudo dnf install nodejs`).
 
 Automated tests cannot see where the panel opens. Before recording a new
@@ -33,12 +34,21 @@ GNOME Shell version as verified in the README, go through the
 ## Adding a tested release
 
 ```bash
-./update-test-and-push.sh
+./update-test-and-push.sh          # build, test, record and commit locally
+./update-test-and-push.sh --push   # the same, then publish it
 ```
 
 Builds the newest Clipboard History release, runs all tests, and only if
-they pass, records the release in `tested-releases.json` and the README,
-then commits and pushes.
+they pass, records the release in `tested-releases.json` (with the evidence:
+which tests ran) and the README, and commits. Publishing needs `--push`,
+works only from `main`, and never without the smoke test.
+
+## Releasing
+
+1. Update `VERSION` and `CHANGELOG.md`, commit, push, and wait for CI.
+2. Tag and push the tag: `git tag -a vX.Y.Z -m "…" && git push origin vX.Y.Z`.
+3. Create the GitHub release from that tag, with the changelog section as
+   notes.
 
 ## Pull requests
 

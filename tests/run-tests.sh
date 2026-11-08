@@ -2,7 +2,8 @@
 # run-tests.sh — the test suite. Exit status 0 only if everything that ran passed.
 #
 #   1. Unit tests: the patcher, the build swap, the installer, migration and
-#      uninstall, and the cursor-follow hook (needs Node.js; skipped without).
+#      uninstall, the cursor-follow hook and the update notifier (these two
+#      need Node.js; skipped without).
 #   2. Build checks: build/ against the release it was built from.
 #   3. Smoke test: build/ loaded in a headless GNOME Shell.
 #
@@ -38,7 +39,7 @@ tests/test_installer.sh || status=1
 section "Unit tests: migration and uninstall"
 tests/test_migration.sh || status=1
 
-section "Unit tests: cursor-follow hook"
+section "Unit tests: cursor-follow hook and update notifier"
 if command -v node >/dev/null; then
     node --import ./tests/js/register.mjs --test --test-reporter=dot tests/js/*.test.mjs 2>&1 | sed 's/^/  /'
     (( PIPESTATUS[0] == 0 )) && echo "  pass  all" || status=1
@@ -56,7 +57,9 @@ if (( SMOKE == 1 )); then
     tests/smoke-test.sh
     case $? in
         0) ;;
-        2) echo "  The smoke test could not run here; counted as failed." >&2; status=1 ;;
+        2) echo "  GNOME Shell did not start, so the smoke test failed; it needs GNOME" >&2
+           echo "  and may fail on headless systems." >&2
+           status=1 ;;
         *) status=1 ;;
     esac
 fi

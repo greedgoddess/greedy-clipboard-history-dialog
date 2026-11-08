@@ -226,8 +226,13 @@ affiliated with the original author.
 The patcher, the build swap, the installer, migration and uninstall, and the
 hook also have unit tests, with made-up releases and stand-ins for GNOME.
 The migration and uninstall tests check in particular that the original
-extension's files, history and settings are never touched. The smoke test
-reports "could not run" separately when GNOME Shell itself cannot start.
+extension's files, history and settings are never touched.
+
+**The smoke test needs GNOME.** It starts GNOME Shell without a window, which
+works on a GNOME desktop. On headless systems (servers, CI containers)
+GNOME Shell may not start, and the smoke test then fails. It says so in its
+output, with exit status 2 instead of 1, and shows GNOME Shell's log. A
+release is recorded as tested only when the smoke test passes.
 
 **By hand,** before marking a GNOME Shell version as verified in the README:
 
