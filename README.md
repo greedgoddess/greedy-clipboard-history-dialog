@@ -15,8 +15,8 @@ preferences:
   on the right.
 - **1Password Quick Access** (optional, not installed by default):
   pressing the shortcut again while the panel is open switches to
-  [1Password](https://1password.com/) Quick Access, placed at the pointer
-  like the panel. Install it with
+  [1Password](https://1password.com/) Quick Access, where the panel
+  was. Install it with
   `./install.sh --with-1password`; see
   [1Password Quick Access](docs/quick-access.md). Thanks to 1Password for
   a native Linux app.
@@ -108,7 +108,7 @@ installing it.
 | The extension loads in GNOME Shell without errors | A GNOME desktop | Smoke test; required before a release is recorded as tested |
 | Opens at the pointer, flips at screen edges | A GNOME desktop | By hand, with the [testing checklist](docs/cursor-follow.md#testing) |
 | Large spacing: taller tabs, icon buttons that work | A GNOME desktop | By hand, with [its checklist](docs/large-spacing.md#testing) |
-| Switches to 1Password Quick Access, placed at the pointer | A GNOME desktop with 1Password | By hand, with [its checklist](docs/quick-access.md#testing) |
+| Switches to 1Password Quick Access, where the panel was | A GNOME desktop with 1Password | By hand, with [its checklist](docs/quick-access.md#testing) |
 
 ### Verified GNOME Shell versions
 

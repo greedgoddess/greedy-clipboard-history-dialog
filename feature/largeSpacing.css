@@ -7,27 +7,56 @@
  * SPDX-License-Identifier: GPL-2.0-or-later */
 
 /* [large-spacing:layout] The whole panel: one fixed size on every tab. Text tab
- * content: tab bar (about 54 px), search row, the list (which takes all
+ * content: tab bar, search row, the list (which takes all
  * remaining height, and the search row's height on the other tabs),
  * separator, button row. */
 .greedy-large-spacing {
-    width: 300px;
+    width: 345px;
     height: 410px;
     font-size: 1em;
 }
 
 /* [large-spacing:corners] The panel's corner radius; the same radius rounds
- * the 1Password Quick Access window. Must equal CORNER_RADIUS in
- * roundedCorners.js (a test checks).
+ * the 1Password Quick Access window. A panel menu is an invisible outer box
+ * (the boxpointer) around the visible inner box (popup-menu-content); the
+ * radius is set on both, so whichever the theme draws gets it. Must equal
+ * CORNER_RADIUS in roundedCorners.js (a test checks).
  * See docs/large-spacing.md#large-spacing-corners */
 .popup-menu-boxpointer.greedy-large-spacing-panel {
     -arrow-border-radius: 15px;
 }
 
-/* Tab bar: icons instead of names, about 54 px tall (20 px above and below
- * the icon, which keeps it centred). */
-.greedy-large-spacing .clipboard-history-tab {
-    padding: 20px 0;
+.popup-menu-content.greedy-large-spacing {
+    border-radius: 15px;
+}
+
+/* [large-spacing:rows] The tab bar at the top and the button row at the
+ * bottom share one format: rows with the same margins and spacing, and
+ * buttons 40 px tall (a 24 px icon with 8 px above and below), with the same
+ * corners and the same hover and pressed colours.
+ * See docs/large-spacing.md#large-spacing-rows */
+.greedy-large-spacing .clipboard-history-tabbar,
+.greedy-spacing-buttons {
+    spacing: 4px;
+    margin: 2px 4px;
+    padding: 0;
+}
+
+.greedy-large-spacing .clipboard-history-tab,
+.greedy-spacing-button {
+    padding: 8px 0;
+    min-height: 0;
+    border-radius: 8px;
+}
+
+.greedy-large-spacing .clipboard-history-tab:hover,
+.greedy-spacing-button:hover,
+.greedy-spacing-button:focus {
+    background-color: rgba(128, 128, 128, 0.15);
+}
+
+.greedy-spacing-button:active {
+    background-color: rgba(128, 128, 128, 0.35);
 }
 
 .greedy-spacing-tab-icon {
@@ -41,7 +70,7 @@
 }
 
 .greedy-large-spacing .clipboard-history-scrollview {
-    width: 292px;
+    width: 337px;
     max-height: 10000px;    /* The panel's fixed height limits it instead. */
 }
 
@@ -71,29 +100,7 @@
     font-size: 13px;
 }
 
-/* Button row at the bottom. */
-.greedy-spacing-buttons {
-    spacing: 6px;
-    padding: 2px 4px;
-}
-
-.greedy-spacing-button {
-    min-width: 40px;
-    min-height: 40px;
-    padding: 6px;
-    border-radius: 6px;
-}
-
-/* Same size as the tab icons at the top. */
+/* Icons in the button row: the same size as the tab icons. */
 .greedy-spacing-icon {
     icon-size: 24px;
-}
-
-.greedy-spacing-button:hover,
-.greedy-spacing-button:focus {
-    background-color: rgba(128, 128, 128, 0.2);
-}
-
-.greedy-spacing-button:active {
-    background-color: rgba(128, 128, 128, 0.35);
 }

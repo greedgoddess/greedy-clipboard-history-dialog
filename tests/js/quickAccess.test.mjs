@@ -4,7 +4,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-const {shortcutAction, placeQuickAccess, isOnePasswordWindow} = await import('../../feature/quickAccess.js');
+const {shortcutAction, placeQuickAccess, quickAccessAnchor, isOnePasswordWindow} =
+    await import('../../feature/quickAccess.js');
 const {quickAccessAvailability} = await import('../../feature/onePassword.js');
 
 test('the shortcut toggles the panel, and switches only when on and the panel is open', () => {
@@ -17,20 +18,40 @@ test('the shortcut toggles the panel, and switches only when on and the panel is
 const workArea = {x: 0, y: 32, width: 1920, height: 1048};
 const quickAccess = {width: 750, height: 450};
 
-test('like the panel: bottom-left corner at the pointer', () => {
-    assert.deepEqual(placeQuickAccess({x: 400, y: 800}, quickAccess, workArea), {x: 400, y: 350});
+test('anchor: the visible panel\'s bottom-left corner when it is right of the pointer', () => {
+    const panel = {x: 412, y: 390, width: 345, height: 410};
+    assert.deepEqual(quickAccessAnchor({x: 400, y: 800}, panel), {x: 412, y: 800, side: 'right', fromPanel: true});
 });
 
-test('no room on the right: flips to the left of the pointer', () => {
-    assert.deepEqual(placeQuickAccess({x: 1500, y: 800}, quickAccess, workArea), {x: 750, y: 350});
+test('anchor: the visible panel\'s bottom-right corner when it was flipped left', () => {
+    const panel = {x: 1143, y: 390, width: 345, height: 410};
+    assert.deepEqual(quickAccessAnchor({x: 1500, y: 800}, panel), {x: 1488, y: 800, side: 'left', fromPanel: true});
 });
 
-test('pointer near the top: moved down only as far as needed', () => {
-    assert.deepEqual(placeQuickAccess({x: 400, y: 100}, quickAccess, workArea), {x: 400, y: 32});
+test('anchor: the pointer when there is no panel', () => {
+    assert.deepEqual(quickAccessAnchor({x: 400, y: 800}, null), {x: 400, y: 800, side: 'right', fromPanel: false});
 });
 
-test('too wide for either side: kept inside the work area', () => {
-    assert.deepEqual(placeQuickAccess({x: 600, y: 800}, {width: 1800, height: 450}, workArea), {x: 0, y: 350});
+test('placement against the panel: same corner, same distance from the pointer', () => {
+    assert.deepEqual(placeQuickAccess({x: 412, y: 800, side: 'right', fromPanel: true}, quickAccess, workArea),
+        {x: 412, y: 350});
+    assert.deepEqual(placeQuickAccess({x: 1488, y: 800, side: 'left', fromPanel: true}, quickAccess, workArea),
+        {x: 738, y: 350});
+});
+
+test('placement against the panel: kept inside the work area, not flipped', () => {
+    assert.deepEqual(placeQuickAccess({x: 1500, y: 800, side: 'right', fromPanel: true}, quickAccess, workArea),
+        {x: 1170, y: 350});
+});
+
+test('placement at the pointer: flips left when there is no room on the right', () => {
+    assert.deepEqual(placeQuickAccess({x: 1500, y: 800, side: 'right', fromPanel: false}, quickAccess, workArea),
+        {x: 750, y: 350});
+});
+
+test('placement near the top: moved down only as far as needed', () => {
+    assert.deepEqual(placeQuickAccess({x: 400, y: 100, side: 'right', fromPanel: true}, quickAccess, workArea),
+        {x: 400, y: 32});
 });
 
 test('1Password windows are recognised by their class or app ID', () => {

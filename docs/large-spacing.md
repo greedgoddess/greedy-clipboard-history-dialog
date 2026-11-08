@@ -6,7 +6,8 @@ and switched on (Preferences → Cursor-Follow → **Large spacing**):
 
 - the panel has one fixed size, the same on every tab;
 - the tab bar at the top shows [icons](#large-spacing-tab-icons) instead of the
-  names Text, Images, Emoji, Kaomoji and Symbols, and is about 54 px tall;
+  names Text, Images, Emoji, Kaomoji and Symbols, in the same compact
+  format as the button row at the bottom;
 - the clipboard entries are compact, with little vertical padding;
 - the panel has [rounded corners](#large-spacing-corners) with a 15 px
   radius, and with the 1Password integration installed, Quick Access gets the
@@ -117,9 +118,11 @@ the table keeps its text.
 <a id="large-spacing-corners"></a>
 ## `large-spacing:corners`
 
-While Large spacing is on, the panel's corner radius is 15 px, set as
-`-arrow-border-radius` in `feature/largeSpacing.css` on the panel's outer box
-(class `greedy-large-spacing-panel`). The radius sits between GNOME's 12 px
+While Large spacing is on, the panel's corner radius is 15 px, set in
+`feature/largeSpacing.css`. A GNOME panel menu is an invisible outer box
+around the visible inner box; the radius is set on both
+(`-arrow-border-radius` on the outer one, `border-radius` on the inner one),
+so whichever the theme draws gets it. The radius sits between GNOME's 12 px
 windows and the panel's usual theme radius, closer to the former.
 
 With the 1Password integration installed, the Quick Access window gets
@@ -130,6 +133,14 @@ The radius is set there as `CORNER_RADIUS` in `feature/roundedCorners.js`; a
 test keeps the two values equal. With Large spacing off, the panel has the
 theme's radius and Quick Access square corners.
 
+<a id="large-spacing-rows"></a>
+## `large-spacing:rows`
+
+The tab bar at the top and the button row at the bottom share one format in
+`feature/largeSpacing.css`: the same row margins and spacing, and buttons of
+the same height, corners and hover colours, so the two look alike and take
+little height. The tabs keep the original's highlight for the selected tab.
+
 <a id="large-spacing-layout"></a>
 ## `large-spacing:layout`
 
@@ -139,13 +150,12 @@ adjusted while the extension runs. Large spacing adds the class
 
 | What | Size |
 | --- | --- |
-| Panel | 300 × 410 px, the same on every tab |
+| Panel | 345 × 410 px, the same on every tab |
 | Font | normal size (`font-size: 1em`) |
-| Tab bar | about 54 px tall (20 px above and below the icon); 24 px icons |
+| Tab bar and button row | the same format: buttons 40 px tall (24 px icons, 8 px above and below), 8 px corners, 4 px apart, same hover colours |
 | Clipboard entries | text 1.25 × normal; 6 px above and below it; 24 px pin and delete icons |
 | Search field | fills its row, within the panel |
 | Emoji, kaomoji | 20 px and 13 px |
-| Button row | 24 px icons, like the tabs, in buttons of at least 40 × 40 px |
 | Corner radius | 15 px, shared with Quick Access |
 
 The list takes all the height the other parts leave. On tabs without the

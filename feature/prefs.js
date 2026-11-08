@@ -149,7 +149,7 @@ export default class GreedyClipboardHistoryPreferences extends UpstreamPreferenc
             const {quickAccessAvailability} = await import('./onePassword.js');
             const availability = await quickAccessAvailability();
             row.subtitle = availability.available
-                ? 'Press the shortcut again while the panel is open to switch to Quick Access, placed at the pointer like the panel.'
+                ? 'Press the shortcut again while the panel is open to switch to Quick Access, where the panel was.'
                 : availability.reason;
             row.sensitive = availability.available || settings.get_boolean('quick-access');
             checkButton.visible = !availability.available;

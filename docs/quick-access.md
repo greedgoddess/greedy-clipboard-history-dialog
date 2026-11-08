@@ -5,8 +5,7 @@ third-party password manager by AgileBits. It is **not installed by default**:
 see [installing it](#quick-access-install). Once installed, and with
 **1Password Quick Access** switched on (Preferences → Cursor-Follow), pressing
 the clipboard shortcut again while the panel is open closes the panel and
-opens 1Password Quick Access, placed like the panel: its bottom-left corner
-at the pointer. The switch is off by default and can only be turned on while
+opens 1Password Quick Access where the panel was, against the same corner. The switch is off by default and can only be turned on while
 1Password is installed and running.
 
 A thank-you to 1Password for offering a native Linux app, with a
@@ -128,14 +127,19 @@ code does not work around either.
 it runs natively on Wayland or as the Flatpak.
 
 <a id="quick-access-placement"></a>
-## `quick-access:placement`
+## `quick-access:anchor`, `quick-access:placement`
 
-`placeQuickAccess()` places Quick Access the way the panel is placed: its
-bottom-left corner at the pointer, so it extends up and to the right. When
-there is not enough room on the right, it goes to the left of the pointer
-instead, with its bottom-right corner at the pointer. It is then moved only
-as far as needed to stay inside the monitor's work area, for example when the
-pointer is near the top of the screen.
+Quick Access goes where the panel was, against the same corner, so both sit
+at the same distance from the pointer. A GNOME panel menu is an invisible
+outer box around the visible panel, so the visible panel's position is used,
+not the pointer: `quickAccessAnchor()` takes the visible panel's bottom-left
+corner when the panel is to the right of the pointer, and its bottom-right
+corner when it was flipped to the left. `placeQuickAccess()` then puts Quick
+Access's matching corner there, and moves it only as far as needed to stay
+inside the monitor's work area, for example near the top of the screen.
+
+Without an open panel, Quick Access goes with its bottom-left corner at the
+pointer, and to the left of it when there is no room on the right.
 
 <a id="quick-access-rounded-corners"></a>
 ## `quick-access:rounded-corners`
@@ -181,9 +185,11 @@ pointer can only be checked by hand, on a GNOME desktop with 1Password:
 2. 1Password not running: the switch cannot be turned on and says why; start
    1Password, **Check again**, and it can.
 3. Setting on, panel open, pointer mid-screen: the shortcut closes the panel
-   and Quick Access appears with its bottom-left corner at the pointer.
-4. Pointer near the right edge: Quick Access appears to the left of the
-   pointer. Near the top: it stays on screen.
+   and Quick Access appears where the panel was, bottom-left corners in the
+   same place, at the same distance from the pointer.
+4. Pointer near the right edge (the panel opens to the left of it): Quick
+   Access lines up with the panel's bottom-right corner. Near the top: it
+   stays on screen.
 5. Quit 1Password with the setting on: the second press shows a notification
    instead of Quick Access.
 6. With Large spacing installed and on, Quick Access has rounded corners with
