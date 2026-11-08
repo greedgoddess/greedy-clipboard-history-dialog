@@ -50,11 +50,11 @@ last_check="$(dconf read "${SETTINGS_PATH}update-last-check" 2>/dev/null | grep 
 say "Last check: $([[ -n "$last_check" && "$last_check" != 0 ]] && date -d "@$last_check" '+%Y-%m-%d %H:%M' || echo never)"
 
 say
-say "== 1Password integration =="
-if grep -q 'quickAccess: true' "$INSTALL_DIR/features.js" 2>/dev/null; then
-    say "Installed; Quick Access switch: $([[ "$(dconf read "${SETTINGS_PATH}quick-access" 2>/dev/null)" == true ]] && echo on || echo off)"
+say "== Password manager integration =="
+if grep -q 'passwordManagers: true' "$INSTALL_DIR/features.js" 2>/dev/null; then
+    say "Installed; enabled: $(dconf read "${SETTINGS_PATH}password-managers" 2>/dev/null || true); shortcut opens: $(dconf read "${SETTINGS_PATH}shortcut-password-manager" 2>/dev/null || true)"
 else
-    say "Not installed (./install.sh --with-1password adds it)"
+    say "Not installed (./install.sh --with-password-managers adds it)"
 fi
 
 say

@@ -99,7 +99,8 @@ original's class from `upstream-extension.js`:
 
 - `enable()` runs the original's `enable()`, then installs
   [`CursorFollow`](#cursor-follow-install) on the original's panel menu and
-  starts the [`QuickAccessSwitch`](quick-access.md) and the
+  starts the [`HoverPreview`](hover-preview.md), the
+  [`PasswordManagerSwitch`](password-managers.md) and the
   [`UpdateNotifier`](update-notifications.md);
 - `disable()` stops both first, then runs the original's `disable()`.
 

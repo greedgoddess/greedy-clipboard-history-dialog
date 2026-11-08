@@ -20,7 +20,8 @@
  * invisible outer box (the boxpointer) around the visible inner box
  * (popup-menu-content); the radius is set on both, so whichever the theme
  * draws gets it. Must equal PANEL_CORNER_RADIUS in roundedCorners.js (a test
- * checks); Quick Access gets a slightly larger radius there, so that both
+ * checks); a password manager's search window gets a slightly larger radius
+ * there, so that both
  * look the same.
  * See docs/large-spacing.md#large-spacing-corners */
 .popup-menu-boxpointer.greedy-large-spacing-panel {
@@ -74,8 +75,8 @@
     icon-size: 24px;
 }
 
-/* The search field spans the same width as the list below: its row loses
- * its side padding and the field its side margins. A small preferred width;
+/* The search field spans nearly the width of the list below: its row loses
+ * its side padding, and the field keeps a small margin at the sides. A small preferred width;
  * it fills the row anyway (it expands), and never runs past the panel's
  * right edge. */
 .greedy-spacing-search-row {
@@ -84,7 +85,7 @@
 }
 
 .greedy-large-spacing .clipboard-history-search {
-    margin: 4px 0;
+    margin: 4px 6px;
     width: 200px;
     font-size: 1.5em;       /* Half as large again, like its clear icon. */
     padding: 7px 10px;
@@ -130,7 +131,8 @@
 /* Emoji and symbols: 26 px, 1.3 × the original's 20 px; the largest size at
  * which the original's 8 emoji (10 symbols) per row fit the panel next to
  * its scroll bar (30 px cut the last one off). The buttons take their
- * natural width and the rows have narrow margins. */
+ * natural width and line up from the left (largeSpacing.js stops them from
+ * being spread over the row); the rows have narrow margins. */
 .greedy-large-spacing .clipboard-history-emoji-row {
     spacing: 2px;
     padding: 1px 2px;
@@ -149,4 +151,15 @@
 /* Icons in the button row: the same size as the tab icons. */
 .greedy-spacing-icon {
     icon-size: 24px;
+}
+
+/* [large-spacing:provider-indicator] The small red dot on a password
+ * manager's button while its app is not running (the icon is also greyed
+ * out). See docs/large-spacing.md#large-spacing-provider-buttons */
+.greedy-spacing-indicator {
+    width: 8px;
+    height: 8px;
+    margin: 1px;
+    border-radius: 4px;
+    background-color: #e01b24;
 }

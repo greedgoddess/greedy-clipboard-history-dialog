@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  *
  * With the 'large-spacing' setting on, the panel gets one fixed size on every
- * tab, a taller tab bar with icons instead of names, and rounded corners that
- * match the 1Password Quick Access window (sizes in largeSpacing.css), and
- * the menu entries at the bottom ("Extension Settings…",
- * "Clear (except pinned)") are replaced by a row of icon buttons. The buttons trigger the
- * original entries, so they behave exactly as before. Optional entries, such
- * as 1Password Quick Access, come first.
+ * tab, a compact tab bar with icons instead of names, and rounded corners that
+ * match a password manager's search window (sizes in largeSpacing.css), and
+ * the menu entries at the bottom ("Extension Settings…", "Clear (except
+ * pinned)") are replaced by a row of icon buttons. The buttons trigger the
+ * original entries, so they behave exactly as before. Buttons for the enabled
+ * password managers come first.
  * Explained section by section in docs/large-spacing.md.
  */
 
@@ -16,6 +16,7 @@
 // Do NOT upload to extensions.gnome.org (EGO) unless you understand JavaScript
 // and can maintain this code.
 
+import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import Shell from 'gi://Shell';
 import St from 'gi://St';
@@ -42,7 +43,7 @@ export const TAB_ICONS = {
     Kaomoji: ['face-wink-symbolic', 'face-smile-big-symbolic', 'emoji-body-symbolic'],
     Symbols: ['emoji-symbols-symbolic', 'insert-text-symbolic'],
 };
-const ONE_PASSWORD_DESKTOP_IDS = ['1password.desktop', 'com.onepassword.OnePassword.desktop'];
+const EMOJI_BUTTON_CLASS = 'clipboard-history-emoji-button';
 
 /** [large-spacing:find-actions]
  * The original's two menu entries, recognised by their labels.
@@ -71,12 +72,20 @@ function findByStyleClass(actor, styleClass) {
     return null;
 }
 
-/** 1Password's app icon, looked up in GNOME Shell's app registry, which
- * answers quietly when an ID is not installed (the native package and the
+/** A password manager's app icon, looked up in GNOME Shell's app registry,
+ * which answers quietly when an ID is not installed (a native package and a
  * Flatpak use different IDs). */
-function onePasswordIcon() {
+function findAllByStyleClass(actor, styleClass, found = []) {
+    if (actor.has_style_class_name?.(styleClass))
+        found.push(actor);
+    for (const child of actor.get_children?.() ?? [])
+        findAllByStyleClass(child, styleClass, found);
+    return found;
+}
+
+function appIcon(desktopIds) {
     const appSystem = Shell.AppSystem?.get_default?.();
-    for (const id of ONE_PASSWORD_DESKTOP_IDS) {
+    for (const id of desktopIds) {
         const icon = appSystem?.lookup_app(id)?.get_icon();
         if (icon)
             return icon;
@@ -87,12 +96,13 @@ function onePasswordIcon() {
 export class LargeSpacing {
     /** [large-spacing:install]
      * menu: the original's panel menu; stylesheet: largeSpacing.css;
-     * quickAccess: a function returning the QuickAccessSwitch, or null.
+     * passwordManagers: a function returning the PasswordManagerSwitch, or
+     * null when that integration is not installed or not loaded yet.
      * See docs/large-spacing.md#large-spacing-install */
-    constructor(menu, settings, stylesheet, quickAccess) {
+    constructor(menu, settings, stylesheet, passwordManagers) {
         this._menu = menu;
         this._settings = settings;
-        this._quickAccess = quickAccess;
+        this._passwordManagers = passwordManagers;
         this._applied = false;
         this.active = Boolean(menu);
         if (!menu)
@@ -102,8 +112,15 @@ export class LargeSpacing {
         this._stylesheet = stylesheet;
         this._theme.load_stylesheet(stylesheet);
 
-        this._settingsIds = ['changed::large-spacing', 'changed::quick-access']
+        this._settingsIds = ['changed::large-spacing', 'changed::password-managers']
             .map(signal => settings.connect(signal, () => this._update()));
+        // [large-spacing:provider-indicator] Whether each password manager is
+        // running is checked whenever the panel opens.
+        // See docs/large-spacing.md#large-spacing-provider-buttons
+        this._openId = menu.connect('open-state-changed', (_menu, open) => {
+            if (open)
+                this._refreshProviderButtons();
+        });
         this._update();
     }
 
@@ -133,11 +150,15 @@ export class LargeSpacing {
             this._menu.box.remove_child(item);
 
         const buttons = new St.BoxLayout({style_class: 'greedy-spacing-buttons', x_expand: true});
-        const optional = [];
-        if (this._quickAccess?.() && this._settings.get_boolean('quick-access')) {
-            optional.push(this._button(onePasswordIcon(), '1Password Quick Access',
-                () => this._quickAccess()?.openQuickAccess()));
-        }
+        // [large-spacing:provider-buttons] One button per enabled password
+        // manager, with its app icon.
+        // See docs/large-spacing.md#large-spacing-provider-buttons
+        const passwordManagers = this._passwordManagers?.();
+        this._providerButtons = (passwordManagers?.enabledProviders() ?? []).map(provider => {
+            const button = this._providerButton(provider, () => this._passwordManagers?.()?.open(provider));
+            return {provider, button};
+        });
+        const optional = this._providerButtons.map(({button}) => button);
         const settingsButton = this._button(new Gio.ThemedIcon({name: 'emblem-system-symbolic'}),
             'Extension Settings', () => settings.activate(null));
         const clearButton = this._button(new Gio.ThemedIcon({name: 'user-trash-symbolic'}),
@@ -161,8 +182,8 @@ export class LargeSpacing {
         // the remaining height, so the panel keeps its size when a tab hides
         // the search row. See docs/large-spacing.md#large-spacing-layout
         this._menu.box.add_style_class_name(LARGE_SPACING_CLASS);
-        // [large-spacing:corners] The panel's rounded corners, matching the
-        // Quick Access window. See docs/large-spacing.md#large-spacing-corners
+        // [large-spacing:corners] The panel's rounded corners, matching a
+        // password manager's search window. See docs/large-spacing.md#large-spacing-corners
         this._menu.actor?.add_style_class_name(PANEL_CLASS);
         // The search field's row has no class of its own; it gets one so that
         // its side padding can go and the field spans the list's width.
@@ -174,7 +195,47 @@ export class LargeSpacing {
             this._scrollViewExpand = this._scrollView.y_expand;
             this._scrollView.y_expand = true;
         }
+        // [large-spacing:emoji-rows] Emoji and symbols keep their natural
+        // width and line up from the left in each category, instead of being
+        // spread over the row. See docs/large-spacing.md#large-spacing-layout
+        this._emojiButtons = findAllByStyleClass(this._menu.box, EMOJI_BUTTON_CLASS)
+            .map(button => ({button, xExpand: button.x_expand}));
+        for (const {button} of this._emojiButtons)
+            button.x_expand = false;
         this._applied = true;
+        this._refreshProviderButtons();
+    }
+
+    /** A button with the password manager's icon, and a small red dot in its
+     * corner that shows while the app is not running. */
+    _providerButton(provider, onClick) {
+        const icon = new St.Icon({gicon: appIcon(provider.desktopIds), style_class: 'greedy-spacing-icon'});
+        const dot = new St.Widget({
+            style_class: 'greedy-spacing-indicator',
+            x_align: Clutter.ActorAlign.END,
+            y_align: Clutter.ActorAlign.START,
+            visible: false,
+        });
+        const content = new St.Widget({layout_manager: new Clutter.BinLayout(), x_expand: true});
+        content.add_child(icon);
+        content.add_child(dot);
+        const button = this._button(null, `${provider.name} ${provider.windowName}`, onClick, content);
+        return Object.assign(button, {providerIcon: icon, providerDot: dot});
+    }
+
+    /** Greys out each password manager's icon and shows its red dot while
+     * the app is not running. Indicator only: the buttons stay clickable,
+     * and the shortcut keeps working. */
+    async _refreshProviderButtons() {
+        const passwordManagers = this._passwordManagers?.();
+        for (const entry of this._providerButtons ?? []) {
+            const running = await passwordManagers?.isRunning(entry.provider);
+            if (!this._providerButtons?.includes(entry))
+                continue;    // Rebuilt or switched off meanwhile
+            const off = running === false;
+            entry.button.providerIcon.opacity = off ? 110 : 255;
+            entry.button.providerDot.visible = off;
+        }
     }
 
     /** Replaces each tab's name with its icon; the name stays as the
@@ -196,10 +257,10 @@ export class LargeSpacing {
         }
     }
 
-    _button(gicon, name, onClick) {
+    _button(gicon, name, onClick, child = null) {
         const button = new St.Button({
             style_class: 'greedy-spacing-button',
-            child: new St.Icon({gicon, style_class: 'greedy-spacing-icon'}),
+            child: child ?? new St.Icon({gicon, style_class: 'greedy-spacing-icon'}),
             accessible_name: name,
             can_focus: true,
             x_expand: true,
@@ -231,6 +292,10 @@ export class LargeSpacing {
         this._menu.actor?.remove_style_class_name(PANEL_CLASS);
         this._searchRow?.remove_style_class_name(SEARCH_ROW_CLASS);
         this._searchRow = null;
+        for (const {button, xExpand} of this._emojiButtons ?? [])
+            button.x_expand = xExpand;
+        this._emojiButtons = null;
+        this._providerButtons = null;
         if (this._scrollView)
             this._scrollView.y_expand = this._scrollViewExpand;
         this._scrollView = null;
@@ -245,9 +310,10 @@ export class LargeSpacing {
         if (this._applied)
             this._unapply();
         this._settingsIds.forEach(id => this._settings.disconnect(id));
+        this._menu.disconnect(this._openId);
         this._theme.unload_stylesheet(this._stylesheet);
         this._menu = null;
         this._settings = null;
-        this._quickAccess = null;
+        this._passwordManagers = null;
     }
 }

@@ -26,7 +26,8 @@ SCHEMA_PATH = '/org/gnome/shell/extensions/greedy-clipboard-history-dialog/'
 NAME = 'Greedy Clipboard History Dialog'
 URL = 'https://github.com/greedgoddess/greedy-clipboard-history-dialog'
 FEATURE_FILES = ['extension.js', 'prefs.js', 'features.js', 'cursorFollow.js', 'updateNotifier.js',
-                 'quickAccess.js', 'onePassword.js', 'roundedCorners.js', 'largeSpacing.js',
+                 'hoverPreview.js', 'hoverPreview.css', 'passwordManagerSwitch.js', 'passwordManagers.js',
+                 'roundedCorners.js', 'largeSpacing.js',
                  'largeSpacing.css']
 
 PREFS_SHIM = """// Created by the build: the original has no prefs.js.
@@ -210,7 +211,7 @@ def main(upstream, out, feature, report_path):
                         '"Open at mouse pointer" will probably be inactive')
     if "'toggle-shortcut'" not in original or 'toggle-shortcut' not in upstream_names:
         warnings.append('the original no longer has its toggle-shortcut keybinding; '
-                        'the switch to 1Password Quick Access will not work')
+                        'switching to a password manager will not work')
     for text, what in (("'Clear", 'its "Clear (except pinned)" entry'),
                        ("'Extension Settings", 'its "Extension Settings…" entry'),
                        ('clipboard-history-tabbar', 'its tab bar')):

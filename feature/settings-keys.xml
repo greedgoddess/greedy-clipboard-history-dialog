@@ -13,13 +13,26 @@
       </description>
     </key>
 
-    <!-- [quick-access:setting]
-         Added by Greedy Clipboard History Dialog. Pressing the shortcut again
-         while the panel is open switches to 1Password Quick Access.
-         See docs/quick-access.md#quick-access-setting -->
-    <key name="quick-access" type="b">
+    <!-- [password-manager:settings]
+         Added by Greedy Clipboard History Dialog, for the optional password
+         manager integration. 1Password is the only supported one for now.
+         See docs/password-managers.md#password-manager-settings -->
+    <key name="password-managers" type="as">
+      <default>[]</default>
+      <summary>Enabled password managers (IDs, for example '1password')</summary>
+    </key>
+    <key name="shortcut-password-manager" type="s">
+      <default>''</default>
+      <summary>The password manager the second press of the shortcut opens ('' for none)</summary>
+    </key>
+
+    <!-- [hover-preview:setting]
+         Added by Greedy Clipboard History Dialog. Shows up to 512 characters
+         of a text entry while the pointer rests on it.
+         See docs/hover-preview.md#hover-preview-setting -->
+    <key name="hover-preview" type="b">
       <default>false</default>
-      <summary>Switch to 1Password Quick Access with the shortcut</summary>
+      <summary>Preview text entries on hover</summary>
     </key>
 
     <!-- [large-spacing:setting]

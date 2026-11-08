@@ -38,32 +38,44 @@ run "$REPO/install.sh" --yes
 check "installing never touches the original extension" 'grep -qx original "$LEGACY_EXT_DIR/extension.js"'
 rm -rf "$LEGACY_EXT_DIR"
 
-# ---- 1Password integration: left out unless asked for ----------------------------
+# ---- Password manager integration: left out unless asked for --------------------
 make_build true plain
 run "$REPO/install.sh" --yes
-check "1Password integration left out by default" '[[ ! -e "$EXT_DIR/quickAccess.js" && ! -e "$EXT_DIR/onePassword.js" && ! -e "$EXT_DIR/roundedCorners.js" ]] && grep -q "quickAccess: false" "$EXT_DIR/features.js"'
-run "$REPO/install.sh" --yes --with-1password
-check "--with-1password includes it" '[[ -f "$EXT_DIR/quickAccess.js" && -f "$EXT_DIR/onePassword.js" && -f "$EXT_DIR/roundedCorners.js" ]] && grep -q "quickAccess: true" "$EXT_DIR/features.js"'
+check "password manager integration left out by default" '[[ ! -e "$EXT_DIR/passwordManagerSwitch.js" && ! -e "$EXT_DIR/passwordManagers.js" && ! -e "$EXT_DIR/roundedCorners.js" ]] && grep -q "passwordManagers: false" "$EXT_DIR/features.js"'
+check "hover preview is always installed" '[[ -f "$EXT_DIR/hoverPreview.js" && -f "$EXT_DIR/hoverPreview.css" ]]'
+run "$REPO/install.sh" --yes --with-password-managers
+check "--with-password-managers includes it" '[[ -f "$EXT_DIR/passwordManagerSwitch.js" && -f "$EXT_DIR/passwordManagers.js" && -f "$EXT_DIR/roundedCorners.js" ]] && grep -q "passwordManagers: true" "$EXT_DIR/features.js"'
 run "$REPO/install.sh" --yes
-check "a plain install keeps it" 'grep -q "quickAccess: true" "$EXT_DIR/features.js"'
-dconf write "${NEW_PATH}quick-access" true
+check "a plain install keeps it" 'grep -q "passwordManagers: true" "$EXT_DIR/features.js"'
+dconf write "${NEW_PATH}password-managers" "['1password']"
+run "$REPO/install.sh" --yes --without-password-managers
+check "--without-password-managers removes it and switches every password manager off" '[[ ! -e "$EXT_DIR/passwordManagerSwitch.js" ]] && grep -q "passwordManagers: false" "$EXT_DIR/features.js" && [[ $(setting "$NEW_PATH" password-managers) == "@as []" ]]'
+run "$REPO/install.sh" --yes --with-1password
+check "--with-1password still works, as the older name" 'grep -q "passwordManagers: true" "$EXT_DIR/features.js"'
 run "$REPO/install.sh" --yes --without-1password
-check "--without-1password removes it and switches its setting off" '[[ ! -e "$EXT_DIR/quickAccess.js" ]] && grep -q "quickAccess: false" "$EXT_DIR/features.js" && [[ $(setting "$NEW_PATH" quick-access) == false ]]'
+
+# An installation from before 1.2.0 (1Password integration, its switch on)
+# keeps it: 1Password enabled and opened by the second shortcut press.
+echo "export const FEATURES = {quickAccess: true, largeSpacing: false};" > "$EXT_DIR/features.js"
+dconf write "${NEW_PATH}quick-access" true
+run "$REPO/install.sh" --yes
+check "the 1Password integration carries over as password managers" 'grep -q "passwordManagers: true" "$EXT_DIR/features.js" && [[ $(setting "$NEW_PATH" password-managers) == "['"'"'1password'"'"']" && $(setting "$NEW_PATH" shortcut-password-manager) == "'"'"'1password'"'"'" && -z $(setting "$NEW_PATH" quick-access) ]]'
+run "$REPO/install.sh" --yes --without-password-managers
 
 # ---- Large spacing: left out unless asked for, independent of 1Password ------------
 run "$REPO/install.sh" --yes
 check "large spacing left out by default" '[[ ! -e "$EXT_DIR/largeSpacing.js" && ! -e "$EXT_DIR/largeSpacing.css" ]] && grep -q "largeSpacing: false" "$EXT_DIR/features.js"'
 run "$REPO/install.sh" --yes --with-large-spacing
-check "--with-large-spacing includes it, 1Password stays out" '[[ -f "$EXT_DIR/largeSpacing.js" && -f "$EXT_DIR/largeSpacing.css" && ! -e "$EXT_DIR/quickAccess.js" ]] && grep -q "largeSpacing: true" "$EXT_DIR/features.js"'
-run "$REPO/install.sh" --yes --with-1password
-check "adding 1Password keeps large spacing" 'grep -q "quickAccess: true, largeSpacing: true" "$EXT_DIR/features.js"'
+check "--with-large-spacing includes it, password managers stay out" '[[ -f "$EXT_DIR/largeSpacing.js" && -f "$EXT_DIR/largeSpacing.css" && ! -e "$EXT_DIR/passwordManagerSwitch.js" ]] && grep -q "largeSpacing: true" "$EXT_DIR/features.js"'
+run "$REPO/install.sh" --yes --with-password-managers
+check "adding password managers keeps large spacing" 'grep -q "passwordManagers: true, largeSpacing: true" "$EXT_DIR/features.js"'
 dconf write "${NEW_PATH}large-spacing" true
 run "$REPO/install.sh" --yes --without-large-spacing
-check "--without-large-spacing removes it and switches it off, 1Password stays" '[[ ! -e "$EXT_DIR/largeSpacing.js" && -f "$EXT_DIR/quickAccess.js" && $(setting "$NEW_PATH" large-spacing) == false ]]'
-run "$REPO/install.sh" --yes --without-1password
+check "--without-large-spacing removes it and switches it off, password managers stay" '[[ ! -e "$EXT_DIR/largeSpacing.js" && -f "$EXT_DIR/passwordManagerSwitch.js" && $(setting "$NEW_PATH" large-spacing) == false ]]'
+run "$REPO/install.sh" --yes --without-password-managers
 
 # An installation from before the rename (touch mode) keeps its choice and switch.
-echo "export const FEATURES = {quickAccess: false, touchMode: true};" > "$EXT_DIR/features.js"
+echo "export const FEATURES = {passwordManagers: false, touchMode: true};" > "$EXT_DIR/features.js"
 dconf write "${NEW_PATH}touch-mode" true
 run "$REPO/install.sh" --yes
 check "touch mode carries over as large spacing" 'grep -q "largeSpacing: true" "$EXT_DIR/features.js" && [[ $(setting "$NEW_PATH" large-spacing) == true && -z $(setting "$NEW_PATH" touch-mode) ]]'

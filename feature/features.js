@@ -4,7 +4,7 @@
  *
  * install.sh rewrites this file in the installed copy. Each optional feature
  * is included only when asked for, and otherwise its files are left out:
- *   quickAccess  ./install.sh --with-1password   (docs/quick-access.md)
- *   largeSpacing    ./install.sh --with-large-spacing  (docs/large-spacing.md)
+ *   passwordManagers  ./install.sh --with-password-managers  (docs/password-managers.md)
+ *   largeSpacing      ./install.sh --with-large-spacing      (docs/large-spacing.md)
  */
-export const FEATURES = {quickAccess: false, largeSpacing: false};
+export const FEATURES = {passwordManagers: false, largeSpacing: false};

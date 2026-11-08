@@ -8,15 +8,25 @@ on is listed in the README under "Tested releases".
 - Large spacing, optional and not installed by default
   (`./install.sh --with-large-spacing`; then Preferences → Cursor-Follow):
   a compact panel with one fixed size on every tab, icons instead of names
-  in the tab bar, compact entries, and icon buttons instead of the menu
-  entries at the bottom: 1Password (with the integration installed and on),
-  settings, and clear. The buttons trigger the original entries. Rounded
-  corners on the panel (15 px) and, with the 1Password integration, on the
-  Quick Access window (18 px, which looks the same), drawn by GNOME Shell without
-  changing 1Password (GNOME Shell 51's Clutter.ShaderEffect, or
-  Shell.GLSLEffect on older versions). All sizes are fixed in
-  largeSpacing.css. (Called touch mode during development; an earlier choice
-  carries over.)
+  in the tab bar, compact entries, emoji lined up from the left, and icon
+  buttons instead of the menu entries at the bottom: one per enabled password
+  manager, settings, and clear. The buttons trigger the original entries.
+  Rounded corners on the panel (15 px) and, with the password manager
+  integration, on the search window (18 px, which looks the same), drawn by
+  GNOME Shell without changing the password manager (GNOME Shell 51's
+  Clutter.ShaderEffect, or Shell.GLSLEffect on older versions). All sizes
+  are fixed in largeSpacing.css. (Called touch mode during development; an
+  earlier choice carries over.)
+- The 1Password integration becomes the password manager integration
+  (`./install.sh --with-password-managers`; `--with-1password` still works),
+  with 1Password as the only supported password manager for now. Any number
+  of password managers can be enabled; a drop-down chooses which one the
+  second shortcut press opens, or none. In Large spacing, each enabled
+  password manager has a button, greyed out with a red dot while its app is
+  not running (still clickable). An earlier 1Password setup carries over.
+- Preview on hover (Preferences → Cursor-Follow, off by default): up to 512
+  characters of a text entry in an overlay next to the panel, with the
+  original layout and with Large spacing.
 - `verify.sh` no longer reports a different build when optional features
   are installed, and shows the message line of warnings, not only their
   stack trace.

@@ -4,8 +4,8 @@
  *
  * The original Clipboard History code is unchanged, in upstream-extension.js.
  * This class extends it and adds "Open at mouse pointer" after it has built
- * its panel button, the optional switch to 1Password Quick Access and large
- * spacing, and the update notifications.
+ * its panel button, the hover preview, the optional password manager
+ * integration and large spacing, and the update notifications.
  * See docs/cursor-follow.md#cursor-follow-entry-point
  */
 
@@ -18,6 +18,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import UpstreamExtension from './upstream-extension.js';
 import {CursorFollow} from './cursorFollow.js';
 import {FEATURES} from './features.js';
+import {HoverPreview} from './hoverPreview.js';
 import {UpdateNotifier} from './updateNotifier.js';
 
 // [cursor-follow:entry-point]
@@ -35,15 +36,19 @@ export default class GreedyClipboardHistoryExtension extends UpstreamExtension {
         if (!this._cursorFollow.active)
             console.warn(`${this.uuid}: panel menu not found; "Open at mouse pointer" is inactive`);
 
-        // [quick-access:entry-point] Only when installed with --with-1password;
-        // otherwise its files are not there at all.
-        // See docs/quick-access.md#quick-access-entry-point
+        // [hover-preview:entry-point] See docs/hover-preview.md#hover-preview-entry-point
+        this._hoverPreview = new HoverPreview(indicator?.menu, this.getSettings(),
+            this.dir.get_child('hoverPreview.css'));
+
+        // [password-manager:entry-point] Only when installed with
+        // --with-password-managers; otherwise its files are not there at all.
+        // See docs/password-managers.md#password-manager-entry-point
         this._greedyEnabled = true;
-        if (FEATURES.quickAccess) {
-            import('./quickAccess.js').then(({QuickAccessSwitch}) => {
+        if (FEATURES.passwordManagers) {
+            import('./passwordManagerSwitch.js').then(({PasswordManagerSwitch}) => {
                 if (this._greedyEnabled)
-                    this._quickAccess = new QuickAccessSwitch(indicator?.menu, this.getSettings());
-            }).catch(error => console.warn(`${this.uuid}: 1Password integration not loaded: ${error.message}`));
+                    this._passwordManagers = new PasswordManagerSwitch(indicator?.menu, this.getSettings());
+            }).catch(error => console.warn(`${this.uuid}: password manager integration not loaded: ${error.message}`));
         }
 
         // [large-spacing:entry-point] Only when installed with --with-large-spacing.
@@ -52,7 +57,7 @@ export default class GreedyClipboardHistoryExtension extends UpstreamExtension {
             import('./largeSpacing.js').then(({LargeSpacing}) => {
                 if (this._greedyEnabled) {
                     this._largeSpacing = new LargeSpacing(indicator?.menu, this.getSettings(),
-                        this.dir.get_child('largeSpacing.css'), () => this._quickAccess ?? null);
+                        this.dir.get_child('largeSpacing.css'), () => this._passwordManagers ?? null);
                 }
             }).catch(error => console.warn(`${this.uuid}: large spacing not loaded: ${error.message}`));
         }
@@ -66,8 +71,10 @@ export default class GreedyClipboardHistoryExtension extends UpstreamExtension {
         this._updateNotifier = null;
         this._largeSpacing?.destroy();
         this._largeSpacing = null;
-        this._quickAccess?.destroy();
-        this._quickAccess = null;
+        this._passwordManagers?.destroy();
+        this._passwordManagers = null;
+        this._hoverPreview?.destroy();
+        this._hoverPreview = null;
         this._cursorFollow?.destroy();
         this._cursorFollow = null;
         super.disable();

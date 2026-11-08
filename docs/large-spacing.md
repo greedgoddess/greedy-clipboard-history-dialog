@@ -10,12 +10,14 @@ and switched on (Preferences → Cursor-Follow → **Large spacing**):
   format as the button row at the bottom;
 - the clipboard entries are compact, with little vertical padding;
 - the panel has [rounded corners](#large-spacing-corners) with a 15 px
-  radius, and with the 1Password integration installed, Quick Access gets the
-  same corners, so both match;
+  radius, and with the password manager integration installed, the search
+  windows get the same corners, so both match;
 - the menu entries at the bottom are replaced by a row of icon buttons:
   optional entries first, then **settings** (gear) and **clear** (trash
-  can). With the [1Password integration](quick-access.md) installed and
-  switched on, a **1Password** button, with 1Password's app icon, opens Quick
+  can). With the [password manager integration](password-managers.md)
+  installed, each enabled password manager gets a button first, with its app
+  icon; see [password manager buttons](#large-spacing-provider-buttons).
+  For 1Password it opens Quick
   Access the same way as the second press of the shortcut.
 
 The buttons trigger the original entries, so settings and clearing behave
@@ -45,7 +47,7 @@ Large spacing was called touch mode before version 1.2.0 was released;
 
 Without `--with-large-spacing`, `install.sh` leaves `largeSpacing.js` and
 `largeSpacing.css` out of the installed copy and records `largeSpacing: false` in
-its `features.js`. The choice is independent of the 1Password integration,
+its `features.js`. The choice is independent of the password manager integration,
 kept by later installs and updates until changed, and removing large spacing
 also switches its setting off. `./verify.sh` shows whether it is installed.
 
@@ -66,14 +68,15 @@ spacing is installed.
 
 When `features.js` says large spacing is installed, `feature/extension.js` loads
 `largeSpacing.js` with a dynamic `import()` and creates `LargeSpacing` with the
-panel menu, the settings, the stylesheet, and a way to reach the 1Password
+panel menu, the settings, the stylesheet, and a way to reach the password manager
 integration if it is loaded. It is destroyed on `disable()`.
 
 <a id="large-spacing-install"></a>
 ## `large-spacing:install`
 
 `LargeSpacing` loads `largeSpacing.css` into GNOME Shell's theme (unloaded again on
-`disable()`) and follows the `large-spacing` and `quick-access` settings.
+`disable()`) and follows the `large-spacing` and `password-managers`
+settings.
 
 <a id="large-spacing-find-actions"></a>
 ## `large-spacing:find-actions`
@@ -86,7 +89,7 @@ release renames them, large spacing stays inactive and logs a warning, and
 <a id="large-spacing-button-order"></a>
 ## `large-spacing:button-order`
 
-`orderButtons()`: optional entries first (1Password, when available), then
+`orderButtons()`: optional entries first (the enabled password managers), then
 settings, then clear.
 
 <a id="large-spacing-apply"></a>
@@ -128,15 +131,31 @@ around the visible inner box; the radius is set on both
 so whichever the theme draws gets it. The radius sits between GNOME's 12 px
 windows and the panel's usual theme radius, closer to the former.
 
-With the 1Password integration installed, the Quick Access window gets
-rounded corners too, drawn by GNOME Shell without changing 1Password; see
-[Quick Access rounded corners](quick-access.md#quick-access-rounded-corners).
+With the password manager integration installed, a search window such as
+1Password Quick Access gets rounded corners too, drawn by GNOME Shell without
+changing the password manager; see
+[rounded corners](password-managers.md#password-manager-rounded-corners).
 Its radius, `CORNER_RADIUS` in `feature/roundedCorners.js`, is 3 px larger
 than the panel's (`PANEL_CORNER_RADIUS`): the panel's outline and shadow make
 its corners look rounder than a bare window's with the same radius, so this
 way both look the same. A test keeps `PANEL_CORNER_RADIUS` equal to the
 stylesheet. With Large spacing off, the panel has the theme's radius and
-Quick Access square corners.
+the search windows square corners.
+
+<a id="large-spacing-provider-buttons"></a>
+## `large-spacing:provider-buttons`, `large-spacing:provider-indicator`
+
+With the [password manager integration](password-managers.md) installed,
+each enabled password manager gets a button at the start of the bottom row,
+with its app icon (looked up through GNOME Shell's app registry, from either
+its native package or its Flatpak). Tapping it opens the password manager's
+search window where the panel was, like the second press of the shortcut.
+
+Whether each password manager is running is checked whenever the panel opens.
+While one is not running, its icon is greyed out and a small red dot shows in
+the button's corner. This is an indicator only: the button stays clickable,
+and the shortcut keeps working; both then show a notification that the app is
+not running.
 
 <a id="large-spacing-rows"></a>
 ## `large-spacing:rows`
@@ -159,10 +178,10 @@ adjusted while the extension runs. Large spacing adds the class
 | Font | normal size (`font-size: 1em`) |
 | Tab bar and button row | the same format: buttons 38 px tall (24 px icons, 7 px above and below), 8 px corners, 3 px apart, same hover colours |
 | Clipboard entries | text 1.25 × normal; 5 px above and below it, 10 px at the sides; 24 px pin and delete icons, the delete icon in the same grey as the star when off |
-| Search field | as wide as the list below (its row loses its side padding); text and clear icon half as large again (1.5 em, 24 px icon) |
-| Emoji and symbols | 26 px, 1.3 × the original: the largest that fits the original's 8 (symbols 10) per row; natural width, narrow row margins |
+| Search field | nearly as wide as the list below (its row loses its side padding; 6 px margin at each side); text and clear icon half as large again (1.5 em, 24 px icon) |
+| Emoji and symbols | 26 px, 1.3 × the original: the largest that fits the original's 8 (symbols 10) per row; natural width, lined up from the left in each category instead of spread over the row |
 | Kaomoji | 13 px |
-| Corner radius | panel 15 px; Quick Access 18 px, which looks the same |
+| Corner radius | panel 15 px; password manager search windows 18 px, which looks the same |
 
 The list takes all the height the other parts leave. On tabs without the
 search row, the list gets that row's height, so the panel keeps its size.
@@ -182,7 +201,7 @@ On `disable()`: undoes everything above and unloads the stylesheet.
 ## Testing
 
 `tests/js/largeSpacing.test.mjs` covers finding the entries, the button order,
-the 1Password button appearing and disappearing with its switch, the buttons
+the password manager buttons and their indicator, the buttons
 triggering the original entries, the trash can following the original's
 visibility, the tab icons, the layout being applied, and putting everything
 back exactly.
@@ -198,10 +217,12 @@ By hand, on a GNOME desktop (with a touch screen if available):
    cleared except pinned entries, as before. With nothing to clear, and on
    the Emoji, Kaomoji and Symbols tabs, the trash can is hidden.
 4. On the Emoji and Symbols tabs, every row fits the panel without being cut
-   off on the right.
-5. With the 1Password integration installed and switched on: a 1Password
-   button comes first and opens Quick Access where the panel was.
-6. The panel has rounded corners; with the 1Password integration, Quick
+   off on the right, and the emoji line up from the left in each category.
+5. With the password manager integration installed and 1Password enabled: a
+   1Password button comes first and opens Quick Access where the panel was.
+   With 1Password not running, its icon is greyed out with a small red dot,
+   and tapping it still works (a notification says it is not running).
+6. The panel has rounded corners; with the password manager integration, Quick
    Access has the same ones.
 7. Switch large spacing off: everything is back as in step 1, and Quick
    Access has square corners again (the next time it opens).

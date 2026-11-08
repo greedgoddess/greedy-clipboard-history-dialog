@@ -8,12 +8,7 @@ export async function resolve(specifier, context, nextResolve) {
 
 const STUBS = {
     'gi://St': `
-        class Widget {
-            constructor(props) { Object.assign(this, props); this.x = 0; this.y = 0; this.destroyed = false; }
-            set_position(x, y) { this.x = x; this.y = y; }
-            destroy() { this.destroyed = true; globalThis.__uiGroup.delete(this); }
-        }
-        // A minimal actor tree for large spacing: children, style classes, heights.
+        // A minimal actor tree: children, style classes, heights.
         class Actor {
             constructor(props = {}) {
                 Object.assign(this, props);
@@ -36,6 +31,13 @@ const STUBS = {
             disconnect() {}
             emit(signal, ...args) { (this.handlers[signal] ?? []).forEach(h => h(this, ...args)); }
             destroy() { this.destroyed = true; this.parent?.remove_child(this); }  // As Clutter does
+        }
+        // St.Widget: an actor that can also be placed and is taken out of
+        // Main.uiGroup when destroyed.
+        class Widget extends Actor {
+            constructor(props = {}) { super(props); this.x = 0; this.y = 0; }
+            set_position(x, y) { this.x = x; this.y = y; }
+            destroy() { super.destroy(); globalThis.__uiGroup?.delete(this); }
         }
         // St.Button: setting label replaces the child with a label, as St does.
         class Button extends Actor {
@@ -79,7 +81,16 @@ const STUBS = {
                 throw new Error("Virtual function not implemented: Class ClutterShaderEffect doesn't implement get_static_snippet");
             },
         });
-        export default {ShaderEffect};`,
+        class BinLayout {}
+        export default {
+            ShaderEffect, BinLayout,
+            ActorAlign: {FILL: 0, START: 1, CENTER: 2, END: 3},
+            EventType: {MOTION: 3, LEAVE: 5, SCROLL: 9, BUTTON_PRESS: 6},
+            PickMode: {REACTIVE: 1},
+            EVENT_PROPAGATE: false,
+        };`,
+    'gi://Pango': `
+        export default {WrapMode: {WORD_CHAR: 2}, EllipsizeMode: {NONE: 0, END: 3}};`,
     'resource:///org/gnome/shell/ui/popupMenu.js': `
         import St from 'gi://St';
         export class PopupBaseMenuItem extends St.Actor {}`,

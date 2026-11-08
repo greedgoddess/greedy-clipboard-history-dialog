@@ -12,7 +12,9 @@
 #
 # Optional features are left out unless asked for, and removed again with the
 # matching --without-… flag; without either flag, a machine keeps what it has:
-#   --with-1password    switching to 1Password Quick Access (third-party)
+#   --with-password-managers  password manager integration (third-party
+#                             apps; 1Password for now). --with-1password and
+#                             --without-1password are older names for it.
 #   --with-large-spacing   large spacing: taller tabs and icon buttons
 #
 # Both modes install the same build. --dev makes this a developer machine:
@@ -31,11 +33,12 @@ usage() {
     say "  --dev       developer machine: notifications watch Clipboard History"
     say "              releases; ./update-test-and-push.sh may run"
     say "  --user      user machine: notifications watch this project's repository"
-    say "  --with-1password"
-    say "              include the 1Password Quick Access integration (third-party;"
+    say "  --with-password-managers"
+    say "              include the password manager integration (third-party apps;"
     say "              left out by default; kept on later installs)"
-    say "  --without-1password"
-    say "              leave the 1Password integration out (the default)"
+    say "  --without-password-managers"
+    say "              leave the password manager integration out (the default;"
+    say "              --with-1password and --without-1password still work)"
     say "  --with-large-spacing"
     say "              include large spacing (taller tabs, icon buttons; left out by"
     say "              default; kept on later installs)"
@@ -51,7 +54,9 @@ usage() {
 MODE="$(current_mode)"
 ALLOW_UNTESTED=0
 # Keep what the installed copy has, unless a flag says otherwise.
-WITH_1PASSWORD="$(grep -q 'quickAccess: true' "$INSTALL_DIR/features.js" 2>/dev/null && echo true || echo false)"
+# (The password manager integration was the 1Password integration,
+# quickAccess, before 1.2.0.)
+WITH_PASSWORD_MANAGERS="$(grep -qE '(passwordManagers|quickAccess): true' "$INSTALL_DIR/features.js" 2>/dev/null && echo true || echo false)"
 # (Large spacing was called touch mode, touchMode, before 1.2.0.)
 WITH_LARGE_SPACING="$(grep -qE '(largeSpacing|touchMode): true' "$INSTALL_DIR/features.js" 2>/dev/null && echo true || echo false)"
 other_args=()
@@ -60,8 +65,8 @@ for arg in "$@"; do
         --dev) MODE=dev ;;
         --user) MODE=user ;;
         --allow-untested) ALLOW_UNTESTED=1 ;;
-        --with-1password) WITH_1PASSWORD=true ;;
-        --without-1password) WITH_1PASSWORD=false ;;
+        --with-password-managers|--with-1password) WITH_PASSWORD_MANAGERS=true ;;
+        --without-password-managers|--without-1password) WITH_PASSWORD_MANAGERS=false ;;
         --with-large-spacing) WITH_LARGE_SPACING=true ;;
         --without-large-spacing) WITH_LARGE_SPACING=false ;;
         *) other_args+=("$arg") ;;
@@ -132,16 +137,16 @@ trap on_exit EXIT
 
 cp -a -- "$BUILT_DIR/." "$STAGE_DIR/"
 
-# [quick-access:install] [large-spacing:install-option] Include each optional
-# feature, or leave its files out entirely.
-# See docs/quick-access.md#quick-access-install and
+# [password-manager:install] [large-spacing:install-option] Include each
+# optional feature, or leave its files out entirely.
+# See docs/password-managers.md#password-manager-install and
 # docs/large-spacing.md#large-spacing-install-option
 cat > "$STAGE_DIR/features.js" <<FEATURES
 // Written by install.sh; see feature/features.js.
-export const FEATURES = {quickAccess: $WITH_1PASSWORD, largeSpacing: $WITH_LARGE_SPACING};
+export const FEATURES = {passwordManagers: $WITH_PASSWORD_MANAGERS, largeSpacing: $WITH_LARGE_SPACING};
 FEATURES
-if [[ "$WITH_1PASSWORD" != true ]]; then
-    rm -f -- "$STAGE_DIR/quickAccess.js" "$STAGE_DIR/onePassword.js" "$STAGE_DIR/roundedCorners.js"
+if [[ "$WITH_PASSWORD_MANAGERS" != true ]]; then
+    rm -f -- "$STAGE_DIR/passwordManagerSwitch.js" "$STAGE_DIR/passwordManagers.js" "$STAGE_DIR/roundedCorners.js"
 fi
 if [[ "$WITH_LARGE_SPACING" != true ]]; then
     rm -f -- "$STAGE_DIR/largeSpacing.js" "$STAGE_DIR/largeSpacing.css"
@@ -203,11 +208,24 @@ if ! gnome-extensions enable "$UUID" >/dev/null 2>&1; then
     enable_at_next_login
 fi
 
-# ---- Mode, 1Password integration and update notifications ----------------------
+# ---- Mode, password manager integration and update notifications --------------
 
 # Without the integration, its setting is switched off, so that installing
 # it again later starts from off.
-[[ "$WITH_1PASSWORD" == true ]] || dconf write "${SETTINGS_PATH}quick-access" false
+# The 1Password switch of before 1.2.0 becomes: 1Password enabled, and opened
+# by the second shortcut press. The old key goes.
+old_quick_access="$(dconf read "${SETTINGS_PATH}quick-access")"
+if [[ -n "$old_quick_access" ]]; then
+    if [[ "$old_quick_access" == true ]]; then
+        dconf write "${SETTINGS_PATH}password-managers" "['1password']"
+        dconf write "${SETTINGS_PATH}shortcut-password-manager" "'1password'"
+    fi
+    dconf reset "${SETTINGS_PATH}quick-access"
+fi
+if [[ "$WITH_PASSWORD_MANAGERS" != true ]]; then
+    dconf write "${SETTINGS_PATH}password-managers" "@as []"
+    dconf write "${SETTINGS_PATH}shortcut-password-manager" "''"
+fi
 # Large spacing was called touch mode before: carry its switch over once. The
 # old key only exists until the first install with the new name, so it holds
 # the current choice.
@@ -263,7 +281,7 @@ if [[ "$MODE" == dev ]]; then
 else
     say "Mode: user. Update notifications watch this project's repository."
 fi
-say "1Password integration: $([[ "$WITH_1PASSWORD" == true ]] && echo "installed (switch it on in Preferences → Cursor-Follow)" || echo "not installed (add it with --with-1password)")"
+say "Password manager integration: $([[ "$WITH_PASSWORD_MANAGERS" == true ]] && echo "installed (switch password managers on in Preferences → Password managers)" || echo "not installed (add it with --with-password-managers)")"
 say "Large spacing: $([[ "$WITH_LARGE_SPACING" == true ]] && echo "installed (switch it on in Preferences → Cursor-Follow)" || echo "not installed (add it with --with-large-spacing)")"
 say "Notifications: $([[ "$(dconf read "${SETTINGS_PATH}update-notifications")" == true ]] && echo on || echo off) (Preferences → Cursor-Follow)"
 say

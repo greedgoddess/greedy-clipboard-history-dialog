@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  *
  * The original preferences are unchanged, in upstream-prefs.js. This class
- * extends them and adds the "Cursor-Follow" and "About" groups.
+ * extends them and adds the "Cursor-Follow", "Password managers" (when that
+ * integration is installed) and "About" groups.
  * See docs/cursor-follow.md#cursor-follow-preference
  */
 
@@ -24,14 +25,18 @@ export default class GreedyClipboardHistoryPreferences extends UpstreamPreferenc
     fillPreferencesWindow(window) {
         // The original may fill the window synchronously or asynchronously.
         const result = super.fillPreferencesWindow(window);
-        const addGroups = () => {
+        const addGroups = async () => {
             const page = this._addCursorFollowGroup(window);
-            this._addAboutGroup(page);
+            // Loaded only when installed: without the integration its files
+            // are not there.
+            const passwordManagers = FEATURES.passwordManagers ? await import('./passwordManagers.js') : null;
+            if (passwordManagers)
+                this._addPasswordManagerGroup(page, passwordManagers);
+            this._addAboutGroup(page, passwordManagers);
         };
         if (typeof result?.then === 'function')
             return result.then(addGroups);
-        addGroups();
-        return result;
+        return addGroups();
     }
 
     /** [cursor-follow:preference]
@@ -52,16 +57,20 @@ export default class GreedyClipboardHistoryPreferences extends UpstreamPreferenc
         settings.bind('cursor-follow', cursorFollowRow, 'active', Gio.SettingsBindFlags.DEFAULT);
         group.add(cursorFollowRow);
 
-        if (FEATURES.quickAccess) {
-            group.add(this._quickAccessRow(settings));
-        }
+        // [hover-preview:preference] See docs/hover-preview.md#hover-preview-setting
+        const hoverRow = new Adw.SwitchRow({
+            title: 'Preview on hover',
+            subtitle: 'Shows up to 512 characters of a text entry while the pointer rests on it.',
+        });
+        settings.bind('hover-preview', hoverRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        group.add(hoverRow);
 
         // [large-spacing:preference] Only when installed with --with-large-spacing.
         // See docs/large-spacing.md#large-spacing-preference
         if (FEATURES.largeSpacing) {
             const spacingRow = new Adw.SwitchRow({
                 title: 'Large spacing',
-                subtitle: 'A compact fixed-size panel with icon tabs, icon buttons instead of the menu entries at the bottom, and rounded corners matching 1Password Quick Access.',
+                subtitle: 'A compact fixed-size panel with icon tabs, icon buttons instead of the menu entries at the bottom, and rounded corners matching the password manager windows.',
             });
             settings.bind('large-spacing', spacingRow, 'active', Gio.SettingsBindFlags.DEFAULT);
             group.add(spacingRow);
@@ -92,12 +101,14 @@ export default class GreedyClipboardHistoryPreferences extends UpstreamPreferenc
      * Who made what: the original extension and its author, and this project,
      * with links and the versions of the installed build.
      * See docs/cursor-follow.md#about-attribution */
-    _addAboutGroup(page) {
+    _addAboutGroup(page, passwordManagers) {
         const build = this._readBuildInfo();
+        const providers = passwordManagers?.PROVIDERS ?? [];
         const group = new Adw.PreferencesGroup({
             title: 'About',
-            description: FEATURES.quickAccess
-                ? 'Not affiliated with or endorsed by the author of Clipboard History, or by 1Password.'
+            description: providers.length
+                ? `Not affiliated with or endorsed by the author of Clipboard History, or by ${
+                    providers.map(p => p.name).join(', ')}.`
                 : 'Not affiliated with or endorsed by the author of Clipboard History.',
         });
 
@@ -116,49 +127,101 @@ export default class GreedyClipboardHistoryPreferences extends UpstreamPreferenc
             'GPL-2.0-or-later',
             'https://github.com/greedgoddess/greedy-clipboard-history-dialog'));
 
-        // [quick-access:about] Only when the 1Password integration is installed.
-        // See docs/quick-access.md#quick-access-about
-        if (FEATURES.quickAccess) {
+        // [password-manager:about] Only when the password manager integration
+        // is installed: each supported password manager, with links.
+        // See docs/password-managers.md#password-manager-about
+        for (const provider of providers) {
             group.add(this._linkRow(
-                '1Password',
-                'Third-party password manager by AgileBits, used for Quick Access; thanks for a native Linux app',
-                'https://1password.com/'));
+                provider.name,
+                `Third-party password manager by ${provider.vendor}; ${provider.thanks}`,
+                provider.links.home));
             group.add(this._linkRow(
-                '1Password for Linux',
-                'Installing 1Password on Linux',
-                'https://support.1password.com/install-linux/'));
+                `${provider.name} for Linux`,
+                `Installing ${provider.name} on Linux`,
+                provider.links.linux));
         }
 
         page.add(group);
     }
 
-    /** [quick-access:preference]
-     * The 1Password Quick Access switch. It can be switched on only while
-     * 1Password is installed and running; otherwise it says why, and
-     * "Check again" looks once more. It can always be switched off.
-     * See docs/quick-access.md#quick-access-preference */
-    _quickAccessRow(settings) {
-        const row = new Adw.SwitchRow({title: '1Password Quick Access', subtitle: 'Checking for 1Password…'});
-        settings.bind('quick-access', row, 'active', Gio.SettingsBindFlags.DEFAULT);
+    /** [password-manager:preference]
+     * The "Password managers" group: one switch per supported password
+     * manager (any number may be on), and the drop-down for which one the
+     * second press of the shortcut opens. A switch can be turned on only
+     * while its app is installed and running; otherwise it says why, and
+     * "Check again" looks once more. It can always be turned off.
+     * See docs/password-managers.md#password-manager-preference */
+    _addPasswordManagerGroup(page, {PROVIDERS, availability}) {
+        const settings = this.getSettings();
+        const group = new Adw.PreferencesGroup({
+            title: 'Password managers',
+            description: `Open a password manager's search window from the clipboard panel. ` +
+                `Supported for now: ${PROVIDERS.map(p => p.name).join(', ')}.`,
+        });
 
-        const checkButton = new Gtk.Button({label: 'Check again', valign: Gtk.Align.CENTER});
-        row.add_suffix(checkButton);
-
-        const update = async () => {
-            checkButton.sensitive = false;
-            const {quickAccessAvailability} = await import('./onePassword.js');
-            const availability = await quickAccessAvailability();
-            row.subtitle = availability.available
-                ? 'Press the shortcut again while the panel is open to switch to Quick Access, where the panel was.'
-                : availability.reason;
-            row.sensitive = availability.available || settings.get_boolean('quick-access');
-            checkButton.visible = !availability.available;
-            checkButton.sensitive = true;
+        const enabled = () => settings.get_strv('password-managers');
+        const setEnabled = (id, on) => {
+            const ids = enabled().filter(other => other !== id);
+            settings.set_strv('password-managers', on ? [...ids, id] : ids);
         };
-        checkButton.connect('clicked', () => update().catch(logError));
-        settings.connect('changed::quick-access', () => update().catch(logError));
-        update().catch(logError);
-        return row;
+
+        for (const provider of PROVIDERS) {
+            const row = new Adw.SwitchRow({title: provider.name, subtitle: `Checking for ${provider.name}…`});
+            const checkButton = new Gtk.Button({label: 'Check again', valign: Gtk.Align.CENTER});
+            row.add_suffix(checkButton);
+            let updating = false;
+            const update = async () => {
+                updating = true;
+                row.active = enabled().includes(provider.id);
+                updating = false;
+                checkButton.sensitive = false;
+                const status = await availability(provider);
+                row.subtitle = status.available
+                    ? `Its ${provider.windowName} can be opened from the panel.`
+                    : status.reason;
+                row.sensitive = status.available || enabled().includes(provider.id);
+                checkButton.visible = !status.available;
+                checkButton.sensitive = true;
+            };
+            row.connect('notify::active', () => {
+                if (!updating)
+                    setEnabled(provider.id, row.active);
+            });
+            checkButton.connect('clicked', () => update().catch(logError));
+            settings.connect('changed::password-managers', () => update().catch(logError));
+            update().catch(logError);
+            group.add(row);
+        }
+
+        // [password-manager:shortcut-preference] Which enabled password
+        // manager the second press of the shortcut opens, or none.
+        const shortcutRow = new Adw.ComboRow({
+            title: 'Second shortcut press opens',
+            subtitle: 'Pressing the shortcut again while the panel is open.',
+        });
+        let choices = [];
+        let filling = false;
+        const fill = () => {
+            filling = true;
+            const providers = PROVIDERS.filter(provider => enabled().includes(provider.id));
+            choices = ['', ...providers.map(provider => provider.id)];
+            shortcutRow.model = Gtk.StringList.new(
+                ['Nothing (closes the panel)', ...providers.map(p => `${p.name} ${p.windowName}`)]);
+            const current = choices.indexOf(settings.get_string('shortcut-password-manager'));
+            shortcutRow.selected = current >= 0 ? current : 0;
+            filling = false;
+        };
+        shortcutRow.connect('notify::selected', () => {
+            if (!filling)
+                settings.set_string('shortcut-password-manager', choices[shortcutRow.selected] ?? '');
+        });
+        settings.connect('changed::password-managers', fill);
+        settings.connect('changed::shortcut-password-manager', fill);
+        fill();
+        group.add(shortcutRow);
+
+        page._passwordManagerSettings = settings;    // Keep alive with the page
+        page.add(group);
     }
 
     _linkRow(title, subtitle, uri) {

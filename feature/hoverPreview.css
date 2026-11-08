@@ -1,0 +1,14 @@
+/* hoverPreview.css — the hover preview overlay; loaded while the extension
+ * runs. See docs/hover-preview.md#hover-preview-overlay
+ *
+ * SPDX-License-Identifier: GPL-2.0-or-later */
+
+/* [hover-preview:style] Up to 420 px wide, then the text wraps. */
+.greedy-hover-preview {
+    max-width: 420px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background-color: rgba(36, 36, 36, 0.97);
+    color: #f2f2f2;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
+}

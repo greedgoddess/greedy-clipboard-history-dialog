@@ -39,7 +39,7 @@ tests/test_installer.sh || status=1
 section "Unit tests: migration and uninstall"
 tests/test_migration.sh || status=1
 
-section "Unit tests: JavaScript (cursor-follow, Quick Access, rounded corners, large spacing, update notifier)"
+section "Unit tests: JavaScript (cursor-follow, password managers, rounded corners, large spacing, hover preview, update notifier)"
 if command -v node >/dev/null; then
     node --import ./tests/js/register.mjs --test --test-reporter=dot tests/js/*.test.mjs 2>&1 | sed 's/^/  /'
     (( PIPESTATUS[0] == 0 )) && echo "  pass  all" || status=1

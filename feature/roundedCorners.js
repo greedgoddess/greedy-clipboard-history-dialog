@@ -1,15 +1,16 @@
-/* roundedCorners.js — rounded corners for the 1Password Quick Access window
+/* roundedCorners.js — rounded corners for a password manager's search window
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  *
- * Part of the optional 1Password integration, used while Large spacing is
- * on (rounded corners belong to Large spacing). GNOME Shell draws every window
- * itself; this adds a small shader effect to the Quick Access window as GNOME
- * Shell draws it, which makes the pixels outside rounded corners transparent.
+ * Part of the optional password manager integration, used while Large
+ * spacing is on (rounded corners belong to Large spacing). GNOME Shell draws
+ * every window itself; this adds a small shader effect to the search window
+ * (such as 1Password Quick Access) as GNOME Shell draws it, which makes the
+ * pixels outside rounded corners transparent.
  * GNOME Shell 51 changed the shader API; both the old and the new one are
  * supported, and without either the corners simply stay square.
- * 1Password itself is not changed or asked for anything.
- * Explained in docs/quick-access.md#quick-access-rounded-corners
+ * The password manager itself is not changed or asked for anything.
+ * Explained in docs/password-managers.md#password-manager-rounded-corners
  */
 
 // Generated with AI for personal use.
@@ -24,7 +25,7 @@ import Shell from 'gi://Shell';
 // The clipboard panel's radius in Large spacing (largeSpacing.css; a test keeps
 // both equal), between GNOME's 12 px windows and the panel's theme radius.
 export const PANEL_CORNER_RADIUS = 15;
-// Quick Access's radius: slightly larger than the panel's, because the panel's
+// The search window's radius: slightly larger than the panel's, because the panel's
 // outline and shadow make its corners look rounder than a bare window's with
 // the same radius. With these values both look the same.
 export const CORNER_RADIUS = PANEL_CORNER_RADIUS + 3;
@@ -45,21 +46,21 @@ float rounded_corner_alpha(vec2 p) {
 `;
 const CODE = 'cogl_color_out *= rounded_corner_alpha(cogl_tex_coord0_in.xy * size);';
 
-/** [quick-access:corner-bounds]
+/** [password-manager:corner-bounds]
  * Where the window's frame is inside its actor, which also covers invisible
  * borders: frame and buffer are the window's frame and buffer rectangles.
- * See docs/quick-access.md#quick-access-rounded-corners */
+ * See docs/password-managers.md#password-manager-rounded-corners */
 export function cornerBounds(frame, buffer) {
     const x1 = frame.x - buffer.x;
     const y1 = frame.y - buffer.y;
     return [x1, y1, x1 + frame.width, y1 + frame.height];
 }
 
-/** [quick-access:shader-api]
+/** [password-manager:shader-api]
  * Which shader API this GNOME Shell offers: 'clutter-snippet' (GNOME 51 and
  * later: Clutter.ShaderEffect with a snippet), 'shell-glsl' (before 51:
  * Shell.GLSLEffect, removed in 51), or null (neither; corners stay square).
- * See docs/quick-access.md#quick-access-rounded-corners */
+ * See docs/password-managers.md#password-manager-rounded-corners */
 export function shaderApi(shell, clutter) {
     // Detected by set_uniform_float(), a plain method new in GNOME 51. Not by
     // looking up vfunc_get_static_snippet: GNOME declares it for subclasses
@@ -72,7 +73,7 @@ export function shaderApi(shell, clutter) {
 }
 
 // The effect class is created on first use, not when this file loads: a
-// GNOME Shell without the expected API must not stop the 1Password
+// GNOME Shell without the expected API must not stop the password manager
 // integration from loading. null once it is known that there is no API.
 let effectClass;
 
@@ -113,10 +114,10 @@ function getEffectClass() {
     return effectClass;
 }
 
-/** [quick-access:rounded-corners]
+/** [password-manager:rounded-corners]
  * Rounds the corners of the given windows while they exist, and removes the
  * effect from all of them on destroy().
- * See docs/quick-access.md#quick-access-rounded-corners */
+ * See docs/password-managers.md#password-manager-rounded-corners */
 export class CornerRounder {
     constructor() {
         this._rounded = new Map();    // window actor -> {effect, ids}

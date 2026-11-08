@@ -24,6 +24,10 @@ function fakeMenu() {
         tabBar.add_child(tab);
     }
     tabRow.add_child(tabBar);
+    const emojiRow = new St.Actor({style_class: 'clipboard-history-emoji-row'});
+    for (const glyph of ['😀', '😃'])
+        emojiRow.add_child(new St.Button({style_class: 'clipboard-history-emoji-button', label: glyph, x_expand: true}));
+    tabRow.add_child(emojiRow);
     const scrollView = new St.Actor({style_class: 'clipboard-history-scrollview', y_expand: false});
     const searchRow = new St.Actor({style_class: 'popup-menu-item'});
     searchRow.add_child(new St.Actor({style_class: 'clipboard-history-search'}));
@@ -33,7 +37,7 @@ function fakeMenu() {
     const box = new St.Actor();
     [tabRow, searchRow, scrollView, separator, clear, settings].forEach(c => box.add_child(c));
     const menu = new St.Actor({box, isOpen: false, actor: new St.Actor({style_class: 'popup-menu-boxpointer'})});
-    return {menu, box, clear, settings, scrollView, tabBar, searchRow};
+    return {menu, box, clear, settings, scrollView, tabBar, searchRow, emojiRow};
 }
 const fakeSettings = values => ({
     handlers: {},
@@ -58,14 +62,14 @@ test('order: optional entries first, then settings, then clear', () => {
 test('large spacing off: the menu is untouched', () => {
     const {menu, box} = fakeMenu();
     const before = box.get_children();
-    const mode = new LargeSpacing(menu, fakeSettings({'large-spacing': false, 'quick-access': false}), 'css', () => null);
+    const mode = new LargeSpacing(menu, fakeSettings({'large-spacing': false, 'password-managers': []}), 'css', () => null);
     assert.deepEqual(box.get_children(), before);
     mode.destroy();
 });
 
 test('large spacing on: buttons replace the entries, in their place, and trigger them', () => {
     const {menu, box, clear, settings} = fakeMenu();
-    const mode = new LargeSpacing(menu, fakeSettings({'large-spacing': true, 'quick-access': false}), 'css', () => null);
+    const mode = new LargeSpacing(menu, fakeSettings({'large-spacing': true, 'password-managers': []}), 'css', () => null);
     assert.ok(!box.children.includes(clear) && !box.children.includes(settings));
     assert.equal(box.children[4].children[0].has_style_class_name('greedy-spacing-buttons'), true);
     const [gear, trash] = buttonsOf(box);
@@ -77,37 +81,77 @@ test('large spacing on: buttons replace the entries, in their place, and trigger
     mode.destroy();
 });
 
-test("the 1Password button uses 1Password's app icon, from either package", () => {
+// A stand-in for the password manager integration, as Large spacing sees it.
+function fakePasswordManagers({running = true, enabled = ['1password']} = {}) {
+    const opened = [];
+    const providers = enabled.map(id => ({id, name: '1Password', windowName: 'Quick Access',
+        desktopIds: ['1password.desktop', 'com.onepassword.OnePassword.desktop']}));
+    return {opened, enabledProviders: () => providers, isRunning: async () => running,
+        open: provider => opened.push(provider.id)};
+}
+const tick = () => new Promise(resolve => setTimeout(resolve, 0));
+
+test("a password manager's button uses its app icon, from either package", () => {
     const {menu, box} = fakeMenu();
     globalThis.__apps = {'com.onepassword.OnePassword.desktop': 'flatpak-icon'};
-    const mode = new LargeSpacing(menu, fakeSettings({'large-spacing': true, 'quick-access': true}), 'css',
-        () => ({openQuickAccess() {}}));
-    assert.equal(buttonsOf(box)[0].child.gicon, 'flatpak-icon');
+    const pm = fakePasswordManagers();
+    const mode = new LargeSpacing(menu, fakeSettings({'large-spacing': true, 'password-managers': ['1password']}), 'css', () => pm);
+    assert.equal(buttonsOf(box)[0].providerIcon.gicon, 'flatpak-icon');
     mode.destroy();
     globalThis.__apps = {};
-    const fallback = new LargeSpacing(fakeMenu().menu, fakeSettings({'large-spacing': true, 'quick-access': true}),
-        'css', () => ({openQuickAccess() {}}));
-    fallback.destroy();
 });
 
-test('the 1Password button comes first, only with the integration and its switch on', () => {
+test('password manager buttons come first, one per enabled password manager, and open it', () => {
     const {menu, box} = fakeMenu();
-    let opened = 0;
-    const quickAccess = {openQuickAccess: () => { opened += 1; }};
-    const settings = fakeSettings({'large-spacing': true, 'quick-access': true});
-    const mode = new LargeSpacing(menu, settings, 'css', () => quickAccess);
+    const pm = fakePasswordManagers();
+    const settings = fakeSettings({'large-spacing': true, 'password-managers': ['1password']});
+    const mode = new LargeSpacing(menu, settings, 'css', () => pm);
     const buttons = buttonsOf(box);
     assert.deepEqual(buttons.map(b => b.accessible_name), ['1Password Quick Access', 'Extension Settings', 'Clear (except pinned)']);
     buttons[0].emit('clicked');
-    assert.equal(opened, 1);
-    settings.set('quick-access', false);
+    assert.deepEqual(pm.opened, ['1password']);
+    mode.destroy();
+});
+
+test('no password manager enabled: no extra button', () => {
+    const {menu, box} = fakeMenu();
+    const pm = fakePasswordManagers({enabled: []});
+    const mode = new LargeSpacing(menu, fakeSettings({'large-spacing': true, 'password-managers': []}), 'css', () => pm);
     assert.deepEqual(buttonsOf(box).map(b => b.accessible_name), ['Extension Settings', 'Clear (except pinned)']);
+    mode.destroy();
+});
+
+test('not running: the icon is greyed out and the red dot shows; the button stays clickable', async () => {
+    const {menu, box} = fakeMenu();
+    const pm = fakePasswordManagers({running: false});
+    const mode = new LargeSpacing(menu, fakeSettings({'large-spacing': true, 'password-managers': ['1password']}), 'css', () => pm);
+    await tick();
+    const [button] = buttonsOf(box);
+    assert.equal(button.providerDot.visible, true);
+    assert.ok(button.providerIcon.opacity < 255);
+    button.emit('clicked');
+    assert.deepEqual(pm.opened, ['1password'], 'still opens: indicator only');
+    mode.destroy();
+});
+
+test('running: full icon, no dot; checked again whenever the panel opens', async () => {
+    const {menu, box} = fakeMenu();
+    const pm = fakePasswordManagers({running: true});
+    const mode = new LargeSpacing(menu, fakeSettings({'large-spacing': true, 'password-managers': ['1password']}), 'css', () => pm);
+    await tick();
+    const [button] = buttonsOf(box);
+    assert.equal(button.providerDot.visible, false);
+    assert.equal(button.providerIcon.opacity, 255);
+    pm.isRunning = async () => false;
+    menu.emit('open-state-changed', true);
+    await tick();
+    assert.equal(button.providerDot.visible, true);
     mode.destroy();
 });
 
 test("the trash can shows exactly when the original's Clear entry does", () => {
     const {menu, box, clear} = fakeMenu();
-    const mode = new LargeSpacing(menu, fakeSettings({'large-spacing': true, 'quick-access': false}), 'css', () => null);
+    const mode = new LargeSpacing(menu, fakeSettings({'large-spacing': true, 'password-managers': []}), 'css', () => null);
     const trash = buttonsOf(box).at(-1);
     assert.equal(trash.visible, true);
     clear.visible = false; clear.emit('notify::visible');
@@ -119,7 +163,7 @@ test("the trash can shows exactly when the original's Clear entry does", () => {
 
 test('large spacing on: fixed-size layout class on the panel, the list takes the remaining height', () => {
     const {menu, box, scrollView} = fakeMenu();
-    const mode = new LargeSpacing(menu, fakeSettings({'large-spacing': true, 'quick-access': false}), 'css', () => null);
+    const mode = new LargeSpacing(menu, fakeSettings({'large-spacing': true, 'password-managers': []}), 'css', () => null);
     assert.ok(box.has_style_class_name('greedy-large-spacing'));
     assert.ok(menu.actor.has_style_class_name('greedy-large-spacing-panel'), 'rounded panel corners');
     assert.equal(scrollView.y_expand, true);
@@ -128,7 +172,7 @@ test('large spacing on: fixed-size layout class on the panel, the list takes the
 
 test('tabs show icons instead of names, and keep their names for screen readers', () => {
     const {menu, tabBar} = fakeMenu();
-    const mode = new LargeSpacing(menu, fakeSettings({'large-spacing': true, 'quick-access': false}), 'css', () => null);
+    const mode = new LargeSpacing(menu, fakeSettings({'large-spacing': true, 'password-managers': []}), 'css', () => null);
     for (const tab of tabBar.children) {
         assert.ok(tab.child.gicon.names.length > 0, `${tab.label} has an icon`);
         assert.equal(tab.accessible_name, tab.label);
@@ -137,9 +181,19 @@ test('tabs show icons instead of names, and keep their names for screen readers'
     mode.destroy();
 });
 
+test('emoji keep their natural width, lined up from the left, and get it back when switched off', () => {
+    const {menu, emojiRow} = fakeMenu();
+    const settings = fakeSettings({'large-spacing': true, 'password-managers': []});
+    const mode = new LargeSpacing(menu, settings, 'css', () => null);
+    assert.deepEqual(emojiRow.children.map(b => b.x_expand), [false, false]);
+    settings.set('large-spacing', false);
+    assert.deepEqual(emojiRow.children.map(b => b.x_expand), [true, true]);
+    mode.destroy();
+});
+
 test("the search field's row gets the full-width class, and loses it again", () => {
     const {menu, searchRow} = fakeMenu();
-    const settings = fakeSettings({'large-spacing': true, 'quick-access': false});
+    const settings = fakeSettings({'large-spacing': true, 'password-managers': []});
     const mode = new LargeSpacing(menu, settings, 'css', () => null);
     assert.ok(searchRow.has_style_class_name('greedy-spacing-search-row'));
     settings.set('large-spacing', false);
@@ -150,7 +204,7 @@ test("the search field's row gets the full-width class, and loses it again", () 
 test('switching off, or disabling, puts the entries and layout back exactly', () => {
     const {menu, box, scrollView, tabBar} = fakeMenu();
     const before = box.get_children();
-    const settings = fakeSettings({'large-spacing': true, 'quick-access': false});
+    const settings = fakeSettings({'large-spacing': true, 'password-managers': []});
     const mode = new LargeSpacing(menu, settings, 'css', () => null);
     settings.set('large-spacing', false);
     assert.deepEqual(box.get_children(), before);
