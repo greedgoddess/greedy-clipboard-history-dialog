@@ -73,11 +73,19 @@ Notes where the pointer is, closes the panel, and checks again that
 1Password is installed and running; if not, a notification says why. Then it
 starts waiting for a 1Password window and runs the Quick Access command.
 
-The first 1Password window that appears within 15 seconds is moved into place
-once it is shown. For 1.5 seconds after that, if 1Password moves or resizes
+The first 1Password window shown within 15 seconds is moved into place. Each
+new window is checked when it is shown, not when it is created: at creation
+it has no class or app ID yet. For 1.5 seconds after that, if 1Password moves or resizes
 the window itself, it is put back; after that you can move it freely. Quick Access can take a few seconds to appear, and 1Password's own
 forums report that on some systems it only appears on the second call; this
 code does not work around either.
+
+<a id="quick-access-window-match"></a>
+## `quick-access:window-match`
+
+`isOnePasswordWindow()` recognises 1Password by its window class or app ID:
+`1Password` when it runs through XWayland, `com.onepassword.OnePassword` when
+it runs natively on Wayland or as the Flatpak.
 
 <a id="quick-access-placement"></a>
 ## `quick-access:placement`

@@ -33,9 +33,10 @@ test('too wide for either side: kept inside the work area', () => {
     assert.deepEqual(placeQuickAccess({x: 600, y: 800}, {width: 1800, height: 450}, workArea), {x: 0, y: 350});
 });
 
-test('1Password windows are recognised by their class', () => {
+test('1Password windows are recognised by their class or app ID', () => {
     assert.ok(isOnePasswordWindow('1Password'));
     assert.ok(isOnePasswordWindow('1password'));
+    assert.ok(isOnePasswordWindow('com.onepassword.OnePassword'));
     assert.ok(!isOnePasswordWindow('firefox'));
     assert.ok(!isOnePasswordWindow(null));
 });

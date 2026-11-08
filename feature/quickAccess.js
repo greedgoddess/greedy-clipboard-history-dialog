@@ -57,9 +57,13 @@ export function placeQuickAccess(pointer, window, workArea) {
     };
 }
 
-/** True for a window of the 1Password app. */
+/** [quick-access:window-match]
+ * True for a window of the 1Password app. Its class is "1Password" when it
+ * runs through XWayland, and its app ID "com.onepassword.OnePassword" when it
+ * runs natively on Wayland or as the Flatpak.
+ * See docs/quick-access.md#quick-access-window-match */
 export function isOnePasswordWindow(wmClass) {
-    return /1password/i.test(wmClass ?? '');
+    return /1password|onepassword/i.test(wmClass ?? '');
 }
 
 export class QuickAccessSwitch {
@@ -112,15 +116,17 @@ export class QuickAccessSwitch {
     }
 
     /** Moves the next 1Password window that appears to its place at the
-     * pointer, and keeps it there briefly in case 1Password moves it itself. */
+     * pointer, and keeps it there briefly in case 1Password moves it itself.
+     * A window has no class yet when it is created, so each new window is
+     * checked when it is shown. */
     _placeNextWindow(pointer) {
         this._stopWaiting();
         this._windowCreatedId = global.display.connect('window-created', (_display, window) => {
-            if (!isOnePasswordWindow(window.get_wm_class()))
-                return;
-            this._stopWaiting();
             const shownId = window.connect('shown', () => {
                 window.disconnect(shownId);
+                if (!this._windowCreatedId || !isOnePasswordWindow(window.get_wm_class()))
+                    return;
+                this._stopWaiting();
                 this._keepInPlace(window, pointer);
             });
         });
