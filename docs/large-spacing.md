@@ -8,6 +8,9 @@ and switched on (Preferences → Cursor-Follow → **Large spacing**):
 - the tab bar at the top shows [icons](#large-spacing-tab-icons) instead of the
   names Text, Images, Emoji, Kaomoji and Symbols, and is about 54 px tall;
 - the clipboard entries are compact, with little vertical padding;
+- the panel has [rounded corners](#large-spacing-corners) with a 15 px
+  radius, and with the 1Password integration installed, Quick Access gets the
+  same corners, so both match;
 - the menu entries at the bottom are replaced by a row of icon buttons:
   optional entries first, then **settings** (gear) and **clear** (trash
   can). With the [1Password integration](quick-access.md) installed and
@@ -111,6 +114,22 @@ The name stays as the tab's accessible name, for screen readers, and comes
 back as the label when large spacing is switched off. A tab with a name not in
 the table keeps its text.
 
+<a id="large-spacing-corners"></a>
+## `large-spacing:corners`
+
+While Large spacing is on, the panel's corner radius is 15 px, set as
+`-arrow-border-radius` in `feature/largeSpacing.css` on the panel's outer box
+(class `greedy-large-spacing-panel`). The radius sits between GNOME's 12 px
+windows and the panel's usual theme radius, closer to the former.
+
+With the 1Password integration installed, the Quick Access window gets
+rounded corners with the same radius, drawn by GNOME Shell without changing
+1Password; see
+[Quick Access rounded corners](quick-access.md#quick-access-rounded-corners).
+The radius is set there as `CORNER_RADIUS` in `feature/roundedCorners.js`; a
+test keeps the two values equal. With Large spacing off, the panel has the
+theme's radius and Quick Access square corners.
+
 <a id="large-spacing-layout"></a>
 ## `large-spacing:layout`
 
@@ -123,10 +142,11 @@ adjusted while the extension runs. Large spacing adds the class
 | Panel | 300 × 410 px, the same on every tab |
 | Font | normal size (`font-size: 1em`) |
 | Tab bar | about 54 px tall (20 px above and below the icon); 24 px icons |
-| Clipboard entries | text 1.25 × normal; 3 px above and below it; 12 px pin and delete icons |
+| Clipboard entries | text 1.25 × normal; 6 px above and below it; 24 px pin and delete icons |
 | Search field | fills its row, within the panel |
 | Emoji, kaomoji | 20 px and 13 px |
 | Button row | 24 px icons, like the tabs, in buttons of at least 40 × 40 px |
+| Corner radius | 15 px, shared with Quick Access |
 
 The list takes all the height the other parts leave. On tabs without the
 search row, the list gets that row's height, so the panel keeps its size.
@@ -163,4 +183,7 @@ By hand, on a GNOME desktop (with a touch screen if available):
    can is hidden.
 4. With the 1Password integration installed and switched on: a 1Password
    button comes first and opens Quick Access at the pointer.
-5. Switch large spacing off: everything is back as in step 1.
+5. The panel has rounded corners; with the 1Password integration, Quick
+   Access has the same ones.
+6. Switch large spacing off: everything is back as in step 1, and Quick
+   Access has square corners again (the next time it opens).

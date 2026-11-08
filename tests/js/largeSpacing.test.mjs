@@ -30,7 +30,7 @@ function fakeMenu() {
     const settings = item('Extension Settings…');
     const box = new St.Actor();
     [tabRow, scrollView, separator, clear, settings].forEach(c => box.add_child(c));
-    const menu = new St.Actor({box, isOpen: false});
+    const menu = new St.Actor({box, isOpen: false, actor: new St.Actor({style_class: 'popup-menu-boxpointer'})});
     return {menu, box, clear, settings, scrollView, tabBar};
 }
 const fakeSettings = values => ({
@@ -102,6 +102,7 @@ test('large spacing on: fixed-size layout class on the panel, the list takes the
     const {menu, box, scrollView} = fakeMenu();
     const mode = new LargeSpacing(menu, fakeSettings({'large-spacing': true, 'quick-access': false}), 'css', () => null);
     assert.ok(box.has_style_class_name('greedy-large-spacing'));
+    assert.ok(menu.actor.has_style_class_name('greedy-large-spacing-panel'), 'rounded panel corners');
     assert.equal(scrollView.y_expand, true);
     mode.destroy();
 });
@@ -125,6 +126,7 @@ test('switching off, or disabling, puts the entries and layout back exactly', ()
     settings.set('large-spacing', false);
     assert.deepEqual(box.get_children(), before);
     assert.ok(!box.has_style_class_name('greedy-large-spacing'));
+    assert.ok(!menu.actor.has_style_class_name('greedy-large-spacing-panel'));
     assert.equal(scrollView.y_expand, false);
     assert.deepEqual(tabBar.children.map(t => t.child.text), ['Text', 'Images', 'Emoji', 'Kaomoji', 'Symbols']);
     settings.set('large-spacing', true);

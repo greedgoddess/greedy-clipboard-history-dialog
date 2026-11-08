@@ -21,10 +21,6 @@
       <default>false</default>
       <summary>Switch to 1Password Quick Access with the shortcut</summary>
     </key>
-    <key name="quick-access-rounded" type="b">
-      <default>true</default>
-      <summary>Round the corners of the Quick Access window</summary>
-    </key>
 
     <!-- [large-spacing:setting]
          Added by Greedy Clipboard History Dialog. Larger tabs, and icon

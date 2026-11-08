@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  *
  * With the 'large-spacing' setting on, the panel gets one fixed size on every
- * tab and a taller tab bar with icons instead of names (sizes in
- * largeSpacing.css), and the menu entries at the bottom ("Extension Settings…",
+ * tab, a taller tab bar with icons instead of names, and rounded corners that
+ * match the 1Password Quick Access window (sizes in largeSpacing.css), and
+ * the menu entries at the bottom ("Extension Settings…",
  * "Clear (except pinned)") are replaced by a row of icon buttons. The buttons trigger the
  * original entries, so they behave exactly as before. Optional entries, such
  * as 1Password Quick Access, come first.
@@ -24,7 +25,8 @@ const CLEAR_LABEL = /^Clear\b/;
 const SETTINGS_LABEL = /^Extension Settings/;
 const SCROLL_VIEW_CLASS = 'clipboard-history-scrollview';
 const TAB_BAR_CLASS = 'clipboard-history-tabbar';
-const TOUCH_MODE_CLASS = 'greedy-large-spacing';
+const PANEL_CLASS = 'greedy-large-spacing-panel';
+const LARGE_SPACING_CLASS = 'greedy-large-spacing';
 
 /** [large-spacing:tab-icons]
  * Icon for each tab, by the tab's name; each with fallbacks, the first one
@@ -149,7 +151,10 @@ export class LargeSpacing {
         // [large-spacing:layout] Fixed sizes from largeSpacing.css; the list takes
         // the remaining height, so the panel keeps its size when a tab hides
         // the search row. See docs/large-spacing.md#large-spacing-layout
-        this._menu.box.add_style_class_name(TOUCH_MODE_CLASS);
+        this._menu.box.add_style_class_name(LARGE_SPACING_CLASS);
+        // [large-spacing:corners] The panel's rounded corners, matching the
+        // Quick Access window. See docs/large-spacing.md#large-spacing-corners
+        this._menu.actor?.add_style_class_name(PANEL_CLASS);
         this._swapTabLabels();
         this._scrollView = findByStyleClass(this._menu.box, SCROLL_VIEW_CLASS);
         if (this._scrollView) {
@@ -209,7 +214,8 @@ export class LargeSpacing {
             tab.accessible_name = accessibleName;
         }
         this._tabLabels = null;
-        this._menu.box.remove_style_class_name(TOUCH_MODE_CLASS);
+        this._menu.box.remove_style_class_name(LARGE_SPACING_CLASS);
+        this._menu.actor?.remove_style_class_name(PANEL_CLASS);
         if (this._scrollView)
             this._scrollView.y_expand = this._scrollViewExpand;
         this._scrollView = null;

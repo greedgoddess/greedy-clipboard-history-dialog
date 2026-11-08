@@ -54,16 +54,6 @@ export default class GreedyClipboardHistoryPreferences extends UpstreamPreferenc
 
         if (FEATURES.quickAccess) {
             group.add(this._quickAccessRow(settings));
-
-            // [quick-access:rounded-preference]
-            // See docs/quick-access.md#quick-access-rounded-corners
-            const roundedRow = new Adw.SwitchRow({
-                title: 'Round Quick Access corners',
-                subtitle: 'Drawn by GNOME Shell; 1Password itself is not changed.',
-            });
-            settings.bind('quick-access-rounded', roundedRow, 'active', Gio.SettingsBindFlags.DEFAULT);
-            settings.bind('quick-access', roundedRow, 'sensitive', Gio.SettingsBindFlags.GET);
-            group.add(roundedRow);
         }
 
         // [large-spacing:preference] Only when installed with --with-large-spacing.
@@ -71,7 +61,7 @@ export default class GreedyClipboardHistoryPreferences extends UpstreamPreferenc
         if (FEATURES.largeSpacing) {
             const spacingRow = new Adw.SwitchRow({
                 title: 'Large spacing',
-                subtitle: 'A compact fixed-size panel with icon tabs, and icon buttons instead of the menu entries at the bottom.',
+                subtitle: 'A compact fixed-size panel with icon tabs, icon buttons instead of the menu entries at the bottom, and rounded corners matching 1Password Quick Access.',
             });
             settings.bind('large-spacing', spacingRow, 'active', Gio.SettingsBindFlags.DEFAULT);
             group.add(spacingRow);

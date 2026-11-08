@@ -16,6 +16,14 @@
     font-size: 1em;
 }
 
+/* [large-spacing:corners] The panel's corner radius; the same radius rounds
+ * the 1Password Quick Access window. Must equal CORNER_RADIUS in
+ * roundedCorners.js (a test checks).
+ * See docs/large-spacing.md#large-spacing-corners */
+.popup-menu-boxpointer.greedy-large-spacing-panel {
+    -arrow-border-radius: 15px;
+}
+
 /* Tab bar: icons instead of names, about 54 px tall (20 px above and below
  * the icon, which keeps it centred). */
 .greedy-large-spacing .clipboard-history-tab {
@@ -37,9 +45,9 @@
     max-height: 10000px;    /* The panel's fixed height limits it instead. */
 }
 
-/* Clipboard entries: little vertical padding, text a quarter larger. */
+/* Clipboard entries: compact, text a quarter larger. */
 .greedy-large-spacing .clipboard-history-item {
-    padding: 3px 6px;
+    padding: 6px 6px;
     spacing: 6px;
     font-size: 1.25em;
 }
@@ -48,8 +56,9 @@
     padding: 5px;
 }
 
+/* Pin (star) and delete (x) on each entry. */
 .greedy-large-spacing .clipboard-history-icon-button .popup-menu-icon {
-    icon-size: 12px;
+    icon-size: 24px;
 }
 
 /* The original sets these in pixels; kept at the same scale as the rest. */

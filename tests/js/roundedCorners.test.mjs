@@ -69,3 +69,10 @@ test('the effect follows size changes', () => {
     assert.deepEqual(actor.effects[0].uniforms.size, [600, 412]);
     rounder.destroy();
 });
+
+test('the clipboard panel in Large spacing and Quick Access share one corner radius', async () => {
+    const {readFile} = await import('node:fs/promises');
+    const css = await readFile(new URL('../../feature/largeSpacing.css', import.meta.url), 'utf8');
+    const [, panelRadius] = css.match(/-arrow-border-radius:\s*(\d+)px/);
+    assert.equal(Number(panelRadius), CORNER_RADIUS);
+});

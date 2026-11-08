@@ -140,9 +140,10 @@ pointer is near the top of the screen.
 <a id="quick-access-rounded-corners"></a>
 ## `quick-access:rounded-corners`
 
-`feature/roundedCorners.js`. With **Round Quick Access corners** on (the
-default; Preferences → Cursor-Follow, below the Quick Access switch), the
-Quick Access window gets rounded corners with GNOME's usual 12 px radius.
+`feature/roundedCorners.js`. Rounded corners are part of
+[Large spacing](large-spacing.md#large-spacing-corners): while Large spacing
+is installed and on, the Quick Access window gets rounded corners with the
+same 15 px radius as the clipboard panel. There is no separate switch.
 
 1Password is not changed or asked for anything: GNOME Shell draws every
 window itself, and a small shader effect on the Quick Access window, as GNOME
@@ -156,13 +157,11 @@ GNOME Shell 51 removed the shader API older versions used (`Shell.GLSLEffect`)
 in favour of `Clutter.ShaderEffect` with a shader snippet. `shaderApi()`
 picks whichever the running GNOME Shell has, recognising GNOME 51's by the
 `set_uniform_float()` method it added (looking up the snippet function itself
-on GNOME's class throws, because only subclasses implement it); the effect class is only created
-on first use, so a GNOME Shell with neither cannot stop the rest of the
-1Password integration from loading. In that case, or if the effect cannot be
-added, the window simply keeps square corners and a warning is logged.
-
-The switch only applies while Quick Access is switched on, and takes effect
-the next time Quick Access opens.
+on GNOME's class throws, because only subclasses implement it); the effect
+class is only created on first use, so a GNOME Shell with neither cannot stop
+the rest of the 1Password integration from loading. In that case, or if the
+effect cannot be added, the window simply keeps square corners and a warning
+is logged. Changes to Large spacing apply the next time Quick Access opens.
 
 <a id="quick-access-cleanup"></a>
 ## `quick-access:cleanup`
@@ -187,5 +186,6 @@ pointer can only be checked by hand, on a GNOME desktop with 1Password:
    pointer. Near the top: it stays on screen.
 5. Quit 1Password with the setting on: the second press shows a notification
    instead of Quick Access.
-6. With **Round Quick Access corners** on, Quick Access has rounded corners;
-   switched off, square ones (from the next time it opens).
+6. With Large spacing installed and on, Quick Access has rounded corners with
+   the same radius as the clipboard panel; with it off, square ones (from the
+   next time it opens).

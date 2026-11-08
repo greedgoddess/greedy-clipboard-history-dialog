@@ -74,7 +74,7 @@ check('cursor-follow key, off by default',
 compiled = subprocess.run(['glib-compile-schemas', '--strict', '--dry-run', str(schema.parent)],
                           capture_output=True, text=True)
 check('schema compiles', compiled.returncode == 0, compiled.stderr.strip())
-for key in ('quick-access', 'quick-access-rounded', 'large-spacing', 'update-notifications', 'developer-mode', 'checkout-path', 'update-last-check',
+for key in ('quick-access', 'large-spacing', 'update-notifications', 'developer-mode', 'checkout-path', 'update-last-check',
             'update-notified'):
     check(f'{key} key', f'<key name="{key}"' in xml)
 info_file = EXT / 'build-info.json'

@@ -136,7 +136,8 @@ export class QuickAccessSwitch {
                     return;
                 this._stopWaiting();
                 this._keepInPlace(window, pointer);
-                if (this._settings.get_boolean('quick-access-rounded')) {
+                // Rounded corners are part of Large spacing.
+                if (this._settings.get_boolean('large-spacing')) {
                     try {
                         if (!this._cornerRounder.round(window))
                             console.warn('Quick Access: this GNOME Shell has no shader API for rounded corners');

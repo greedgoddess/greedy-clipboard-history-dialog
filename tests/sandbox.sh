@@ -74,7 +74,8 @@ run() { "$@" </dev/null >"$SANDBOX/out" 2>&1; }
 # A minimal build in the copied repository; make_build TESTED MARKER
 make_build() {
     rm -rf "$REPO/build"; mkdir -p "$REPO/build/$UUID/schemas"
-    for f in extension.js upstream-extension.js cursorFollow.js prefs.js quickAccess.js onePassword.js roundedCorners.js \
+    for f in extension.js upstream-extension.js cursorFollow.js prefs.js quickAccess.js \
+             onePassword.js roundedCorners.js \
              largeSpacing.js largeSpacing.css; do
         echo "// $2" > "$REPO/build/$UUID/$f"
     done

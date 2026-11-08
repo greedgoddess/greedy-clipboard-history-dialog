@@ -16,13 +16,14 @@ preferences:
 - **1Password Quick Access** (optional, not installed by default):
   pressing the shortcut again while the panel is open switches to
   [1Password](https://1password.com/) Quick Access, placed at the pointer
-  like the panel, optionally with rounded corners. Install it with
+  like the panel. Install it with
   `./install.sh --with-1password`; see
   [1Password Quick Access](docs/quick-access.md). Thanks to 1Password for
   a native Linux app.
 - **Large spacing** (optional, not installed by default): a compact
-  fixed-size panel with icon tabs, and icon buttons (1Password, settings,
-  clear) instead of the menu entries at the bottom. Install it with
+  fixed-size panel with icon tabs, icon buttons (1Password, settings,
+  clear) instead of the menu entries at the bottom, and rounded corners
+  shared with 1Password Quick Access. Install it with
   `./install.sh --with-large-spacing`; see [large spacing](docs/large-spacing.md).
 - **Update notifications:** a notification when there is an update to
   install; see [update notifications](docs/update-notifications.md).

@@ -2,7 +2,8 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  *
- * Part of the optional 1Password integration. GNOME Shell draws every window
+ * Part of the optional 1Password integration, used while Large spacing is
+ * on (rounded corners belong to Large spacing). GNOME Shell draws every window
  * itself; this adds a small shader effect to the Quick Access window as GNOME
  * Shell draws it, which makes the pixels outside rounded corners transparent.
  * GNOME Shell 51 changed the shader API; both the old and the new one are
@@ -20,8 +21,10 @@ import Cogl from 'gi://Cogl';
 import GObject from 'gi://GObject';
 import Shell from 'gi://Shell';
 
-// Same radius as GNOME's own windows.
-export const CORNER_RADIUS = 12;
+// Shared with the clipboard panel in Large spacing (largeSpacing.css), so that
+// both have the same corners; between GNOME's 12 px windows and the panel's
+// theme radius.
+export const CORNER_RADIUS = 15;
 
 const DECLARATIONS = `
 uniform vec4 bounds;   // the window's frame inside its actor: x1, y1, x2, y2
