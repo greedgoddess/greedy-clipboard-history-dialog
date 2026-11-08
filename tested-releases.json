@@ -12,7 +12,12 @@
       "51"
     ],
     "tested_on": "GNOME Shell 51.1",
+    "evidence": [
+      "unit tests",
+      "build checks",
+      "headless GNOME Shell smoke test"
+    ],
     "date": "2026-11-08",
-    "feature_commit": "867d934"
+    "feature_commit": "107fb72"
   }
 ]
