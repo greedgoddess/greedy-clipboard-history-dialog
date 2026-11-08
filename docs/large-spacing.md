@@ -179,7 +179,7 @@ adjusted while the extension runs. Large spacing adds the class
 | Font | normal size (`font-size: 1em`) |
 | Tab bar and button row | the same format: buttons 38 px tall (24 px icons, 7 px above and below), 8 px corners, 3 px apart, same hover colours |
 | Clipboard entries | text 1.25 × normal; 5 px above and below it, 10 px at the sides; 24 px pin and delete icons, the delete icon in the same grey as the star when off |
-| Search field | nearly as wide as the list below (its row loses its side padding; 6 px margin at each side); text and clear icon half as large again (1.5 em, 24 px icon) |
+| Search field | nearly as wide as the list below (its row loses its side padding; 6 px margin at each side); text the same size as the list's (1.25 em), 24 px clear icon |
 | Emoji and symbols | 26 px, 1.3 × the original: the largest that fits the original's 8 (symbols 10) per row; natural width, lined up from the left in each category instead of spread over the row |
 | Kaomoji | 13 px |
 | Corner radius | panel 15 px; password manager search windows 18 px, which looks the same |

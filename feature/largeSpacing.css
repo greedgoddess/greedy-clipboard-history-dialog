@@ -87,7 +87,7 @@
 .greedy-large-spacing .clipboard-history-search {
     margin: 4px 6px;
     width: 200px;
-    font-size: 1.5em;       /* Half as large again, like its clear icon. */
+    font-size: 1.25em;      /* The same size as the list's text. */
     padding: 7px 10px;
 }
 
