@@ -1,15 +1,11 @@
-# Continuous integration. "checks" must pass.
+# Continuous integration: syntax, ShellCheck, unit tests, and building and
+# checking the newest tested release. All of it runs without GNOME.
 #
-# "smoke-test" loads the extension in a real GNOME Shell, inside a Fedora
-# container. A container is a headless system without the services a desktop
-# starts at boot, so GNOME Shell may not start there; the job is allowed to
-# fail without failing the whole run, and its result is shown as it is.
-#
-# Services the job provides, and whether they are real:
-#   - system D-Bus: real (the same dbus-daemon every Linux system runs; a
-#     container just does not start it). GNOME Shell connects to it at
-#     startup, for example for its screen-time limits.
-#   - nothing is replaced by a stand-in.
+# The smoke test, which loads the extension in GNOME Shell, is not run here:
+# GNOME Shell needs a real desktop session, which a CI container does not
+# have, and replacing the missing services with stand-ins is not a test
+# ground this project relies on. It runs on a GNOME desktop instead, and
+# update-test-and-push.sh records a release as tested only when it passes.
 name: CI
 
 on:
@@ -41,26 +37,3 @@ jobs:
       - name: Build the newest tested release and check it
         run: ./build.sh && python3 tests/check_build.py
 
-  smoke-test:
-    runs-on: ubuntu-24.04
-    continue-on-error: true
-    container: fedora:45
-    steps:
-      - name: Tools
-        run: dnf install -y --setopt=install_weak_deps=False git gnome-shell dbus-daemon python3 zip glib2 /usr/bin/gresource mesa-dri-drivers
-      - name: Start the system D-Bus (real, not a stand-in)
-        run: |
-          dbus-uuidgen --ensure=/etc/machine-id
-          mkdir -p /run/dbus
-          dbus-daemon --system --fork
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-      - name: Build and smoke test on GNOME Shell from Fedora 45
-        run: |
-          git config --global --add safe.directory "$PWD"
-          ./build.sh
-          # Here, unlike in "checks", GNOME Shell is installed, so the build
-          # must have checked the GNOME Shell internals the feature relies on.
-          grep -q 'Internals check: *checked' build/BUILD-INFO
-          tests/smoke-test.sh

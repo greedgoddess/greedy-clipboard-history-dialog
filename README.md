@@ -90,8 +90,8 @@ project is verified only where marked here:
 | 51 | yes | yes | yes, by hand | yes, by hand |
 | 46–50 | not tested | not tested | not tested | not tested |
 
-The smoke test needs GNOME and may fail on headless systems, such as the CI
-container; "Activates" is checked on a GNOME desktop. The manual checks are
+The smoke test needs GNOME and may fail on headless systems; it runs on a
+GNOME desktop, not in CI. The manual checks are
 in [the testing checklist](docs/cursor-follow.md#testing).
 
 ## Versions

@@ -23,10 +23,8 @@ tests/run-tests.sh         # unit tests, build checks, headless smoke test
 `tests/run-tests.sh --unit-only` needs no build; `--no-smoke-test` skips the
 headless GNOME Shell. The smoke test needs GNOME Shell and may fail on
 headless systems, where GNOME Shell may not start; run it on a GNOME
-desktop. In CI, the smoke-test job runs in a Fedora container with a real system
-D-Bus started for it, and no stand-ins for other services; it may still fail
-for that reason without failing the whole run. The workflow file lists what
-the job provides. The cursor-follow unit tests need Node.js
+desktop. CI does not run the smoke test: it needs a real GNOME session, so it runs
+on a GNOME desktop only. CI runs everything else. The cursor-follow unit tests need Node.js
 (`sudo dnf install nodejs`).
 
 Automated tests cannot see where the panel opens. Before recording a new

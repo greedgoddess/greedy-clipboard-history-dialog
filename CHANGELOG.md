@@ -5,9 +5,9 @@ on is listed in the README under "Tested releases".
 
 ## Unreleased
 
-- CI: the smoke-test container starts a real system D-Bus, which GNOME Shell
-  needs at startup; no services are replaced by stand-ins. The workflow
-  file lists what the job provides.
+- CI no longer runs the smoke test: it needs a real GNOME session, which a
+  container does not have. It runs on a GNOME desktop, where
+  `update-test-and-push.sh` requires it.
 - CI: actions updated to versions running on Node.js 24; jobs pinned to
   Ubuntu 24.04.
 
