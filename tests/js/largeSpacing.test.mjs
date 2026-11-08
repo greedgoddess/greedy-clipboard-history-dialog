@@ -127,6 +127,17 @@ test('clear keeps the panel open', () => {
     mode.destroy();
 });
 
+test('password managers that finish loading later still get their buttons', () => {
+    const {menu, box} = fakeMenu();
+    let pm = null;
+    const mode = new LargeSpacing(menu, fakeSettings({'large-spacing': true, 'password-managers': ['1password']}), 'css', () => pm);
+    assert.deepEqual(buttonsOf(box).map(b => b.accessible_name), ['Extension Settings', 'Clear (except pinned)']);
+    pm = fakePasswordManagers();
+    mode.refresh();
+    assert.deepEqual(buttonsOf(box).map(b => b.accessible_name), ['1Password Quick Access', 'Extension Settings', 'Clear (except pinned)']);
+    mode.destroy();
+});
+
 test('no password manager enabled: no extra button', () => {
     const {menu, box} = fakeMenu();
     const pm = fakePasswordManagers({enabled: []});

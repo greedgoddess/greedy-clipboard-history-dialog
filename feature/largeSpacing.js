@@ -124,6 +124,13 @@ export class LargeSpacing {
         this._update();
     }
 
+    /** Rebuilds the button row, for example once the password manager
+     * integration has finished loading after Large spacing. */
+    refresh() {
+        if (this.active)
+            this._update();
+    }
+
     _update() {
         const on = this._settings.get_boolean('large-spacing');
         if (this._applied)

@@ -46,8 +46,12 @@ export default class GreedyClipboardHistoryExtension extends UpstreamExtension {
         this._greedyEnabled = true;
         if (FEATURES.passwordManagers) {
             import('./passwordManagerSwitch.js').then(({PasswordManagerSwitch}) => {
-                if (this._greedyEnabled)
-                    this._passwordManagers = new PasswordManagerSwitch(indicator?.menu, this.getSettings());
+                if (!this._greedyEnabled)
+                    return;
+                this._passwordManagers = new PasswordManagerSwitch(indicator?.menu, this.getSettings());
+                // Both load in the background; if Large spacing was ready
+                // first, it adds the password manager buttons now.
+                this._largeSpacing?.refresh();
             }).catch(error => console.warn(`${this.uuid}: password manager integration not loaded: ${error.message}`));
         }
 
