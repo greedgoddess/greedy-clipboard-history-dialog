@@ -75,6 +75,19 @@ export default class ClipboardHistoryPreferences extends ExtensionPreferences {
         settings.bind('enable-image-support', imagesRow, 'active', Gio.SettingsBindFlags.DEFAULT);
         historyGroup.add(imagesRow);
 
+        // ---------------- Placement group ----------------
+        // [cursor-follow:preference] Switch for the 'cursor-follow' setting.
+        // See docs/cursor-follow.md#cursor-follow-preference
+        const placementGroup = new Adw.PreferencesGroup({title: 'Placement'});
+        page.add(placementGroup);
+
+        const cursorFollowRow = new Adw.SwitchRow({
+            title: 'Open at mouse pointer',
+            subtitle: 'Opens the panel next to the pointer instead of below the panel icon.',
+        });
+        settings.bind('cursor-follow', cursorFollowRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        placementGroup.add(cursorFollowRow);
+
         // ---------------- Help group ----------------
         const helpGroup = new Adw.PreferencesGroup({title: 'Help'});
         page.add(helpGroup);

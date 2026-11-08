@@ -1,6 +1,30 @@
 #!/usr/bin/env bash
+# update.sh — pulls the latest commits from GitHub and reinstalls.
+#
+# Only fast-forwards: if this checkout has local commits or changes that are
+# not on GitHub, it stops instead of merging. See docs/installation.md#updating
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-command -v git >/dev/null || { echo "Install git first: sudo dnf install git"; exit 1; }
+# shellcheck source=scripts/common.sh
+source "$ROOT/scripts/common.sh"
+
+usage() {
+    say "Usage: ./update.sh [--yes]"
+    say "Runs 'git pull --ff-only', then ./install.sh."
+    say "  -y, --yes   passed on to ./install.sh"
+}
+parse_common_options "$@"
+
+require_command git "Install it with: sudo dnf install git"
+
+remote_url="$(git -C "$ROOT" remote get-url origin 2>/dev/null || true)"
+[[ -n "$remote_url" ]] || fail "This checkout has no 'origin' remote."
+if [[ "$remote_url" != git@github.com:* && "$remote_url" != ssh://* ]]; then
+    warn "origin is not an SSH remote ($remote_url). This project uses SSH; see docs/maintenance.md"
+fi
+
+[[ -z "$(git -C "$ROOT" status --porcelain)" ]] \
+    || fail "This checkout has uncommitted changes. Commit or discard them first."
+
 git -C "$ROOT" pull --ff-only
-"$ROOT/install.sh"
+"$ROOT/install.sh" "$@"

@@ -1,103 +1,141 @@
 #!/usr/bin/env bash
+# install.sh — installs this extension for the current user.
+#
+# Replaces any installed copy with the same UUID, keeping one backup of it in
+# ~/.local/share/greedy-clipboard-history-dialog/backup/. Never touches the
+# clipboard history or existing settings, with one exception: the first time
+# it is installed, "Open at mouse pointer" is switched on (later choices in
+# the preferences are respected). See docs/installation.md
 set -euo pipefail
-
-UUID="clipboard-history@manouchehr"
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-SOURCE="$ROOT/src"
-EXT_PARENT="$HOME/.local/share/gnome-shell/extensions"
-DEST="$EXT_PARENT/$UUID"
-mkdir -p "$EXT_PARENT"
-STAGE="$(mktemp -d "$EXT_PARENT/.clipboard-history-stage.XXXXXX")"
-BACKUP=""
+SOURCE_DIR="$ROOT/src"
+# shellcheck source=scripts/common.sh
+source "$ROOT/scripts/common.sh"
 
-cleanup() {
-  [[ -n "${STAGE:-}" && -d "$STAGE" ]] && rm -rf "$STAGE"
+usage() {
+    say "Usage: ./install.sh [--yes]"
+    say "Installs the extension from src/ for the current user."
+    say "  -y, --yes   answer yes to every question"
 }
-trap cleanup EXIT
+parse_common_options "$@"
 
-command -v gnome-extensions >/dev/null || {
-  echo "ERROR: gnome-extensions command not found." >&2
-  exit 1
-}
-command -v glib-compile-schemas >/dev/null || {
-  echo "ERROR: glib-compile-schemas not found. Install Fedora package: glib2" >&2
-  exit 1
-}
+# ---- Checks before anything is changed -------------------------------------
 
-for file in extension.js metadata.json prefs.js stylesheet.css; do
-  [[ -f "$SOURCE/$file" ]] || {
-    echo "ERROR: Missing $SOURCE/$file" >&2
-    exit 1
-  }
+require_command gnome-extensions "It is part of GNOME Shell."
+require_command glib-compile-schemas "Install it with: sudo dnf install glib2"
+require_command gsettings "Install it with: sudo dnf install glib2"
+require_command dconf "Install it with: sudo dnf install dconf"
+require_command python3 "Install it with: sudo dnf install python3"
+
+for file in extension.js prefs.js metadata.json stylesheet.css \
+            schemas/org.gnome.shell.extensions.clipboard-history.gschema.xml; do
+    [[ -f "$SOURCE_DIR/$file" ]] || fail "Missing src/$file. Is this a complete checkout?"
 done
 
-python3 - "$SOURCE/metadata.json" <<'PY'
-import json, sys
-m = json.load(open(sys.argv[1], encoding="utf-8"))
-if m.get("uuid") != "clipboard-history@manouchehr":
-    raise SystemExit("ERROR: metadata.json UUID does not match install directory.")
-PY
+source_uuid="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["uuid"])' "$SOURCE_DIR/metadata.json")"
+[[ "$source_uuid" == "$UUID" ]] || fail "src/metadata.json has UUID '$source_uuid', expected '$UUID'."
+grep -Fq "$CURRENT_VERSION_MARKER" "$SOURCE_DIR/extension.js" \
+    || fail "src/extension.js does not contain the cursor-follow code."
 
-grep -Fq 'boxPointer._userArrowSide = St.Side.LEFT;' "$SOURCE/extension.js" || {
-  echo "ERROR: Personal cursor-positioning patch is missing." >&2
-  exit 1
-}
-grep -Fq 'boxPointer._arrowAlignment = 1.0;' "$SOURCE/extension.js" || {
-  echo "ERROR: Bottom alignment patch is missing." >&2
-  exit 1
-}
-if grep -q '^THIS_IS_NOT_VALID_JAVASCRIPT;$' "$SOURCE/extension.js"; then
-  echo "ERROR: Test syntax-error line found in source." >&2
-  exit 1
-fi
+case "$(installed_variant)" in
+    previous-fork)
+        fail "The previous fork version is installed. Run ./uninstall-previous-version.sh first." ;;
+    other)
+        say "Another copy of the extension (probably the stock one) is installed."
+        say "It will be backed up to $BACKUP_DIR and replaced."
+        confirm "Continue?" || { say "Cancelled. Nothing was changed."; exit 0; } ;;
+esac
 
-# Disable the existing instance before replacing its files.
+# ---- Build the new copy in a staging folder --------------------------------
+
+mkdir -p "$WORK_DIR" "$EXTENSIONS_DIR"
+STAGE_DIR="$(mktemp -d "$WORK_DIR/staging.XXXXXX")"
+MOVED_OLD_COPY=0
+INSTALLED_NEW_COPY=0
+
+# On any failure: remove the staging folder and, if the old copy was already
+# moved aside but the new one is not in place, put the old copy back.
+on_exit() {
+    local status=$?
+    rm -rf -- "$STAGE_DIR"
+    if (( status != 0 && MOVED_OLD_COPY == 1 && INSTALLED_NEW_COPY == 0 )); then
+        warn "Installation failed; restoring the previous copy."
+        rm -rf -- "$INSTALL_DIR"
+        mv -- "$BACKUP_DIR" "$INSTALL_DIR"
+    fi
+}
+trap on_exit EXIT
+
+cp -a -- "$SOURCE_DIR/." "$STAGE_DIR/"
+rm -f -- "$STAGE_DIR/schemas/gschemas.compiled"
+glib-compile-schemas --strict "$STAGE_DIR/schemas"
+
+# ---- Swap the installed copy -----------------------------------------------
+
 gnome-extensions disable "$UUID" >/dev/null 2>&1 || true
 
-cp -a "$SOURCE/." "$STAGE/"
-if [[ -d "$STAGE/schemas" ]]; then
-  glib-compile-schemas "$STAGE/schemas"
+if [[ -d "$INSTALL_DIR" ]]; then
+    rm -rf -- "$BACKUP_DIR"
+    mv -- "$INSTALL_DIR" "$BACKUP_DIR"
+    MOVED_OLD_COPY=1
+fi
+mv -- "$STAGE_DIR" "$INSTALL_DIR"
+INSTALLED_NEW_COPY=1
+
+# ---- Settings ---------------------------------------------------------------
+
+# First install only: switch "Open at mouse pointer" on. An empty dconf read
+# means the key has never been set, so a deliberate "off" is never overridden.
+if [[ -z "$(dconf read "$CURSOR_FOLLOW_KEY")" ]]; then
+    dconf write "$CURSOR_FOLLOW_KEY" true
+    say "Switched on 'Open at mouse pointer' (first install)."
 fi
 
-# Keep a rollback copy of any existing installation.
-if [[ -d "$DEST" ]]; then
-  BACKUP="$EXT_PARENT/.${UUID}.backup.$(date +%Y%m%d-%H%M%S)"
-  mv "$DEST" "$BACKUP"
+# ---- Enable -----------------------------------------------------------------
+
+# On Wayland, GNOME Shell only notices a newly added extension folder at the
+# next login, so 'gnome-extensions enable' can fail for a first install. In
+# that case the UUID is added to the enabled list directly, and GNOME enables
+# the extension when it starts.
+enable_at_next_login() {
+    python3 - "$UUID" <<'PY'
+import ast, subprocess, sys
+uuid = sys.argv[1]
+
+def read(key):
+    value = subprocess.run(['gsettings', 'get', 'org.gnome.shell', key],
+                           capture_output=True, text=True, check=True).stdout.strip()
+    return [] if value.startswith('@as') else ast.literal_eval(value)
+
+def write(key, items):
+    subprocess.run(['gsettings', 'set', 'org.gnome.shell', key, str(items)], check=True)
+
+enabled = read('enabled-extensions')
+if uuid not in enabled:
+    write('enabled-extensions', enabled + [uuid])
+try:
+    disabled = read('disabled-extensions')
+    if uuid in disabled:
+        write('disabled-extensions', [u for u in disabled if u != uuid])
+except subprocess.CalledProcessError:
+    pass  # Older GNOME Shell without a disabled-extensions key
+PY
+}
+
+if ! gnome-extensions enable "$UUID" >/dev/null 2>&1; then
+    enable_at_next_login
 fi
 
-mv "$STAGE" "$DEST"
-STAGE=""
+# ---- Summary ----------------------------------------------------------------
 
-if ! gnome-extensions enable "$UUID"; then
-  echo "ERROR: GNOME could not enable the fork; attempting rollback." >&2
-  rm -rf "$DEST"
-  if [[ -n "$BACKUP" && -d "$BACKUP" ]]; then
-    mv "$BACKUP" "$DEST"
-    gnome-extensions enable "$UUID" >/dev/null 2>&1 || true
-  fi
-  exit 1
+say
+say "Installed $UUID, version $(metadata_version "$INSTALL_DIR/metadata.json"), to:"
+say "  $INSTALL_DIR"
+if (( MOVED_OLD_COPY == 1 )); then
+    say "The copy it replaced is kept in:"
+    say "  $BACKUP_DIR"
 fi
-
-if ! gnome-extensions info "$UUID" | grep -q 'State: ACTIVE'; then
-  echo "ERROR: Extension did not reach ACTIVE state; attempting rollback." >&2
-  gnome-extensions disable "$UUID" >/dev/null 2>&1 || true
-  rm -rf "$DEST"
-  if [[ -n "$BACKUP" && -d "$BACKUP" ]]; then
-    mv "$BACKUP" "$DEST"
-    gnome-extensions enable "$UUID" >/dev/null 2>&1 || true
-  fi
-  exit 1
-fi
-
-echo
-echo "Installed: $UUID"
-gnome-extensions info "$UUID" | tail -5
-if [[ -n "$BACKUP" ]]; then
-  echo
-  echo "Previous installation backup retained at:"
-  echo "  $BACKUP"
-fi
-echo
-echo "Your existing clipboard history/cache is not deleted."
-echo "If the extension does not reflect the new code under Wayland,"
-echo "log out of GNOME and log back in."
+say "Clipboard history and settings were not changed."
+say
+say "Log out and back in now. GNOME Shell keeps running the code it loaded"
+say "at login until then. Afterwards, check the result with ./verify.sh"

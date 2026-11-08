@@ -13,6 +13,6 @@
     ],
     "url": "https://github.com/M-ghalevand/gnome-shell-extension-clipboard-history",
     "uuid": "clipboard-history@manouchehr",
-    "version": 4,
-    "version-name": "1.0"
+    "version": 5,
+    "version-name": "1.0+cursor-follow"
 }

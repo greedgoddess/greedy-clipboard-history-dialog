@@ -50,5 +50,21 @@
       </description>
     </key>
 
+    <!-- [cursor-follow:setting]
+         Opens the panel next to the mouse pointer instead of below the panel
+         icon. Off by default, so the panel opens where it always has unless
+         the user turns this on.
+         See docs/cursor-follow.md#cursor-follow-setting -->
+    <key name="cursor-follow" type="b">
+      <default>false</default>
+      <summary>Open the clipboard history panel at the mouse pointer</summary>
+      <description>
+        When enabled, the panel opens to the right of the mouse pointer, with
+        its bottom edge level with the pointer, and moves to the left of the
+        pointer when there is not enough room on the right. When disabled, it
+        opens below the panel icon.
+      </description>
+    </key>
+
   </schema>
 </schemalist>

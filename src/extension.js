@@ -65,6 +65,14 @@ const PASTE_KEY_STAGGER_MS = 15;
 const MAX_PREVIEW_CHARS = 400;
 const THUMBNAIL_ICON_SIZE = 48;
 
+// [cursor-follow:arrow-alignment]
+// Where the popup's arrow sits along its left edge when the popup opens at
+// the mouse pointer: 0.0 is the top of that edge and 1.0 the bottom. At 1.0
+// the pointer touches the popup's bottom corner, so the popup's bottom edge
+// is level with the pointer and the popup grows upwards from there.
+// See docs/cursor-follow.md#cursor-follow-arrow-alignment
+const POINTER_ARROW_ALIGNMENT = 1.0;
+
 const IMAGE_MIME_TYPES = ['image/png', 'image/jpeg', 'image/tiff', 'image/bmp'];
 
 // An established convention across the GNOME and KDE ecosystems: password
@@ -551,41 +559,83 @@ class ClipboardHistoryIndicator extends PanelMenu.Button {
         this._renderedImageItems = [];
         this._activeTab = 'text'; // 'text' | 'images' | 'emoji' | 'kaomoji' | 'symbols'
 
-        this.add_child(new St.Icon({icon_name: 'edit-copy-symbolic', style_class: 'system-status-icon'}));
+        this.add_child(new St.Icon({icon_name: 'edit-paste-symbolic', style_class: 'system-status-icon'}));
 
-        // Invisible actor used to anchor the popup to the mouse pointer.
-        this._cursorAnchor = new St.Widget({
+        this._buildMenu();
+        this._installCursorFollow(); // [cursor-follow:install]
+
+        this._connectWatcher();
+        this._loadHistory();
+    }
+
+    // -------------------- Opening at the mouse pointer --------------------
+    //
+    // Optional placement, controlled by the 'cursor-follow' setting: instead
+    // of dropping down from the panel icon, the popup opens next to the mouse
+    // pointer. GNOME's own BoxPointer still does all of the positioning and
+    // flipping; this code only changes what it points at and from which side.
+    // Full explanation: docs/cursor-follow.md
+
+    /** [cursor-follow:install]
+     * Creates the invisible pointer anchor and routes the menu's BoxPointer
+     * through _positionMenu(). Runs once, whatever the setting, so that
+     * toggling the setting takes effect the next time the menu opens without
+     * rebuilding anything.
+     * See docs/cursor-follow.md#cursor-follow-install */
+    _installCursorFollow() {
+        // A 1×1 transparent actor that is moved to the pointer each time the
+        // menu opens. The BoxPointer treats it as the thing it points at, in
+        // place of the panel icon.
+        this._pointerAnchor = new St.Widget({
             width: 1,
             height: 1,
             opacity: 0,
             reactive: false,
             can_focus: false,
         });
-        Main.uiGroup.add_child(this._cursorAnchor);
+        Main.uiGroup.add_child(this._pointerAnchor);
 
-        this._buildMenu();
-
-        // Anchor the popup to the mouse pointer.
+        // PopupMenu.open() calls boxPointer.setPosition(sourceActor,
+        // alignment) right before showing the menu. Keeping the original
+        // method lets _positionMenu() delegate to it, and lets destroy() put
+        // it back. The panel's own arrow side is kept so that it can be
+        // restored when the setting is off.
         const boxPointer = this.menu._boxPointer;
         this._originalSetPosition = boxPointer.setPosition;
+        this._panelArrowSide = boxPointer._userArrowSide;
+        boxPointer.setPosition = (sourceActor, alignment) =>
+            this._positionMenu(sourceActor, alignment);
+    }
 
-        boxPointer.setPosition = (sourceActor, alignment) => {
-            const [x, y] = global.get_pointer();
+    /** [cursor-follow:positioning]
+     * Replacement for BoxPointer.setPosition(). With the setting off, it
+     * restores the panel arrow side and behaves exactly like the original.
+     * With it on, it moves the anchor to the pointer and asks the BoxPointer
+     * to point at the anchor from the popup's left edge, which places the
+     * popup to the right of the pointer. The BoxPointer flips the popup to
+     * the left of the pointer by itself when there is not enough room on the
+     * right.
+     * See docs/cursor-follow.md#cursor-follow-positioning */
+    _positionMenu(sourceActor, alignment) {
+        const boxPointer = this.menu._boxPointer;
 
-            this._cursorAnchor.set_position(x, y);
-            boxPointer._sourceActor = this._cursorAnchor;
+        if (!this._settings.get_boolean('cursor-follow')) {
+            boxPointer._userArrowSide = this._panelArrowSide;
+            boxPointer._arrowSide = this._panelArrowSide;
+            this._originalSetPosition.call(boxPointer, sourceActor, alignment);
+            return;
+        }
 
-            // Prefer the popup to the right of the cursor.
-            // GNOME automatically flips it when there is insufficient space.
-            boxPointer._userArrowSide = St.Side.LEFT;
-            boxPointer._arrowSide = St.Side.LEFT;
-            boxPointer._arrowAlignment = 1.0;
+        const [pointerX, pointerY] = global.get_pointer();
+        this._pointerAnchor.set_position(pointerX, pointerY);
 
-            boxPointer.queue_relayout();
-        };
-
-        this._connectWatcher();
-        this._loadHistory();
+        // _userArrowSide is the side GNOME prefers and flips away from when
+        // space runs out; _arrowSide is the side currently in use, which also
+        // sets the direction of the opening animation. Both are private
+        // BoxPointer fields with no public setter.
+        boxPointer._userArrowSide = St.Side.LEFT;
+        boxPointer._arrowSide = St.Side.LEFT;
+        this._originalSetPosition.call(boxPointer, this._pointerAnchor, POINTER_ARROW_ALIGNMENT);
     }
 
     // -------------------- Menu construction --------------------
@@ -1021,15 +1071,17 @@ class ClipboardHistoryIndicator extends PanelMenu.Button {
             this._menuStateId = null;
         }
 
-        // Restore GNOME's original positioning method.
+        // [cursor-follow:cleanup]
+        // Hand setPosition back to GNOME's BoxPointer and remove the anchor
+        // before the menu itself is destroyed by super.destroy().
+        // See docs/cursor-follow.md#cursor-follow-cleanup
         if (this._originalSetPosition) {
             this.menu._boxPointer.setPosition = this._originalSetPosition;
             this._originalSetPosition = null;
         }
-
-        if (this._cursorAnchor) {
-            Main.uiGroup.remove_child(this._cursorAnchor);
-            this._cursorAnchor = null;
+        if (this._pointerAnchor) {
+            this._pointerAnchor.destroy();
+            this._pointerAnchor = null;
         }
 
         this._watcher = null;

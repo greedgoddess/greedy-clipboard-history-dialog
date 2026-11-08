@@ -1,152 +1,113 @@
-# Clipboard History — Personal Fedora Fork
+# Greedy Clipboard History Dialog
 
-This is a personal fork of [M-ghalevand's GNOME Clipboard History extension](https://github.com/M-ghalevand/gnome-shell-extension-clipboard-history), exported from the known-working local installation rather than rebuilt from upstream `master`.
+A personal fork of
+[Clipboard History](https://extensions.gnome.org/extension/10613/clipboard-history/)
+by Manouchehr Ghalevand, a Windows-style clipboard history panel for GNOME
+Shell.
 
-## Why export from the installed copy?
+It is the stock extension, release 1.0 (3), with one addition:
 
-The upstream GitHub `master` README/source currently describes GNOME Shell 46–50, while the installed GNOME Extensions release 1.0 (3) was reviewed with GNOME Shell 51 support. The working local installation is therefore the source of truth for this fork. See the upstream repository and the GNOME Extensions version listing before merging upstream changes.
+**Open at mouse pointer.** An optional setting that opens the panel next to
+the mouse pointer instead of below its panel icon: to the right of the
+pointer, with its bottom edge level with it, or to the left when there is no
+room on the right. Switch it on or off in the extension preferences, under
+**Placement**.
 
-## Personal changes included
+Everything else is unchanged from the stock release. The addition is written
+so that it can be proposed to the original author; see
+[Upstream proposal](#upstream-proposal).
 
-- Clipboard popup anchored to the current pointer position.
-- Preferred placement is to the **right** of the cursor.
-- Popup bottom edge is aligned with the cursor.
-- GNOME `BoxPointer` preferred arrow side is set to `St.Side.LEFT`; native flip behavior can move the popup to the left when there is insufficient room on the right.
-- Correct cleanup restores the original `setPosition` method.
-- Panel icon uses `edit-copy-symbolic`.
-- Temporary debugging notifications/logging are stripped during export.
+## Quick start
 
-The extension retains the original UUID `clipboard-history@manouchehr`. This intentionally replaces the upstream installation rather than installing a second side-by-side copy. It also preserves the original GSettings schema and cache location, so settings and local clipboard history remain intact.
+All commands run from a checkout of this repository. GitHub is accessed over
+SSH (see [docs/maintenance.md](docs/maintenance.md#ssh-access)).
 
-## 1. Export the working installation on the first Fedora system
-
-Extract the toolkit ZIP, then run:
-
-```bash
-chmod +x ./*.sh
-./bootstrap-fork.sh
-```
-
-By default this creates:
-
-```text
-~/Projects/clipboard-history-personal/
-```
-
-You can provide another destination:
+**New machine:**
 
 ```bash
-./bootstrap-fork.sh "$HOME/Projects/my-clipboard-fork"
-```
-
-The exporter checks that the tested cursor patch is present and refuses to export if the deliberate syntax-error test line is present. It copies the currently installed extension into `src/`, removes the compiled schema cache, cleans up temporary diagnostics, and marks the metadata as version 4 / Personal Fork.
-
-## 2. Put the fork under Git
-
-```bash
-cd ~/Projects/clipboard-history-personal
-git init
-git add .
-git commit -m "Create personal Clipboard History fork"
-```
-
-Create an **empty** private GitHub repository (for example `clipboard-history-personal`), then connect and push it:
-
-```bash
-git branch -M main
-git remote add origin git@github.com:YOUR_GITHUB_USERNAME/clipboard-history-personal.git
-git push -u origin main
-```
-
-Replace `YOUR_GITHUB_USERNAME` with your GitHub account name. You can use an HTTPS remote instead of SSH if preferred.
-
-If you want the extension's metadata URL to point to your fork, edit `src/metadata.json` and change its `url` field to your repository URL, then commit and push that change.
-
-## 3. Install on the second Fedora system
-
-Install Git if necessary:
-
-```bash
-sudo dnf install git glib2
-```
-
-Clone your personal repository:
-
-```bash
-mkdir -p ~/Projects
-cd ~/Projects
-git clone git@github.com:YOUR_GITHUB_USERNAME/clipboard-history-personal.git
-cd clipboard-history-personal
-```
-
-Install:
-
-```bash
-chmod +x ./*.sh
+git clone git@github.com:greedgoddess/greedy-clipboard-history-dialog.git ~/Projects/greedy-clipboard-history-dialog
+cd ~/Projects/greedy-clipboard-history-dialog
 ./install.sh
 ```
 
-The installer:
-- verifies the extension UUID and personal positioning patch;
-- disables the existing extension if present;
-- compiles the GSettings schema locally;
-- keeps a timestamped backup of any existing installation;
-- installs under `~/.local/share/gnome-shell/extensions/clipboard-history@manouchehr`;
-- enables the extension;
-- does not delete the clipboard history cache or GNOME settings.
-
-On a fresh second system, the panel icon should appear after enabling. If you are replacing an already-loaded copy and GNOME Shell does not pick up the new JavaScript under Wayland, log out and back in.
-
-## 4. Update later
-
-After pushing changes from the first machine:
+**Machine with the previous version of this fork (version 4):**
 
 ```bash
-cd ~/Projects/clipboard-history-personal
+cd ~/Projects/greedy-clipboard-history-dialog
+git pull --ff-only
+./uninstall-previous-version.sh
+./install.sh
+```
+
+**Later updates:**
+
+```bash
+cd ~/Projects/greedy-clipboard-history-dialog
 ./update.sh
 ```
 
-This performs a fast-forward-only `git pull` and reinstalls the fork.
+After installing or updating, **log out and back in**, then run `./verify.sh`.
 
-## 5. Verify
+The scripts never delete your clipboard history or settings unless you ask
+for it with `./uninstall.sh --purge`.
 
-```bash
-./verify.sh
+## Documentation
+
+| Document | Contents |
+| --- | --- |
+| [docs/installation.md](docs/installation.md) | Installing, migrating from version 4, updating, checking, uninstalling, troubleshooting |
+| [docs/cursor-follow.md](docs/cursor-follow.md) | How Open at mouse pointer works, section by section, linked from the code |
+| [docs/maintenance.md](docs/maintenance.md) | Git and SSH, comparing with the stock release, following new stock releases |
+| [upstream-patches/README.md](upstream-patches/README.md) | The proposal for the original author: patch, how to check it, merge-request text |
+
+## Repository layout
+
+```text
+src/                            The extension, as installed
+  extension.js                  Panel, menu and Open at mouse pointer
+  prefs.js                      Preferences window
+  schemas/                      Settings schema
+  metadata.json                 Name, UUID, version, supported GNOME versions
+docs/                           Documentation
+upstream-patches/               Proposal for the original author
+scripts/common.sh               Shared settings for the scripts below
+install.sh                      Install or reinstall
+uninstall.sh                    Remove (optionally with history and settings)
+uninstall-previous-version.sh   Remove version 4 of this fork before installing
+update.sh                       git pull, then install
+verify.sh                       Show what is installed and whether it works
 ```
 
-Check extension state:
+## How this fork differs from the stock release
 
-```bash
-gnome-extensions info clipboard-history@manouchehr
-```
+| File | Difference |
+| --- | --- |
+| `src/extension.js` | Open at mouse pointer: one constant, two methods, one call, one cleanup block, all tagged `[cursor-follow:…]` |
+| `src/prefs.js` | **Placement** group with the **Open at mouse pointer** switch |
+| `src/schemas/…gschema.xml` | `cursor-follow` key |
+| `src/metadata.json` | Fork name, version 5, version name `1.0+cursor-follow` |
 
-Watch GNOME Shell logs for extension errors:
+To check this against the stock release yourself, see
+[docs/maintenance.md](docs/maintenance.md#comparing-with-the-stock-release).
 
-```bash
-journalctl -f -o cat /usr/bin/gnome-shell
-```
+## Why the UUID is unchanged
 
-## 6. Uninstall
+The fork keeps the stock UUID, `clipboard-history@manouchehr`. This makes it
+a drop-in replacement: it uses the same settings and the same clipboard
+history (`~/.cache/clipboard-history@manouchehr/`). The flip side is that the
+fork and the stock extension cannot be installed side by side, and GNOME may
+offer to replace the fork once the stock extension publishes a version higher
+than 5; see [docs/installation.md](docs/installation.md#gnome-offers-an-update-for-the-extension).
 
-```bash
-./uninstall.sh
-```
+## Upstream proposal
 
-This removes the installed extension files but deliberately preserves:
-- `~/.cache/clipboard-history@manouchehr/` (clipboard history and image cache);
-- the extension's GSettings values.
+Open at mouse pointer is prepared as a patch for the original extension,
+switched off by default so that it changes nothing for existing users. The
+proposal is a **draft** and has not been submitted. Until the author decides,
+this fork is the way to use the feature.
 
-To reinstall, run `./install.sh` from the fork checkout.
+## Credits and license
 
-## Important notes
-
-- Fedora's `glib2` package provides `glib-compile-schemas`.
-- The extension's UUID remains the upstream UUID. Do not change it unless you also intentionally migrate the schema ID, settings path, cache path, and extension references.
-- Do not install the upstream copy alongside this fork under the same UUID.
-- The original extension is licensed GPL-2.0-or-later. Keep its `LICENSE` and copyright notices when redistributing.
-- Clipboard history is local to each machine; this installer does not copy clipboard contents between systems.
-
-## Upstream
-
-- Source: https://github.com/M-ghalevand/gnome-shell-extension-clipboard-history
-- GNOME Extensions: https://extensions.gnome.org/extension/10613/clipboard-history/
+Clipboard History is © 2025 Manouchehr Ghalevand, licensed under
+GPL-2.0-or-later; see [src/LICENSE](src/LICENSE). The additions in this fork
+are under the same license.
