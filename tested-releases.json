@@ -18,6 +18,6 @@
       "headless GNOME Shell smoke test"
     ],
     "date": "2026-11-08",
-    "feature_commit": "1903902"
+    "feature_commit": "c88cb54"
   }
 ]
