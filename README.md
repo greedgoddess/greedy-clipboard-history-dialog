@@ -61,6 +61,7 @@ Shell, and refuses a download that differs from what was tested.
 <!-- tested-releases:start -->
 | Release | GNOME Shell (release) | Tested on | Date |
 | --- | --- | --- | --- |
+| 1.0 (3) | 46, 47, 48, 49, 50, 51 | GNOME Shell 51.1 | 2026-11-08 |
 <!-- tested-releases:end -->
 
 Other sources: `--latest` (newest release, untested), `--version N`,

@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "version": 3,
+    "version_name": "1.0",
+    "content_sha256": "6e182e0dcfe7dcd15489e7760ed98ccda627ccf55c5b02f1fa933f1efb06a466",
+    "shell_versions": [
+      "46",
+      "47",
+      "48",
+      "49",
+      "50",
+      "51"
+    ],
+    "tested_on": "GNOME Shell 51.1",
+    "date": "2026-11-08",
+    "feature_commit": "211a09f"
+  }
+]
