@@ -93,6 +93,7 @@ this cannot be checked, and the password manager counts as not available.
 The extension and the preferences share this code.
 
 <a id="password-manager-settings"></a>
+<a id="password-manager-enabled"></a>
 ## `password-manager:settings`
 
 Keys in `feature/settings-keys.xml`: `password-managers`, the IDs of the
@@ -102,6 +103,7 @@ not enable anything. `enabledProviders()` turns the IDs into password
 managers, in the order of `PROVIDERS`.
 
 <a id="password-manager-preference"></a>
+<a id="password-manager-shortcut-preference"></a>
 ## `password-manager:preference`
 
 The **Password managers** group in the preferences: a switch per supported
@@ -120,6 +122,7 @@ has built its panel, and creates the `PasswordManagerSwitch`; it is destroyed
 first on `disable()`. The preferences load `passwordManagers.js` the same way.
 
 <a id="password-manager-shortcut"></a>
+<a id="password-manager-shortcut-action"></a>
 ## `password-manager:shortcut`, `password-manager:shortcut-action`
 
 The original registers its shortcut as the keybinding `toggle-shortcut`.
@@ -151,6 +154,7 @@ take a few seconds to appear, and on some systems only appears on the second
 call; this code does not work around either.
 
 <a id="password-manager-placement"></a>
+<a id="password-manager-anchor"></a>
 ## `password-manager:anchor`, `password-manager:placement`
 
 The search window goes where the panel was, against the same corner, so both
@@ -166,6 +170,8 @@ Without an open panel, the window goes with its bottom-left corner at the
 pointer, and to the left of it when there is no room on the right.
 
 <a id="password-manager-rounded-corners"></a>
+<a id="password-manager-shader-api"></a>
+<a id="password-manager-corner-bounds"></a>
 ## `password-manager:rounded-corners`
 
 `feature/roundedCorners.js`. Rounded corners are part of

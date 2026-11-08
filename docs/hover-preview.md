@@ -14,6 +14,7 @@ grep -rn "\[hover-preview:" feature/
 ```
 
 <a id="hover-preview-setting"></a>
+<a id="hover-preview-preference"></a>
 ## `hover-preview:setting`, `hover-preview:preference`
 
 Boolean key `hover-preview` in `feature/settings-keys.xml`, default `false`,
@@ -45,6 +46,7 @@ cut after 512 characters, with an ellipsis when it was cut. Characters are
 counted as characters, so an emoji or an accented letter is never split.
 
 <a id="hover-preview-overlay"></a>
+<a id="hover-preview-style"></a>
 ## `hover-preview:overlay`, `hover-preview:style`
 
 After the pointer has rested on the entry for 350 ms, a label that wraps

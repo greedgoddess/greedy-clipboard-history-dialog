@@ -71,8 +71,9 @@ works the same. This installs the latest state of `main`; for the latest
 release instead, add `--branch` and its tag (see
 [Releases](https://github.com/greedgoddess/greedy-clipboard-history-dialog/releases)).
 `install.sh` builds first if needed. Log out and back in, then check with
-`./verify.sh`. The first install switches both Cursor-Follow settings on;
-the preferences can switch them off.
+`./verify.sh`. The first install switches **Open at mouse pointer** and
+**Update notifications** on; everything else starts off. The preferences
+can change all of them.
 
 **From Clipboard History or an earlier version of this project:** run
 `./uninstall-previous-version.sh` before `./install.sh`. It copies your
@@ -101,7 +102,7 @@ installing it.
 <!-- tested-releases:start -->
 | Release | GNOME Shell (release) | Tested on | Date |
 | --- | --- | --- | --- |
-| 1.0 (3) | 46, 47, 48, 49, 50, 51 | GNOME Shell 51.1 | 2026-11-09 |
+| 1.0 (3) | 46, 47, 48, 49, 50, 51 | GNOME Shell 51.1 | 2026-11-08 |
 <!-- tested-releases:end -->
 
 ### What is verified where
@@ -120,10 +121,10 @@ installing it.
 A release lists the GNOME Shell versions the *original* supports. This
 project is verified only where marked here:
 
-| GNOME Shell | Builds | Activates (smoke test) | Opens at pointer | Flips at screen edge | 1Password Quick Access (optional) |
-| --- | --- | --- | --- | --- | --- |
-| 51 | yes | yes | yes, by hand | yes, by hand | yes, by hand (1.1.0, 2026-11-08) |
-| 46–50 | not tested | not tested | not tested | not tested | not tested |
+| GNOME Shell | Builds | Activates (smoke test) | Opens at pointer | Flips at screen edge | Password managers: 1Password (optional) | Large spacing (optional) | Hover preview |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 51 | yes | yes | yes, by hand | yes, by hand | yes, by hand (1.2.0) | yes, by hand (1.2.0) | not yet checked by hand |
+| 46–50 | not tested | not tested | not tested | not tested | not tested | not tested | not tested |
 
 The smoke test needs GNOME and may fail on headless systems; it runs on a
 GNOME desktop, not in CI. The manual checks are

@@ -93,6 +93,7 @@ release renames them, large spacing stays inactive and logs a warning, and
 settings, then clear.
 
 <a id="large-spacing-apply"></a>
+<a id="large-spacing-clear-keeps-open"></a>
 ## `large-spacing:apply`
 
 Takes the two original entries out of the menu, keeping them and their
@@ -144,6 +145,7 @@ stylesheet. With Large spacing off, the panel has the theme's radius and
 the search windows square corners.
 
 <a id="large-spacing-provider-buttons"></a>
+<a id="large-spacing-provider-indicator"></a>
 ## `large-spacing:provider-buttons`, `large-spacing:provider-indicator`
 
 With the [password manager integration](password-managers.md) installed,
@@ -167,6 +169,7 @@ the same height, corners and hover colours, so the two look alike and take
 little height. The tabs keep the original's highlight for the selected tab.
 
 <a id="large-spacing-layout"></a>
+<a id="large-spacing-emoji-rows"></a>
 ## `large-spacing:layout`
 
 All sizes are fixed in `feature/largeSpacing.css`; nothing is measured or

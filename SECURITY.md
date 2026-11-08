@@ -11,7 +11,10 @@ Relevant here in particular:
 - `install.sh` and the other scripts change files in your home folder and
   GNOME settings;
 - the extension contacts GitHub and extensions.gnome.org when update
-  notifications are on (see docs/update-notifications.md).
+  notifications are on (see docs/update-notifications.md);
+- the optional password manager integration starts the password manager's
+  own program and checks whether it runs with `pgrep` (see
+  docs/password-managers.md).
 
 Problems in Clipboard History itself belong to its author:
 https://github.com/M-ghalevand/gnome-shell-extension-clipboard-history

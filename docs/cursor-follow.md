@@ -192,9 +192,15 @@ Each step only runs if its install step did, and nothing is done to a
 `feature/prefs.js` extends the original preferences from `upstream-prefs.js`.
 After the original has filled the window (synchronously or asynchronously),
 it adds a **Cursor-Follow** group to the page the original shows first (or
-to a page of its own if there is none), with two switches:
-**Open at mouse pointer**, bound to `cursor-follow`, and
-[**Update notifications**](update-notifications.md#update-notify-preference). If a release has no usable
+to a page of its own if there is none), with these switches:
+**Open at mouse pointer**, bound to `cursor-follow`;
+[**Preview on hover**](hover-preview.md#hover-preview-setting);
+[**Large spacing**](large-spacing.md#large-spacing-preference), when
+installed; and
+[**Update notifications**](update-notifications.md#update-notify-preference).
+With the password manager integration installed, a separate
+[**Password managers**](password-managers.md#password-manager-preference)
+group follows. If a release has no usable
 preferences of its own, the build supplies an empty base, so only the
 Cursor-Follow switches are shown.
 
@@ -208,11 +214,13 @@ needs no change handler. `install.sh` switches it on at the first install.
 <a id="about-attribution"></a>
 ## `about:attribution`
 
-An **About** group in the preferences, under Cursor-Follow: Clipboard History
-and its author, with links to its repository and its extensions.gnome.org
-page, and this project with a link to its repository. It shows the installed
-versions from `build-info.json`, the license, and that this project is not
-affiliated with the original author.
+An **About** group at the end of the preferences: Clipboard History and its
+author, with links to its repository and its extensions.gnome.org page, and
+this project with a link to its repository. It shows the installed versions
+from `build-info.json`, the license, and that this project is not affiliated
+with the original author. With the password manager integration installed,
+it also links to each supported password manager
+([`password-manager:about`](password-managers.md#password-manager-about)).
 
 <a id="testing"></a>
 ## Testing
