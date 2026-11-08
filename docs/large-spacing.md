@@ -99,7 +99,8 @@ Takes the two original entries out of the menu, keeping them and their
 places, puts one row of buttons where the first of them was, and applies the
 [layout](#large-spacing-layout). Each button
 calls `activate()` on its original entry, which runs the original's own
-action and closes the panel, as clicking the entry did. The trash can follows
+action, as clicking the entry did; the gear closes the panel, the trash can
+keeps it open (`large-spacing:clear-keeps-open`). The trash can follows
 the visibility the original gives its "Clear" entry.
 
 <a id="large-spacing-tab-icons"></a>
@@ -152,8 +153,8 @@ its native package or its Flatpak). Tapping it opens the password manager's
 search window where the panel was, like the second press of the shortcut.
 
 Whether each password manager is running is checked whenever the panel opens.
-While one is not running, its icon is greyed out and a small red dot shows in
-the button's corner. This is an indicator only: the button stays clickable,
+While one is not running, its icon is greyed out (colours removed and faded)
+and a small red dot shows in the button's corner. This is an indicator only: the button stays clickable,
 and the shortcut keeps working; both then show a notification that the app is
 not running.
 

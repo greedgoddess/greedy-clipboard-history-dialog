@@ -26,6 +26,9 @@ const STUBS = {
                 this.style_class = (this.style_class ?? '').split(' ').filter(c => c && c !== name).join(' ');
             }
             set_height(height) { this.height = height; }
+            add_effect_with_name(name, effect) { (this.effects ??= {})[name] = effect; }
+            get_effect(name) { return this.effects?.[name] ?? null; }
+            remove_effect_by_name(name) { if (this.effects) delete this.effects[name]; }
             get_preferred_height() { return [0, this.natural ?? 30]; }
             connect(signal, handler) { (this.handlers[signal] ??= []).push(handler); return signal + this.handlers[signal].length; }
             disconnect() {}
@@ -82,8 +85,9 @@ const STUBS = {
             },
         });
         class BinLayout {}
+        class DesaturateEffect { constructor(props) { Object.assign(this, props); } }
         export default {
-            ShaderEffect, BinLayout,
+            ShaderEffect, BinLayout, DesaturateEffect,
             ActorAlign: {FILL: 0, START: 1, CENTER: 2, END: 3},
             EventType: {MOTION: 3, LEAVE: 5, SCROLL: 9, BUTTON_PRESS: 6},
             PickMode: {REACTIVE: 1},

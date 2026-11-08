@@ -113,6 +113,20 @@ test('password manager buttons come first, one per enabled password manager, and
     mode.destroy();
 });
 
+test('clear keeps the panel open', () => {
+    const {menu, box, clear} = fakeMenu();
+    let closed = false;
+    menu.itemActivated = function () { closed = true; };
+    const original = menu.itemActivated;
+    clear.activate = () => { clear.activations += 1; menu.itemActivated(); };    // As GNOME's menu does
+    const mode = new LargeSpacing(menu, fakeSettings({'large-spacing': true, 'password-managers': []}), 'css', () => null);
+    buttonsOf(box).at(-1).emit('clicked');
+    assert.equal(clear.activations, 1);
+    assert.equal(closed, false);
+    assert.equal(menu.itemActivated, original, 'restored afterwards');
+    mode.destroy();
+});
+
 test('no password manager enabled: no extra button', () => {
     const {menu, box} = fakeMenu();
     const pm = fakePasswordManagers({enabled: []});
@@ -129,6 +143,7 @@ test('not running: the icon is greyed out and the red dot shows; the button stay
     const [button] = buttonsOf(box);
     assert.equal(button.providerDot.visible, true);
     assert.ok(button.providerIcon.opacity < 255);
+    assert.ok(button.providerIcon.get_effect('greedy-greyed-out'), 'colours removed');
     button.emit('clicked');
     assert.deepEqual(pm.opened, ['1password'], 'still opens: indicator only');
     mode.destroy();
@@ -142,6 +157,7 @@ test('running: full icon, no dot; checked again whenever the panel opens', async
     const [button] = buttonsOf(box);
     assert.equal(button.providerDot.visible, false);
     assert.equal(button.providerIcon.opacity, 255);
+    assert.equal(button.providerIcon.get_effect('greedy-greyed-out'), null);
     pm.isRunning = async () => false;
     menu.emit('open-state-changed', true);
     await tick();

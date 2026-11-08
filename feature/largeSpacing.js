@@ -161,8 +161,24 @@ export class LargeSpacing {
         const optional = this._providerButtons.map(({button}) => button);
         const settingsButton = this._button(new Gio.ThemedIcon({name: 'emblem-system-symbolic'}),
             'Extension Settings', () => settings.activate(null));
+        // [large-spacing:clear-keeps-open] Clearing runs the original's
+        // action, but the panel stays open: GNOME closes a menu when one of
+        // its entries is activated, which is skipped for this one call.
+        // See docs/large-spacing.md#large-spacing-apply
         const clearButton = this._button(new Gio.ThemedIcon({name: 'user-trash-symbolic'}),
-            'Clear (except pinned)', () => clear.activate(null));
+            'Clear (except pinned)', () => {
+                const menu = this._menu;
+                const own = Object.hasOwn(menu, 'itemActivated') ? menu.itemActivated : null;
+                menu.itemActivated = () => {};
+                try {
+                    clear.activate(null);
+                } finally {
+                    if (own)
+                        menu.itemActivated = own;
+                    else
+                        delete menu.itemActivated;
+                }
+            });
         // As in the original design: the trash can shows exactly when the
         // original shows "Clear", which it hides when there is nothing to
         // clear (all pinned, or a tab without history).
@@ -233,7 +249,13 @@ export class LargeSpacing {
             if (!this._providerButtons?.includes(entry))
                 continue;    // Rebuilt or switched off meanwhile
             const off = running === false;
-            entry.button.providerIcon.opacity = off ? 110 : 255;
+            const icon = entry.button.providerIcon;
+            // Greyed out: colours removed and faded; colours back when running.
+            if (off && !icon.get_effect('greedy-greyed-out'))
+                icon.add_effect_with_name('greedy-greyed-out', new Clutter.DesaturateEffect({factor: 1.0}));
+            else if (!off)
+                icon.remove_effect_by_name('greedy-greyed-out');
+            icon.opacity = off ? 140 : 255;
             entry.button.providerDot.visible = off;
         }
     }
