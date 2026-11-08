@@ -46,11 +46,15 @@ fixes are best effort.
 ## Install
 
 ```bash
-git clone git@github.com:greedgoddess/greedy-clipboard-history-dialog.git
+git clone https://github.com/greedgoddess/greedy-clipboard-history-dialog.git
 cd greedy-clipboard-history-dialog
 ./install.sh
 ```
 
+With SSH set up for GitHub, `git@github.com:greedgoddess/greedy-clipboard-history-dialog.git`
+works the same. This installs the latest state of `main`; for the latest
+release instead, add `--branch` and its tag (see
+[Releases](https://github.com/greedgoddess/greedy-clipboard-history-dialog/releases)).
 `install.sh` builds first if needed. Log out and back in, then check with
 `./verify.sh`. The first install switches both Cursor-Follow settings on;
 the preferences can switch them off.
@@ -79,6 +83,14 @@ installing it.
 | --- | --- | --- | --- |
 | 1.0 (3) | 46, 47, 48, 49, 50, 51 | GNOME Shell 51.1 | 2026-11-08 |
 <!-- tested-releases:end -->
+
+### What is verified where
+
+| What | Where | How |
+| --- | --- | --- |
+| Source syntax, ShellCheck, unit tests, build integrity | GitHub Actions (CI), on every push | Automatically; a green CI run means only this |
+| The extension loads in GNOME Shell without errors | A GNOME desktop | Smoke test; required before a release is recorded as tested |
+| Opens at the pointer, flips at screen edges | A GNOME desktop | By hand, with the [testing checklist](docs/cursor-follow.md#testing) |
 
 ### Verified GNOME Shell versions
 

@@ -45,8 +45,20 @@ works only from `main`, and never without the smoke test.
 
 ## Releasing
 
+Release tags are signed (SSH signing; the key must be added on GitHub as a
+signing key).
+
 1. Update `VERSION` and `CHANGELOG.md`, commit, push, and wait for CI.
-2. Tag and push the tag: `git tag -a vX.Y.Z -m "…" && git push origin vX.Y.Z`.
+2. Create a signed tag, check its signature, and push it:
+
+   ```bash
+   git tag -s vX.Y.Z -m "Greedy Clipboard History Dialog X.Y.Z"
+   git tag -v vX.Y.Z
+   git push origin vX.Y.Z
+   ```
+
+   `git tag -v` needs `gpg.ssh.allowedSignersFile` set; GitHub shows the
+   tag as **Verified** once it is pushed.
 3. Create the GitHub release from that tag, with the changelog section as
    notes.
 

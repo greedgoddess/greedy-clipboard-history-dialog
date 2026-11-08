@@ -21,7 +21,8 @@ require_command git "Install it with: sudo dnf install git"
 
 remote_url="$(git -C "$ROOT" remote get-url origin 2>/dev/null || true)"
 [[ -n "$remote_url" ]] || fail "This checkout has no 'origin' remote."
-if [[ "$remote_url" != git@github.com:* && "$remote_url" != ssh://* ]]; then
+# HTTPS is fine for pulling; developer machines push over SSH.
+if [[ "$(current_mode)" == dev && "$remote_url" != git@github.com:* && "$remote_url" != ssh://* ]]; then
     warn "origin is not an SSH remote ($remote_url). This project is pushed and pulled over SSH."
 fi
 

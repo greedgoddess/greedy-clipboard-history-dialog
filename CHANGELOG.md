@@ -10,6 +10,8 @@ on is listed in the README under "Tested releases".
   `update-test-and-push.sh` requires it.
 - CI: actions updated to versions running on Node.js 24; jobs pinned to
   Ubuntu 24.04.
+- Docs: signed release tags; HTTPS cloning; what CI verifies and what is
+  verified on a GNOME desktop.
 
 ## 1.0.2 — 2026-11-08
 
