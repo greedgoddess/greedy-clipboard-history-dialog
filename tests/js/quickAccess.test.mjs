@@ -15,15 +15,22 @@ test('the shortcut toggles the panel, and switches only when on and the panel is
 });
 
 const workArea = {x: 0, y: 32, width: 1920, height: 1048};
+const quickAccess = {width: 750, height: 450};
 
-test('Quick Access takes the panel\'s place: left edges aligned, bottom edges level', () => {
-    const panel = {x: 400, y: 300, width: 420, height: 500};
-    assert.deepEqual(placeQuickAccess(panel, {width: 750, height: 450}, workArea), {x: 400, y: 350});
+test('like the panel: bottom-left corner at the pointer', () => {
+    assert.deepEqual(placeQuickAccess({x: 400, y: 800}, quickAccess, workArea), {x: 400, y: 350});
 });
 
-test('Quick Access stays inside the work area', () => {
-    assert.deepEqual(placeQuickAccess({x: 1700, y: 40, width: 420, height: 100}, {width: 750, height: 450}, workArea),
-        {x: 1170, y: 32});
+test('no room on the right: flips to the left of the pointer', () => {
+    assert.deepEqual(placeQuickAccess({x: 1500, y: 800}, quickAccess, workArea), {x: 750, y: 350});
+});
+
+test('pointer near the top: moved down only as far as needed', () => {
+    assert.deepEqual(placeQuickAccess({x: 400, y: 100}, quickAccess, workArea), {x: 400, y: 32});
+});
+
+test('too wide for either side: kept inside the work area', () => {
+    assert.deepEqual(placeQuickAccess({x: 600, y: 800}, {width: 1800, height: 450}, workArea), {x: 0, y: 350});
 });
 
 test('1Password windows are recognised by their class', () => {

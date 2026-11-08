@@ -120,7 +120,7 @@ export default class GreedyClipboardHistoryPreferences extends UpstreamPreferenc
             checkButton.sensitive = false;
             const availability = await quickAccessAvailability();
             row.subtitle = availability.available
-                ? 'Press the shortcut again while the panel is open to switch to Quick Access, in the panel’s place.'
+                ? 'Press the shortcut again while the panel is open to switch to Quick Access, placed at the pointer like the panel.'
                 : availability.reason;
             row.sensitive = availability.available || settings.get_boolean('quick-access');
             checkButton.visible = !availability.available;

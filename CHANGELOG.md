@@ -7,7 +7,8 @@ on is listed in the README under "Tested releases".
 
 - 1Password Quick Access (Preferences → Cursor-Follow, off by default):
   pressing the shortcut again while the panel is open switches to Quick
-  Access, in the panel's place. Can only be switched on while 1Password is
+  Access, placed like the panel: bottom-left corner at the pointer, or to
+  the left of it when there is no room on the right. Can only be switched on while 1Password is
   installed and running.
 - CI no longer runs the smoke test: it needs a real GNOME session, which a
   container does not have. It runs on a GNOME desktop, where
