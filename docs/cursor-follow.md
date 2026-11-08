@@ -99,7 +99,8 @@ original's class from `upstream-extension.js`:
 
 - `enable()` runs the original's `enable()`, then installs
   [`CursorFollow`](#cursor-follow-install) on the original's panel menu and
-  starts the [`UpdateNotifier`](update-notifications.md);
+  starts the [`QuickAccessSwitch`](quick-access.md) and the
+  [`UpdateNotifier`](update-notifications.md);
 - `disable()` stops both first, then runs the original's `disable()`.
 
 The original runs exactly as it would on its own; it is not aware of the

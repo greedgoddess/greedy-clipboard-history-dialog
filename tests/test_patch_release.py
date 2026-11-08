@@ -18,7 +18,10 @@ EXTENSION_JS = """import {Extension} from 'resource:///org/gnome/shell/extension
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 export default class Original extends Extension {
-    enable() { Main.panel.addToStatusArea(this.uuid, new PanelMenu.Button(0.5, 'x')); }
+    enable() {
+        Main.panel.addToStatusArea(this.uuid, new PanelMenu.Button(0.5, 'x'));
+        Main.wm.addKeybinding('toggle-shortcut', this._settings, 0, 0, () => {});
+    }
 }
 """
 PREFS_JS = "export default class OriginalPrefs { fillPreferencesWindow() {} }\n"
@@ -27,6 +30,7 @@ SCHEMA = f"""<?xml version="1.0" encoding="UTF-8"?>
   <schema id="{LEGACY_SCHEMA}" path="/org/gnome/shell/extensions/clipboard-history/">
     <!-- a comment the build must keep -->
     <key name="max-history-size" type="i"><default>50</default></key>
+    <key name="toggle-shortcut" type="as"><default>[]</default></key>
   </schema>
 </schemalist>
 """
@@ -71,6 +75,13 @@ class PatchReleaseTest(unittest.TestCase):
             self.assertIn(f'<key name="{key}"', xml)
         meta = json.loads((out / 'metadata.json').read_text())
         self.assertEqual(meta['shell-version'], ['51'])
+
+    def test_missing_shortcut_is_reported(self):
+        self.write(f'schemas/{LEGACY_SCHEMA}.gschema.xml',
+                   SCHEMA.replace('    <key name="toggle-shortcut" type="as"><default>[]</default></key>\n', ''))
+        result, _, warnings = self.patch()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(any('toggle-shortcut' in w for w in warnings))
 
     def test_missing_preferences_get_a_fallback(self):
         (self.release / 'prefs.js').unlink()

@@ -16,6 +16,8 @@ import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Gtk from 'gi://Gtk';
 
+import {quickAccessAvailability} from './onePassword.js';
+
 import UpstreamPreferences from './upstream-prefs.js';
 
 export default class GreedyClipboardHistoryPreferences extends UpstreamPreferences {
@@ -49,6 +51,8 @@ export default class GreedyClipboardHistoryPreferences extends UpstreamPreferenc
         });
         settings.bind('cursor-follow', cursorFollowRow, 'active', Gio.SettingsBindFlags.DEFAULT);
         group.add(cursorFollowRow);
+
+        group.add(this._quickAccessRow(settings));
 
         // [update-notify:preference]
         // See docs/update-notifications.md#update-notify-preference
@@ -98,6 +102,34 @@ export default class GreedyClipboardHistoryPreferences extends UpstreamPreferenc
             'https://github.com/greedgoddess/greedy-clipboard-history-dialog'));
 
         page.add(group);
+    }
+
+    /** [quick-access:preference]
+     * The 1Password Quick Access switch. It can be switched on only while
+     * 1Password is installed and running; otherwise it says why, and
+     * "Check again" looks once more. It can always be switched off.
+     * See docs/quick-access.md#quick-access-preference */
+    _quickAccessRow(settings) {
+        const row = new Adw.SwitchRow({title: '1Password Quick Access', subtitle: 'Checking for 1Password…'});
+        settings.bind('quick-access', row, 'active', Gio.SettingsBindFlags.DEFAULT);
+
+        const checkButton = new Gtk.Button({label: 'Check again', valign: Gtk.Align.CENTER});
+        row.add_suffix(checkButton);
+
+        const update = async () => {
+            checkButton.sensitive = false;
+            const availability = await quickAccessAvailability();
+            row.subtitle = availability.available
+                ? 'Press the shortcut again while the panel is open to switch to Quick Access, in the panel’s place.'
+                : availability.reason;
+            row.sensitive = availability.available || settings.get_boolean('quick-access');
+            checkButton.visible = !availability.available;
+            checkButton.sensitive = true;
+        };
+        checkButton.connect('clicked', () => update().catch(logError));
+        settings.connect('changed::quick-access', () => update().catch(logError));
+        update().catch(logError);
+        return row;
     }
 
     _linkRow(title, subtitle, uri) {

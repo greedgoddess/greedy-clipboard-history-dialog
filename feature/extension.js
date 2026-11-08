@@ -4,7 +4,8 @@
  *
  * The original Clipboard History code is unchanged, in upstream-extension.js.
  * This class extends it and adds "Open at mouse pointer" after it has built
- * its panel button, and the update notifications.
+ * its panel button, the switch to 1Password Quick Access, and the update
+ * notifications.
  * See docs/cursor-follow.md#cursor-follow-entry-point
  */
 
@@ -16,6 +17,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import UpstreamExtension from './upstream-extension.js';
 import {CursorFollow} from './cursorFollow.js';
+import {QuickAccessSwitch} from './quickAccess.js';
 import {UpdateNotifier} from './updateNotifier.js';
 
 // [cursor-follow:entry-point]
@@ -33,12 +35,17 @@ export default class GreedyClipboardHistoryExtension extends UpstreamExtension {
         if (!this._cursorFollow.active)
             console.warn(`${this.uuid}: panel menu not found; "Open at mouse pointer" is inactive`);
 
+        // [quick-access:entry-point] See docs/quick-access.md#quick-access-entry-point
+        this._quickAccess = new QuickAccessSwitch(indicator?.menu, this.getSettings());
+
         this._updateNotifier = new UpdateNotifier(this, this.getSettings());
     }
 
     disable() {
         this._updateNotifier?.destroy();
         this._updateNotifier = null;
+        this._quickAccess?.destroy();
+        this._quickAccess = null;
         this._cursorFollow?.destroy();
         this._cursorFollow = null;
         super.disable();

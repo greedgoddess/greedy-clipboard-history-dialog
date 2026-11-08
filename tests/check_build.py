@@ -51,7 +51,7 @@ for name, data in original.items():
     check(f'original {name} carried over unchanged', target.is_file() and target.read_bytes() == expected)
 
 # This project's files are the repository's.
-for name in ('extension.js', 'prefs.js', 'cursorFollow.js', 'updateNotifier.js'):
+for name in ('extension.js', 'prefs.js', 'cursorFollow.js', 'updateNotifier.js', 'quickAccess.js', 'onePassword.js'):
     check(f'{name} is this project\'s', (EXT / name).read_bytes() == (ROOT / 'feature' / name).read_bytes())
 
 # Identity.
@@ -73,7 +73,8 @@ check('cursor-follow key, off by default',
 compiled = subprocess.run(['glib-compile-schemas', '--strict', '--dry-run', str(schema.parent)],
                           capture_output=True, text=True)
 check('schema compiles', compiled.returncode == 0, compiled.stderr.strip())
-for key in ('update-notifications', 'developer-mode', 'checkout-path', 'update-last-check', 'update-notified'):
+for key in ('quick-access', 'update-notifications', 'developer-mode', 'checkout-path', 'update-last-check',
+            'update-notified'):
     check(f'{key} key', f'<key name="{key}"' in xml)
 info_file = EXT / 'build-info.json'
 info = json.loads(info_file.read_text(encoding='utf-8')) if info_file.is_file() else {}

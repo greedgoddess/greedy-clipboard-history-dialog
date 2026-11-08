@@ -13,6 +13,15 @@
       </description>
     </key>
 
+    <!-- [quick-access:setting]
+         Added by Greedy Clipboard History Dialog. Pressing the shortcut again
+         while the panel is open switches to 1Password Quick Access.
+         See docs/quick-access.md#quick-access-setting -->
+    <key name="quick-access" type="b">
+      <default>false</default>
+      <summary>Switch to 1Password Quick Access with the shortcut</summary>
+    </key>
+
     <!-- [update-notify:settings]
          Added by Greedy Clipboard History Dialog. Update notifications; the
          installer sets developer-mode and checkout-path.

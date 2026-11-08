@@ -25,7 +25,8 @@ SCHEMA_ID = 'org.gnome.shell.extensions.greedy-clipboard-history-dialog'
 SCHEMA_PATH = '/org/gnome/shell/extensions/greedy-clipboard-history-dialog/'
 NAME = 'Greedy Clipboard History Dialog'
 URL = 'https://github.com/greedgoddess/greedy-clipboard-history-dialog'
-FEATURE_FILES = ['extension.js', 'prefs.js', 'cursorFollow.js', 'updateNotifier.js']
+FEATURE_FILES = ['extension.js', 'prefs.js', 'cursorFollow.js', 'updateNotifier.js', 'quickAccess.js',
+                 'onePassword.js']
 
 PREFS_SHIM = """// Created by the build: the original has no prefs.js.
 export {ExtensionPreferences as default} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
@@ -206,6 +207,9 @@ def main(upstream, out, feature, report_path):
     if 'addToStatusArea(' not in original:
         warnings.append('the original no longer calls Main.panel.addToStatusArea(); '
                         '"Open at mouse pointer" will probably be inactive')
+    if "'toggle-shortcut'" not in original or 'toggle-shortcut' not in upstream_names:
+        warnings.append('the original no longer has its toggle-shortcut keybinding; '
+                        'the switch to 1Password Quick Access will not work')
     if 'PanelMenu' not in original:
         warnings.append('the original no longer uses PanelMenu; "Open at mouse pointer" will probably be inactive')
 

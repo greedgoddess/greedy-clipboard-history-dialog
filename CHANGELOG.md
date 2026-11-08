@@ -3,8 +3,12 @@
 Versions of this project. The Clipboard History release each build is based
 on is listed in the README under "Tested releases".
 
-## Unreleased
+## 1.1.0 — not released yet
 
+- 1Password Quick Access (Preferences → Cursor-Follow, off by default):
+  pressing the shortcut again while the panel is open switches to Quick
+  Access, in the panel's place. Can only be switched on while 1Password is
+  installed and running.
 - CI no longer runs the smoke test: it needs a real GNOME session, which a
   container does not have. It runs on a GNOME desktop, where
   `update-test-and-push.sh` requires it.

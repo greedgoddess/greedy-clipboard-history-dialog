@@ -13,6 +13,10 @@ preferences:
 - **Open at mouse pointer:** the panel opens to the right of the pointer
   with its bottom edge level with it, or to the left when there is no room
   on the right.
+- **1Password Quick Access:** pressing the shortcut again while the panel is
+  open switches to 1Password Quick Access, in the panel's place; only
+  available while 1Password is installed and running. See
+  [1Password Quick Access](docs/quick-access.md).
 - **Update notifications:** a notification when there is an update to
   install; see [update notifications](docs/update-notifications.md).
 
@@ -91,6 +95,7 @@ installing it.
 | Source syntax, ShellCheck, unit tests, build integrity | GitHub Actions (CI), on every push | Automatically; a green CI run means only this |
 | The extension loads in GNOME Shell without errors | A GNOME desktop | Smoke test; required before a release is recorded as tested |
 | Opens at the pointer, flips at screen edges | A GNOME desktop | By hand, with the [testing checklist](docs/cursor-follow.md#testing) |
+| Switches to 1Password Quick Access in the panel's place | A GNOME desktop with 1Password | By hand, with [its checklist](docs/quick-access.md#testing) |
 
 ### Verified GNOME Shell versions
 
@@ -111,7 +116,7 @@ in [the testing checklist](docs/cursor-follow.md#testing).
 This project's version is in [`VERSION`](VERSION) and the
 [changelog](CHANGELOG.md); releases are tagged `vX.Y.Z` on GitHub. The
 installed extension shows both versions, for example
-`1.0.2 (Clipboard History 1.0, release 3)`; `build/BUILD-INFO` and the
+`1.1.0 (Clipboard History 1.0, release 3)`; `build/BUILD-INFO` and the
 `build-info.json` inside each build record the full provenance.
 
 ## Development

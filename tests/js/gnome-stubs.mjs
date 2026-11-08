@@ -33,8 +33,14 @@ const STUBS = {
         };
         globalThis.__timerDelays = () => [...timers.keys()].map(id => globalThis.__delays[id]);
         globalThis.__delays = {};
+        globalThis.__programs = {};
+        globalThis.__files = {};
         export default {
-            PRIORITY_LOW: 300, SOURCE_REMOVE: false,
+            PRIORITY_LOW: 300, PRIORITY_DEFAULT: 0, SOURCE_REMOVE: false,
+            FileTest: {IS_EXECUTABLE: 1, IS_DIR: 2},
+            find_program_in_path: name => globalThis.__programs[name] ?? null,
+            file_test: path => Boolean(globalThis.__files[path]),
+            get_user_data_dir: () => '/home/user/.local/share',
             timeout_add_seconds(priority, seconds, callback) {
                 const id = nextId++; timers.set(id, callback); globalThis.__delays[id] = seconds; return id;
             },
@@ -48,9 +54,21 @@ const STUBS = {
             cancel() { this.cancelled = true; }
             is_cancelled() { return this.cancelled; }
         }
+        // Subprocess: pgrep "finds" 1Password when globalThis.__running is true.
+        class Subprocess {
+            static new(argv) { return new Subprocess(argv); }
+            constructor(argv) { this.argv = argv; }
+            async wait_check_async() {
+                if (this.argv[0] === 'pgrep' && !globalThis.__running)
+                    throw new Error('exit status 1');
+                return true;
+            }
+        }
         export default {
             _promisify() {},
             Cancellable,
+            Subprocess,
+            SubprocessFlags: {NONE: 0, STDOUT_SILENCE: 1, STDERR_SILENCE: 2},
             IOErrorEnum: {CANCELLED: 19},
             File: {new_for_path: () => ({
                 load_contents_async: async () => [new TextEncoder().encode(JSON.stringify(globalThis.__buildInfo))],
