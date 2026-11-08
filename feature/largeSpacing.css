@@ -91,9 +91,10 @@
     max-height: 10000px;    /* The panel's fixed height limits it instead. */
 }
 
-/* Clipboard entries: compact, text a quarter larger. */
+/* Clipboard entries: compact top and bottom, the original's 10 px at the
+ * sides, text a quarter larger. */
 .greedy-large-spacing .clipboard-history-item {
-    padding: 5px 5px;
+    padding: 5px 10px;
     spacing: 5px;
     font-size: 1.25em;
 }
@@ -107,16 +108,17 @@
     icon-size: 24px;
 }
 
-/* Emoji and symbols: half as large again as the original's 20 px. The
- * original lays them out 8 (symbols 10) per row, so the buttons take their
- * natural width and the rows have narrow margins, to fit the panel. */
+/* Emoji and symbols: 26 px, 1.3 × the original's 20 px; the largest size at
+ * which the original's 8 emoji (10 symbols) per row fit the panel next to
+ * its scroll bar (30 px cut the last one off). The buttons take their
+ * natural width and the rows have narrow margins. */
 .greedy-large-spacing .clipboard-history-emoji-row {
     spacing: 2px;
     padding: 1px 2px;
 }
 
 .greedy-large-spacing .clipboard-history-emoji-button {
-    font-size: 30px;
+    font-size: 26px;
     min-width: 0;
     padding: 1px;
 }

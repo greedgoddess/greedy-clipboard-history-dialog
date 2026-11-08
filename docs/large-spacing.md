@@ -158,9 +158,9 @@ adjusted while the extension runs. Large spacing adds the class
 | Panel | 345 × 472 px, the same on every tab; the list takes all height the other parts leave |
 | Font | normal size (`font-size: 1em`) |
 | Tab bar and button row | the same format: buttons 38 px tall (24 px icons, 7 px above and below), 8 px corners, 3 px apart, same hover colours |
-| Clipboard entries | text 1.25 × normal; 5 px above and below it; 24 px pin and delete icons |
+| Clipboard entries | text 1.25 × normal; 5 px above and below it, 10 px at the sides; 24 px pin and delete icons |
 | Search field | fills its row, within the panel; text and clear icon half as large again (1.5 em, 24 px icon) |
-| Emoji and symbols | 30 px, half as large again; natural width, narrow row margins, to fit the original's 8 (symbols 10) per row |
+| Emoji and symbols | 26 px, 1.3 × the original: the largest that fits the original's 8 (symbols 10) per row; natural width, narrow row margins |
 | Kaomoji | 13 px |
 | Corner radius | panel 15 px; Quick Access 18 px, which looks the same |
 
