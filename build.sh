@@ -113,6 +113,15 @@ unzip -q "$WORK/release.zip" -d "$WORK/release"
 say "Adding Open at mouse pointer…"
 python3 "$ROOT/scripts/patch_release.py" "$WORK/release" "$WORK/$UUID" \
     "$ROOT/feature" "$WORK/report.json"
+# Recorded in the build for the update notifications (docs/update-notifications.md).
+python3 - "$WORK/report.json" "$CONTENT_HASH" \
+    "$(git -C "$ROOT" log -1 --format=%H -- feature 2>/dev/null || true)" > "$WORK/$UUID/build-info.json" <<'PY'
+import json, sys
+report, content_hash, feature_commit = sys.argv[1:]
+r = json.load(open(report))
+print(json.dumps({'upstream_version': r['upstream_version'], 'content_sha256': content_hash,
+                  'feature_commit': feature_commit}, indent=2))
+PY
 glib-compile-schemas --strict "$WORK/$UUID/schemas" \
     || fail "The settings schema does not compile."
 

@@ -1,0 +1,39 @@
+    <!-- [cursor-follow:setting]
+         Added by Greedy Clipboard History Dialog. Opens the panel next to the
+         mouse pointer instead of below the panel icon.
+         See docs/cursor-follow.md#cursor-follow-setting -->
+    <key name="cursor-follow" type="b">
+      <default>false</default>
+      <summary>Open the clipboard history panel at the mouse pointer</summary>
+      <description>
+        When enabled, the panel opens to the right of the mouse pointer, with
+        its bottom edge level with the pointer, and to the left when there is
+        not enough room on the right. When disabled, it opens below the panel
+        icon.
+      </description>
+    </key>
+
+    <!-- [update-notify:settings]
+         Added by Greedy Clipboard History Dialog. Update notifications; the
+         installer sets developer-mode and checkout-path.
+         See docs/update-notifications.md#update-notify-settings -->
+    <key name="update-notifications" type="b">
+      <default>false</default>
+      <summary>Show a notification when an update is available</summary>
+    </key>
+    <key name="developer-mode" type="b">
+      <default>false</default>
+      <summary>Watch Clipboard History releases instead of this build's repository</summary>
+    </key>
+    <key name="checkout-path" type="s">
+      <default>''</default>
+      <summary>Folder of the repository checkout this build was installed from</summary>
+    </key>
+    <key name="update-last-check" type="x">
+      <default>0</default>
+      <summary>Time of the last update check, in seconds since 1970</summary>
+    </key>
+    <key name="update-notified" type="s">
+      <default>''</default>
+      <summary>The update that was last notified, so it is notified only once</summary>
+    </key>

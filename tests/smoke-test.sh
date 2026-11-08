@@ -33,6 +33,7 @@ env -i PATH="$PATH" HOME="$SANDBOX/home" LANG="${LANG:-C.UTF-8}" \
         gsettings set org.gnome.shell enabled-extensions "[\"$UUID\"]"
         gsettings set org.gnome.shell welcome-dialog-last-shown-version "999"
         dconf write /org/gnome/shell/extensions/greedy-clipboard-history-dialog/cursor-follow true
+        dconf write /org/gnome/shell/extensions/greedy-clipboard-history-dialog/update-notifications false
 
         flags=(--headless --virtual-monitor 1280x800)
         gnome-shell --help 2>&1 | grep -q -- "--wayland" && flags+=(--wayland)
@@ -50,7 +51,7 @@ env -i PATH="$PATH" HOME="$SANDBOX/home" LANG="${LANG:-C.UTF-8}" \
         kill "$shell" 2>/dev/null || true
         wait "$shell" 2>/dev/null || true
         echo "$state" > "$LOG.state"
-    '
+    ' >>"$SANDBOX/session.log" 2>&1  # Messages from services started in the test session
 
 state="$(cat "$LOG.state" 2>/dev/null || true)"
 failures=0
@@ -63,7 +64,7 @@ else
     [[ "$state" == ACTIVE || "$state" == ENABLED ]] \
         && report pass "extension active" || report FAIL "extension active (state: $state)"
 fi
-if grep -qiE "($UUID|greedy|upstream-extension|cursorFollow).*(error|exception)|JS ERROR.*($UUID|greedy|cursorFollow|upstream-)" "$LOG"; then
+if grep -qiE "($UUID|greedy|upstream-extension|cursorFollow|updateNotifier).*(error|exception)|JS ERROR.*($UUID|greedy|cursorFollow|updateNotifier|upstream-)" "$LOG"; then
     report FAIL "no errors from the extension"
 else
     report pass "no errors from the extension"
@@ -78,5 +79,9 @@ if (( failures > 0 )); then
     say
     say "Last lines of the headless GNOME Shell log:"
     tail -n 30 "$LOG" | sed 's/^/    /'
+    if [[ -s "$SANDBOX/session.log" ]]; then
+        say "Other messages from the test session:"
+        tail -n 15 "$SANDBOX/session.log" | sed 's/^/    /'
+    fi
     exit 1
 fi

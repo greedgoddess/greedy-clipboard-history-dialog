@@ -43,7 +43,7 @@ done
 
 require_command git "Install it with: sudo dnf install git"
 [[ "$(current_mode)" == dev ]] \
-    || fail "This machine is set up for users. Run ./install.sh --dev to set up the developer tools."
+    || fail "This machine is set up for users. Run ./install.sh --dev to make it a developer machine."
 cd "$ROOT"
 
 # ---- Repository ready? ----------------------------------------------------------

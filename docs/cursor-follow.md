@@ -20,7 +20,7 @@ grep -rn "\[cursor-follow:" feature/
 | [`cursor-follow:positioning`](#cursor-follow-positioning) | `feature/cursorFollow.js` |
 | [`cursor-follow:cleanup`](#cursor-follow-cleanup) | `feature/cursorFollow.js` |
 | [`cursor-follow:preference`](#cursor-follow-preference) | `feature/prefs.js` |
-| [`cursor-follow:setting`](#cursor-follow-setting) | `feature/cursor-follow-key.xml` |
+| [`cursor-follow:setting`](#cursor-follow-setting) | `feature/settings-keys.xml` |
 
 <a id="how-the-build-works"></a>
 ## How the build works
@@ -45,10 +45,13 @@ result and puts it in `build/`:
    place that names them literally is rewritten and reported. Because the
    UUID differs, the build keeps its own settings and clipboard history,
    and extensions.gnome.org never offers to replace it.
-4. **Add the setting** from `feature/cursor-follow-key.xml` to the schema.
+4. **Add the settings** from `feature/settings-keys.xml` to the schema, key
+   by key; a key the original already has is kept and reported.
 5. **Write `metadata.json`** with this identity, the original's version and
    the original's list of supported GNOME Shell versions. When a new release
-   adds a GNOME Shell version, the next build supports it too.
+   adds a GNOME Shell version, the next build supports it too. `build.sh`
+   also writes `build-info.json` for the
+   [update notifications](update-notifications.md#update-notify-build-info).
 6. **Check** that the schema compiles, that the release supports the running
    GNOME Shell, and, in the running GNOME Shell's own code, that the
    internals described under [positioning](#cursor-follow-positioning)
@@ -84,9 +87,9 @@ the last tested release, and `build/previous/` holds the build before.
 original's class from `upstream-extension.js`:
 
 - `enable()` runs the original's `enable()`, then installs
-  [`CursorFollow`](#cursor-follow-install) on the original's panel menu;
-- `disable()` removes `CursorFollow` first, then runs the original's
-  `disable()`.
+  [`CursorFollow`](#cursor-follow-install) on the original's panel menu and
+  starts the [`UpdateNotifier`](update-notifications.md);
+- `disable()` stops both first, then runs the original's `disable()`.
 
 The original runs exactly as it would on its own; it is not aware of the
 addition.
@@ -165,15 +168,16 @@ time, and destroys the anchor. Each step only runs if its install step did.
 
 `feature/prefs.js` extends the original preferences from `upstream-prefs.js`.
 After the original has filled the window (synchronously or asynchronously),
-it adds a **Placement** group with one `Adw.SwitchRow`,
-**Open at mouse pointer**, bound to the setting, to the page the original
-shows first. If there is no page, it adds one. If a release has no usable
+it adds a **Cursor-Follow** group to the page the original shows first (or
+to a page of its own if there is none), with two switches:
+**Open at mouse pointer**, bound to `cursor-follow`, and
+[**Update notifications**](update-notifications.md#update-notify-preference). If a release has no usable
 preferences of its own, the build supplies an empty base, so only the
-Placement switch is shown.
+Cursor-Follow switches are shown.
 
 <a id="cursor-follow-setting"></a>
 ## `cursor-follow:setting`
 
-Boolean key `cursor-follow`, default `false`, inserted into the original's
-settings schema by the build. It is read each time the panel opens, so it
+Boolean key `cursor-follow`, default `false`, in `feature/settings-keys.xml`,
+inserted into the original's settings schema by the build. It is read each time the panel opens, so it
 needs no change handler. `install.sh` switches it on at the first install.

@@ -29,10 +29,17 @@ LEGACY_HISTORY_DIR="$CACHE_HOME/$LEGACY_UUID"
 WORK_DIR="$DATA_HOME/greedy-clipboard-history-dialog"
 BACKUP_DIR="$WORK_DIR/backup"
 
-# Whether this machine is set up for users only or also for development
-# (release notifications, ./update-test-and-push.sh). Set by install.sh.
+# Whether this machine is set up for users or for development, kept in the
+# extension's settings (developer-mode) so that the extension can read it
+# too. Set by install.sh. An earlier version kept it in a file.
 MODE_FILE="$WORK_DIR/mode"
-current_mode() { cat "$MODE_FILE" 2>/dev/null || say user; }
+current_mode() {
+    case "$(dconf read "${SETTINGS_PATH}developer-mode" 2>/dev/null)" in
+        true) say dev ;;
+        false) say user ;;
+        *) cat "$MODE_FILE" 2>/dev/null || say user ;;
+    esac
+}
 
 say() { printf '%s\n' "$*"; }
 warn() { printf 'WARNING: %s\n' "$*" >&2; }

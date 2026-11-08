@@ -5,12 +5,15 @@
 
 **Clipboard History for GNOME Shell, with an option to open the panel at the mouse pointer.**
 
-This project adds one setting to
+This project adds a **Cursor-Follow** section to the preferences of
 [Clipboard History](https://extensions.gnome.org/extension/10613/clipboard-history/)
-by Manouchehr Ghalevand: **Open at mouse pointer**, under **Placement** in
-the extension preferences. With it on, the panel opens to the right of the
-pointer with its bottom edge level with it, or to the left when there is no
-room on the right.
+by Manouchehr Ghalevand:
+
+- **Open at mouse pointer:** the panel opens to the right of the pointer
+  with its bottom edge level with it, or to the left when there is no room
+  on the right.
+- **Update notifications:** a notification when there is an update to
+  install; see [update notifications](docs/update-notifications.md).
 
 The repository holds only the addition. `./build.sh` downloads a tested
 release of Clipboard History and adds the setting without editing the
@@ -33,15 +36,17 @@ directed and tested by the author. It has had no independent review.
 ```bash
 git clone git@github.com:greedgoddess/greedy-clipboard-history-dialog.git
 cd greedy-clipboard-history-dialog
-./build.sh && ./install.sh
+./install.sh
 ```
 
-Log out and back in, then check with `./verify.sh`. The first install
-switches **Open at mouse pointer** on.
+`install.sh` builds first if needed. Log out and back in, then check with
+`./verify.sh`. The first install switches both Cursor-Follow settings on.
 
-**Developer machine:** `./install.sh --dev` installs the same build and also
-sets up the [developer tools](#development). `./install.sh --user` removes
-them again; without either flag, a machine keeps its mode.
+**Developer machine:** `./install.sh --dev` installs the same build, lets
+[`./update-test-and-push.sh`](#development) run, and makes the update
+notifications watch Clipboard History releases instead of this repository.
+`./install.sh --user` switches back; without either flag, a machine keeps
+its mode.
 
 **From Clipboard History or an earlier version of this project:** run
 `./uninstall-previous-version.sh` before `./install.sh`. It copies your
@@ -70,7 +75,7 @@ Other sources: `--latest` (newest release, untested), `--version N`,
 
 ## Development
 
-Needs a machine set up with `./install.sh --dev`.
+Needs a developer machine (`./install.sh --dev`).
 
 **New release of Clipboard History:** `./update-test-and-push.sh` builds the
 newest release, runs the tests, and if they pass, adds it to the table above
@@ -81,10 +86,9 @@ and pushes over SSH. Nothing is committed if anything fails.
 loads it in a headless GNOME Shell and checks that it becomes active
 without errors and that Open at mouse pointer hooks in.
 
-**Release notifications** (switched on by `--dev`): a daily check shows a
-desktop notification, once per release, when Clipboard History publishes a
-release that is not tested yet. `./upstream-notifications.sh off|on|status`
-toggles it or shows the last check.
+**Release notifications:** on a developer machine, the extension's update
+notifications report each new Clipboard History release that is not tested
+yet.
 
 ## Troubleshooting
 
@@ -92,6 +96,7 @@ toggles it or shows the last check.
 | --- | --- |
 | No change after installing or updating | Log out and back in |
 | `update-test-and-push.sh`: machine set up for users | `./install.sh --dev` |
+| No update notifications | Check Preferences → Cursor-Follow, and the last check in `./verify.sh` |
 | Build: no tested release for this GNOME Shell | Run `./update-test-and-push.sh`, or build untested with `./build.sh --latest` |
 | Build: release differs from the tested one | The download changed; run `./update-test-and-push.sh --force` to test it again |
 | Build warns, or the panel opens below its icon | See [what can break](docs/cursor-follow.md#what-can-break-and-what-happens-then) |

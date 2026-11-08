@@ -7,10 +7,14 @@
 # it is installed, "Open at mouse pointer" is switched on (later choices in
 # the preferences are respected).
 #
-# Both modes install the same build. --dev also sets up the developer tools
-# (daily release notifications, ./update-test-and-push.sh); --user removes
-# them. Without either flag, the machine keeps its current mode (user on a
-# first install).
+# Builds first if build/ is empty (the newest tested release, or the newest
+# release when none is tested yet).
+#
+# Both modes install the same build. --dev makes this a developer machine:
+# update notifications then watch Clipboard History releases, and
+# ./update-test-and-push.sh may run. --user switches back: notifications
+# watch this project's repository. Without either flag, the machine keeps its
+# current mode (user on a first install).
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=scripts/common.sh
@@ -18,10 +22,10 @@ source "$ROOT/scripts/common.sh"
 
 usage() {
     say "Usage: ./install.sh [--dev | --user] [--yes]"
-    say "Installs the build in build/ for the current user. Run ./build.sh first."
-    say "  --dev       also set up the developer tools (release notifications,"
-    say "              ./update-test-and-push.sh)"
-    say "  --user      remove the developer tools"
+    say "Installs the build in build/ for the current user, building it first if needed."
+    say "  --dev       developer machine: notifications watch Clipboard History"
+    say "              releases; ./update-test-and-push.sh may run"
+    say "  --user      user machine: notifications watch this project's repository"
     say "              (without either, the machine keeps its current mode)"
     say "  -y, --yes   answer yes to every question"
 }
@@ -44,7 +48,18 @@ require_command gsettings "Install it with: sudo dnf install glib2"
 require_command dconf "Install it with: sudo dnf install dconf"
 require_command python3 "Install it with: sudo dnf install python3"
 
-[[ -f "$BUILT_DIR/metadata.json" ]] || fail "Nothing built yet. Run ./build.sh first."
+if [[ ! -f "$BUILT_DIR/metadata.json" ]]; then
+    shell_major="$(gnome-shell --version 2>/dev/null | grep -oE '[0-9]+' | head -n1 || true)"
+    if python3 "$ROOT/scripts/upstream.py" tested --shell "$shell_major" >/dev/null 2>&1; then
+        say "Nothing built yet; building the newest tested release…"
+        "$ROOT/build.sh"
+    else
+        say "Nothing built yet, and no tested release for this GNOME Shell;"
+        say "building the newest release (untested)…"
+        "$ROOT/build.sh" --latest
+    fi
+    say
+fi
 for file in extension.js upstream-extension.js cursorFollow.js prefs.js; do
     [[ -f "$BUILT_DIR/$file" ]] || fail "The build is incomplete (no $file). Run ./build.sh again."
 done
@@ -135,19 +150,36 @@ if ! gnome-extensions enable "$UUID" >/dev/null 2>&1; then
     enable_at_next_login
 fi
 
-# ---- Mode: developer tools on or off ------------------------------------------
+# ---- Mode and update notifications ---------------------------------------------
 
-mkdir -p "$WORK_DIR"
-echo "$MODE" > "$MODE_FILE"
+# The extension reads these settings; see docs/update-notifications.md.
+# GVariant text accepts a JSON string literal for a string value.
+gvariant_string() { python3 -c 'import json, sys; print(json.dumps(sys.argv[1]))' "$1"; }
+dconf write "${SETTINGS_PATH}developer-mode" "$([[ "$MODE" == dev ]] && echo true || echo false)"
+dconf write "${SETTINGS_PATH}checkout-path" "$(gvariant_string "$ROOT")"
+rm -f -- "$MODE_FILE"
+if [[ -z "$(dconf read "${SETTINGS_PATH}update-notifications")" ]]; then
+    dconf write "${SETTINGS_PATH}update-notifications" true
+    say "Switched on update notifications (first install)."
+fi
+
+# An earlier version checked for releases with a systemd timer; the extension
+# does that itself now.
+OLD_UNIT="greedy-clipboard-history-upstream-check"
+OLD_UNIT_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
+if [[ -f "$OLD_UNIT_DIR/$OLD_UNIT.timer" ]]; then
+    systemctl --user disable --now "$OLD_UNIT.timer" >/dev/null 2>&1 || true
+    rm -f -- "$OLD_UNIT_DIR/$OLD_UNIT.timer" "$OLD_UNIT_DIR/$OLD_UNIT.service"
+    systemctl --user daemon-reload 2>/dev/null || true
+    say "Removed the old release-check timer (the extension checks itself now)."
+fi
+
 if [[ "$MODE" == dev ]]; then
-    "$ROOT/upstream-notifications.sh" on
     remote_url="$(git -C "$ROOT" remote get-url origin 2>/dev/null || true)"
     [[ "$remote_url" == git@github.com:* || "$remote_url" == ssh://* ]] \
         || warn "This checkout's origin is not an SSH remote; ./update-test-and-push.sh will refuse to push."
     gnome-shell --help 2>&1 | grep -q -- '--headless' \
         || warn "This GNOME Shell has no --headless mode; the smoke test cannot run here."
-else
-    "$ROOT/upstream-notifications.sh" off >/dev/null
 fi
 
 # ---- Summary ----------------------------------------------------------------
@@ -160,7 +192,12 @@ if (( MOVED_OLD_COPY == 1 )); then
     say "  $BACKUP_DIR"
 fi
 say "Clipboard history and settings were not changed."
-say "Mode: $MODE$([[ "$MODE" == dev ]] && echo " (release notifications on; ./update-test-and-push.sh available)")"
+if [[ "$MODE" == dev ]]; then
+    say "Mode: dev. Update notifications watch Clipboard History releases; ./update-test-and-push.sh is available."
+else
+    say "Mode: user. Update notifications watch this project's repository."
+fi
+say "Notifications: $([[ "$(dconf read "${SETTINGS_PATH}update-notifications")" == true ]] && echo on || echo off) (Preferences → Cursor-Follow)"
 say
 say "Log out and back in now. GNOME Shell keeps running the code it loaded"
 say "at login until then. Afterwards, check the result with ./verify.sh"

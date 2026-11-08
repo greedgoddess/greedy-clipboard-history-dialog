@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """upstream.py — releases of the original Clipboard History extension.
 
-Shared by build.sh, update-test-and-push.sh and upstream-notifications.sh.
+Shared by build.sh, install.sh and update-test-and-push.sh.
 
   upstream.py latest [--shell N]        newest release on extensions.gnome.org
                                          that supports GNOME Shell N (or the
@@ -14,6 +14,8 @@ Shared by build.sh, update-test-and-push.sh and upstream-notifications.sh.
                                          prints "VERSION CONTENT_HASH"
   upstream.py record-test REPORT_JSON   adds a test result to tested-releases.json
                                          and refreshes the table in README.md
+  upstream.py refresh-readme            rewrites the README table from
+                                         tested-releases.json
 """
 import hashlib
 import json
@@ -86,7 +88,11 @@ def record_test(report_path):
     releases.append(entry)
     releases.sort(key=lambda r: r['version'], reverse=True)
     TESTED_FILE.write_text(json.dumps(releases, indent=2) + '\n', encoding='utf-8')
+    refresh_readme()
 
+
+def refresh_readme():
+    releases = sorted(load_tested(), key=lambda r: r['version'], reverse=True)
     rows = ['| Release | GNOME Shell (release) | Tested on | Date |', '| --- | --- | --- | --- |']
     for r in releases:
         rows.append(f"| {r['version_name']} ({r['version']}) | {', '.join(r['shell_versions'])} "
@@ -110,6 +116,8 @@ def main(args):
         tested(option(rest, '--shell'))
     elif command == 'record-test' and len(rest) == 1:
         record_test(rest[0])
+    elif command == 'refresh-readme':
+        refresh_readme()
     else:
         fail(__doc__)
 

@@ -36,20 +36,22 @@ gnome-extensions info "$UUID" 2>/dev/null | grep -E '^\s*(Enabled|State|Version)
     || say "GNOME Shell does not know the extension yet (log out and back in)."
 
 say
-say "== Mode =="
+say "== Mode and update notifications =="
 if [[ "$(current_mode)" == dev ]]; then
-    say "dev"
-    "$ROOT/upstream-notifications.sh" status | sed 's/^/  /'
+    say "Mode: dev (notifications watch Clipboard History releases)"
 else
-    say "user"
+    say "Mode: user (notifications watch this project's repository)"
 fi
+say "Notifications: $([[ "$(dconf read "${SETTINGS_PATH}update-notifications" 2>/dev/null)" == true ]] && echo on || echo off)"
+last_check="$(dconf read "${SETTINGS_PATH}update-last-check" 2>/dev/null | grep -oE '[0-9]+' || true)"
+say "Last check: $([[ -n "$last_check" && "$last_check" != 0 ]] && date -d "@$last_check" '+%Y-%m-%d %H:%M' || echo never)"
 
 say
 say "== Open at mouse pointer =="
 value="$(dconf read "$CURSOR_FOLLOW_KEY" 2>/dev/null || true)"
 case "$value" in
     true)  say "On" ;;
-    false) say "Off (switch it on in the extension preferences, under Placement)" ;;
+    false) say "Off (switch it on in the extension preferences, under Cursor-Follow)" ;;
     "")    say "Not set, so off (the default)" ;;
     *)     say "Unexpected value: $value" ;;
 esac

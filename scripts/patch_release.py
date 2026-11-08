@@ -24,7 +24,7 @@ SCHEMA_ID = 'org.gnome.shell.extensions.greedy-clipboard-history-dialog'
 SCHEMA_PATH = '/org/gnome/shell/extensions/greedy-clipboard-history-dialog/'
 NAME = 'Greedy Clipboard History Dialog'
 URL = 'https://github.com/greedgoddess/greedy-clipboard-history-dialog'
-FEATURE_FILES = ['extension.js', 'prefs.js', 'cursorFollow.js']
+FEATURE_FILES = ['extension.js', 'prefs.js', 'cursorFollow.js', 'updateNotifier.js']
 
 PREFS_SHIM = """// Created by the build: the original has no prefs.js.
 export {ExtensionPreferences as default} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
@@ -67,7 +67,7 @@ def main(upstream, out, feature, report_path):
     else:
         if prefs_js.is_file():
             warnings.append('prefs.js has no "export default class"; the original preferences are replaced '
-                            'by an empty window with only the Placement switch')
+                            'by an empty window with only the Cursor-Follow switches')
             prefs_js.unlink()
         (out / 'upstream-prefs.js').write_text(PREFS_SHIM, encoding='utf-8')
 
@@ -87,8 +87,12 @@ def main(upstream, out, feature, report_path):
             js.write_text(new, encoding='utf-8')
             warnings.append(f'{js.relative_to(out)} names the original UUID or schema literally; replaced')
 
-    # ---- Settings schema: own ID and path, plus the cursor-follow key --------------
-    key_xml = (feature / 'cursor-follow-key.xml').read_text(encoding='utf-8')
+    # ---- Settings schema: own ID and path, plus this project's keys ----------------
+    keys_xml = (feature / 'settings-keys.xml').read_text(encoding='utf-8')
+    # Each key with the comment above it, so that keys can be added one by one.
+    key_blocks = re.findall(r'(?:[ \t]*<!--.*?-->\s*)?[ \t]*<key name="([^"]+)".*?</key>\n', keys_xml, re.S)
+    key_texts = re.findall(r'((?:[ \t]*<!--.*?-->\s*)?[ \t]*<key name="[^"]+".*?</key>\n)', keys_xml, re.S)
+    key_xml = ''.join(key_texts)
     schemas_dir = out / 'schemas'
     schemas_dir.mkdir(exist_ok=True)
     schema_file = None
@@ -113,12 +117,15 @@ def main(upstream, out, feature, report_path):
             new_tag = new_tag[:-1] + f' path="{SCHEMA_PATH}">'
         xml = xml[:match.start()] + new_tag + xml[match.end():]
 
-        if 'name="cursor-follow"' in xml:
-            warnings.append('the release already has a cursor-follow key; it was kept and ours not added')
-        else:
-            close = xml.find('</schema>', match.start())
-            line_start = xml.rfind('\n', 0, close) + 1
-            xml = xml[:line_start] + key_xml + '\n' + xml[line_start:]
+        added = []
+        for name, text in zip(key_blocks, key_texts):
+            if f'name="{name}"' in xml:
+                warnings.append(f'the release already has a {name} key; it was kept and ours not added')
+            else:
+                added.append(text)
+        close = xml.find('</schema>', match.start())
+        line_start = xml.rfind('\n', 0, close) + 1
+        xml = xml[:line_start] + '\n'.join(added) + '\n' + xml[line_start:]
         schema_file.unlink()
     (schemas_dir / f'{SCHEMA_ID}.gschema.xml').write_text(xml, encoding='utf-8')
 
@@ -141,7 +148,9 @@ def main(upstream, out, feature, report_path):
         'uuid': UUID,
         'name': NAME,
         'description': ('Personal build of Clipboard History by Manouchehr Ghalevand, with an option '
-                        'to open the panel at the mouse pointer.\n\n'
+                        'to open the panel at the mouse pointer. When update notifications are on, it '
+                        'contacts GitHub and, on developer machines, extensions.gnome.org once a day '
+                        'to look for updates; nothing else is sent.\n\n'
                         + metadata.get('description', '').replace(LEGACY_UUID, UUID)),
         'settings-schema': SCHEMA_ID,
         'shell-version': metadata.get('shell-version', []),

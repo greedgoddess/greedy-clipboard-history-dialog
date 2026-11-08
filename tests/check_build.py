@@ -43,7 +43,7 @@ for name, data in original.items():
     check(f'original {name} carried over unchanged', target.is_file() and (literal or target.read_bytes() == data))
 
 # This project's files are the repository's.
-for name in ('extension.js', 'prefs.js', 'cursorFollow.js'):
+for name in ('extension.js', 'prefs.js', 'cursorFollow.js', 'updateNotifier.js'):
     check(f'{name} is this project\'s', (EXT / name).read_bytes() == (ROOT / 'feature' / name).read_bytes())
 
 # Identity.
@@ -65,6 +65,12 @@ check('cursor-follow key, off by default',
 compiled = subprocess.run(['glib-compile-schemas', '--strict', '--dry-run', str(schema.parent)],
                           capture_output=True, text=True)
 check('schema compiles', compiled.returncode == 0, compiled.stderr.strip())
+for key in ('update-notifications', 'developer-mode', 'checkout-path', 'update-last-check', 'update-notified'):
+    check(f'{key} key', f'<key name="{key}"' in xml)
+info_file = EXT / 'build-info.json'
+info = json.loads(info_file.read_text(encoding='utf-8')) if info_file.is_file() else {}
+check('build-info.json records the release and feature commit',
+      info.get('upstream_version') == original_meta.get('version') and 'feature_commit' in info)
 original_keys = set(re.findall(rb'<key name="([^"]+)"', b''.join(
     d for n, d in original.items() if n.startswith('schemas/') and n.endswith('.xml'))))
 built_keys = set(re.findall(r'<key name="([^"]+)"', xml))
