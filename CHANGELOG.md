@@ -3,7 +3,11 @@
 Versions of this project. The Clipboard History release each build is based
 on is listed in the README under "Tested releases".
 
-## 1.1.0 — not released yet
+## 1.1.0 — 2026-11-08
+
+Tested on GNOME Shell 51.1 (Fedora 45) with Clipboard History 1.0 (release
+3): unit tests, build checks and smoke test, plus the manual checklists for
+pointer placement and for 1Password Quick Access.
 
 - 1Password Quick Access, optional and not installed by default
   (`./install.sh --with-1password`; then Preferences → Cursor-Follow):

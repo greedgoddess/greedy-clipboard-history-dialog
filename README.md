@@ -107,10 +107,10 @@ installing it.
 A release lists the GNOME Shell versions the *original* supports. This
 project is verified only where marked here:
 
-| GNOME Shell | Builds | Activates (smoke test) | Opens at pointer | Flips at screen edge |
-| --- | --- | --- | --- | --- |
-| 51 | yes | yes | yes, by hand | yes, by hand |
-| 46–50 | not tested | not tested | not tested | not tested |
+| GNOME Shell | Builds | Activates (smoke test) | Opens at pointer | Flips at screen edge | 1Password Quick Access (optional) |
+| --- | --- | --- | --- | --- | --- |
+| 51 | yes | yes | yes, by hand | yes, by hand | yes, by hand (1.1.0, 2026-11-08) |
+| 46–50 | not tested | not tested | not tested | not tested | not tested |
 
 The smoke test needs GNOME and may fail on headless systems; it runs on a
 GNOME desktop, not in CI. The manual checks are
