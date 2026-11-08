@@ -2,9 +2,9 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  *
- * install.sh rewrites this file in the installed copy: the 1Password
- * integration is included only with ./install.sh --with-1password, and
- * otherwise its files are left out entirely.
- * See docs/quick-access.md#quick-access-install
+ * install.sh rewrites this file in the installed copy. Each optional feature
+ * is included only when asked for, and otherwise its files are left out:
+ *   quickAccess  ./install.sh --with-1password   (docs/quick-access.md)
+ *   touchMode    ./install.sh --with-touch-mode  (docs/touch-mode.md)
  */
-export const FEATURES = {quickAccess: false};
+export const FEATURES = {quickAccess: false, touchMode: false};

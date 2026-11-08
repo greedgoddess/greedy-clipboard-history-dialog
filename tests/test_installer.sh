@@ -50,6 +50,18 @@ dconf write "${NEW_PATH}quick-access" true
 run "$REPO/install.sh" --yes --without-1password
 check "--without-1password removes it and switches its setting off" '[[ ! -e "$EXT_DIR/quickAccess.js" ]] && grep -q "quickAccess: false" "$EXT_DIR/features.js" && [[ $(setting "$NEW_PATH" quick-access) == false ]]'
 
+# ---- Touch mode: left out unless asked for, independent of 1Password ------------
+run "$REPO/install.sh" --yes
+check "touch mode left out by default" '[[ ! -e "$EXT_DIR/touchMode.js" && ! -e "$EXT_DIR/touchMode.css" ]] && grep -q "touchMode: false" "$EXT_DIR/features.js"'
+run "$REPO/install.sh" --yes --with-touch-mode
+check "--with-touch-mode includes it, 1Password stays out" '[[ -f "$EXT_DIR/touchMode.js" && -f "$EXT_DIR/touchMode.css" && ! -e "$EXT_DIR/quickAccess.js" ]] && grep -q "touchMode: true" "$EXT_DIR/features.js"'
+run "$REPO/install.sh" --yes --with-1password
+check "adding 1Password keeps touch mode" 'grep -q "quickAccess: true, touchMode: true" "$EXT_DIR/features.js"'
+dconf write "${NEW_PATH}touch-mode" true
+run "$REPO/install.sh" --yes --without-touch-mode
+check "--without-touch-mode removes it and switches it off, 1Password stays" '[[ ! -e "$EXT_DIR/touchMode.js" && -f "$EXT_DIR/quickAccess.js" && $(setting "$NEW_PATH" touch-mode) == false ]]'
+run "$REPO/install.sh" --yes --without-1password
+
 # Interrupted install: moving the new copy into place fails.
 make_build true third
 stub mv 'if [[ "$2" == *staging.* && "$3" == *'"$UUID"' ]]; then exit 1; fi; exec /bin/mv "$@"'

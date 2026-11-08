@@ -55,6 +55,14 @@ else
 fi
 
 say
+say "== Touch mode =="
+if grep -q 'touchMode: true' "$INSTALL_DIR/features.js" 2>/dev/null; then
+    say "Installed; switch: $([[ "$(dconf read "${SETTINGS_PATH}touch-mode" 2>/dev/null)" == true ]] && echo on || echo off)"
+else
+    say "Not installed (./install.sh --with-touch-mode adds it)"
+fi
+
+say
 say "== Open at mouse pointer =="
 value="$(dconf read "$CURSOR_FOLLOW_KEY" 2>/dev/null || true)"
 case "$value" in

@@ -4,8 +4,8 @@
  *
  * The original Clipboard History code is unchanged, in upstream-extension.js.
  * This class extends it and adds "Open at mouse pointer" after it has built
- * its panel button, the switch to 1Password Quick Access, and the update
- * notifications.
+ * its panel button, the optional switch to 1Password Quick Access and touch
+ * mode, and the update notifications.
  * See docs/cursor-follow.md#cursor-follow-entry-point
  */
 
@@ -46,6 +46,17 @@ export default class GreedyClipboardHistoryExtension extends UpstreamExtension {
             }).catch(error => console.warn(`${this.uuid}: 1Password integration not loaded: ${error.message}`));
         }
 
+        // [touch-mode:entry-point] Only when installed with --with-touch-mode.
+        // See docs/touch-mode.md#touch-mode-entry-point
+        if (FEATURES.touchMode) {
+            import('./touchMode.js').then(({TouchMode}) => {
+                if (this._greedyEnabled) {
+                    this._touchMode = new TouchMode(indicator?.menu, this.getSettings(),
+                        this.dir.get_child('touchMode.css'), () => this._quickAccess ?? null);
+                }
+            }).catch(error => console.warn(`${this.uuid}: touch mode not loaded: ${error.message}`));
+        }
+
         this._updateNotifier = new UpdateNotifier(this, this.getSettings());
     }
 
@@ -53,6 +64,8 @@ export default class GreedyClipboardHistoryExtension extends UpstreamExtension {
         this._greedyEnabled = false;
         this._updateNotifier?.destroy();
         this._updateNotifier = null;
+        this._touchMode?.destroy();
+        this._touchMode = null;
         this._quickAccess?.destroy();
         this._quickAccess = null;
         this._cursorFollow?.destroy();

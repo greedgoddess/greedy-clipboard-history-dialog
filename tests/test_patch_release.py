@@ -21,6 +21,9 @@ export default class Original extends Extension {
     enable() {
         Main.panel.addToStatusArea(this.uuid, new PanelMenu.Button(0.5, 'x'));
         Main.wm.addKeybinding('toggle-shortcut', this._settings, 0, 0, () => {});
+        const bar = {style_class: 'clipboard-history-tabbar'};
+        this.menu.addAction('Clear (except pinned)', () => {});
+        this.menu.addAction('Extension Settings…', () => {});
     }
 }
 """

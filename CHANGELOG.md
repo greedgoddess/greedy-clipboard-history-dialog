@@ -3,6 +3,14 @@
 Versions of this project. The Clipboard History release each build is based
 on is listed in the README under "Tested releases".
 
+## 1.2.0 — not released yet
+
+- Touch mode, optional and not installed by default
+  (`./install.sh --with-touch-mode`; then Preferences → Cursor-Follow):
+  twice as tall tabs, and icon buttons instead of the menu entries at the
+  bottom: 1Password (with the integration installed and on), settings, and
+  clear. The buttons trigger the original entries.
+
 ## 1.1.0 — 2026-11-08
 
 Tested on GNOME Shell 51.1 (Fedora 45) with Clipboard History 1.0 (release

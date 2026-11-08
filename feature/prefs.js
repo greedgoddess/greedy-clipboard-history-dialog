@@ -55,6 +55,17 @@ export default class GreedyClipboardHistoryPreferences extends UpstreamPreferenc
         if (FEATURES.quickAccess)
             group.add(this._quickAccessRow(settings));
 
+        // [touch-mode:preference] Only when installed with --with-touch-mode.
+        // See docs/touch-mode.md#touch-mode-preference
+        if (FEATURES.touchMode) {
+            const touchRow = new Adw.SwitchRow({
+                title: 'Touch mode',
+                subtitle: 'Twice as tall tabs, and icon buttons instead of the menu entries at the bottom.',
+            });
+            settings.bind('touch-mode', touchRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+            group.add(touchRow);
+        }
+
         // [update-notify:preference]
         // See docs/update-notifications.md#update-notify-preference
         const developer = settings.get_boolean('developer-mode');

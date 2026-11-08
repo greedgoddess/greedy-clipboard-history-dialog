@@ -22,6 +22,15 @@
       <summary>Switch to 1Password Quick Access with the shortcut</summary>
     </key>
 
+    <!-- [touch-mode:setting]
+         Added by Greedy Clipboard History Dialog. Larger tabs, and icon
+         buttons instead of the menu entries at the bottom.
+         See docs/touch-mode.md#touch-mode-setting -->
+    <key name="touch-mode" type="b">
+      <default>false</default>
+      <summary>Touch mode: larger tabs and icon buttons</summary>
+    </key>
+
     <!-- [update-notify:settings]
          Added by Greedy Clipboard History Dialog. Update notifications; the
          installer sets developer-mode and checkout-path.

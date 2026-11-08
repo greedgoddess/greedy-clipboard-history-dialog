@@ -89,6 +89,12 @@ export class QuickAccessSwitch {
         this.active = true;
     }
 
+    /** Opens Quick Access at the pointer, as the second press of the shortcut
+     * does; used by the 1Password button in touch mode. */
+    openQuickAccess() {
+        this._switchToQuickAccess().catch(error => console.warn(`Quick Access: ${error.message}`));
+    }
+
     _onShortcut() {
         if (shortcutAction(this._settings.get_boolean('quick-access'), this._menu.isOpen) === 'switch')
             this._switchToQuickAccess().catch(error => console.warn(`Quick Access: ${error.message}`));

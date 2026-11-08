@@ -1,0 +1,25 @@
+/* touchMode.css — styles for touch mode; loaded only while the extension
+ * runs with touch mode installed. See docs/touch-mode.md
+ *
+ * SPDX-License-Identifier: GPL-2.0-or-later */
+
+.greedy-touch-buttons {
+    spacing: 12px;
+    padding: 4px 8px;
+}
+
+.greedy-touch-button {
+    min-width: 48px;
+    min-height: 48px;
+    padding: 12px;
+    border-radius: 12px;
+}
+
+.greedy-touch-button:hover,
+.greedy-touch-button:focus {
+    background-color: rgba(128, 128, 128, 0.2);
+}
+
+.greedy-touch-button:active {
+    background-color: rgba(128, 128, 128, 0.35);
+}

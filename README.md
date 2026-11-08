@@ -19,6 +19,10 @@ preferences:
   like the panel. Install it with `./install.sh --with-1password`; see
   [1Password Quick Access](docs/quick-access.md). Thanks to 1Password for
   a native Linux app.
+- **Touch mode** (optional, not installed by default): twice as tall tabs,
+  and icon buttons (1Password, settings, clear) instead of the menu entries
+  at the bottom. Install it with `./install.sh --with-touch-mode`; see
+  [touch mode](docs/touch-mode.md).
 - **Update notifications:** a notification when there is an update to
   install; see [update notifications](docs/update-notifications.md).
 
@@ -69,8 +73,9 @@ the preferences can switch them off.
 `./uninstall-previous-version.sh` before `./install.sh`. It copies your
 history and settings over, then removes the old extension.
 
-**1Password integration:** `./install.sh --with-1password` adds it,
-`--without-1password` removes it; it is left out by default.
+**Optional features:** `./install.sh --with-1password` adds the 1Password
+integration and `--with-touch-mode` adds touch mode; `--without-…` removes
+them. Both are left out by default, and each is kept by later installs.
 
 **Update:** `./update.sh` (pulls this repository, builds the newest tested
 release, installs), then log out and back in.
@@ -100,6 +105,7 @@ installing it.
 | Source syntax, ShellCheck, unit tests, build integrity | GitHub Actions (CI), on every push | Automatically; a green CI run means only this |
 | The extension loads in GNOME Shell without errors | A GNOME desktop | Smoke test; required before a release is recorded as tested |
 | Opens at the pointer, flips at screen edges | A GNOME desktop | By hand, with the [testing checklist](docs/cursor-follow.md#testing) |
+| Touch mode: taller tabs, icon buttons that work | A GNOME desktop | By hand, with [its checklist](docs/touch-mode.md#testing) |
 | Switches to 1Password Quick Access, placed at the pointer | A GNOME desktop with 1Password | By hand, with [its checklist](docs/quick-access.md#testing) |
 
 ### Verified GNOME Shell versions
@@ -121,7 +127,7 @@ in [the testing checklist](docs/cursor-follow.md#testing).
 This project's version is in [`VERSION`](VERSION) and the
 [changelog](CHANGELOG.md); releases are tagged `vX.Y.Z` on GitHub. The
 installed extension shows both versions, for example
-`1.1.0 (Clipboard History 1.0, release 3)`; `build/BUILD-INFO` and the
+`1.2.0 (Clipboard History 1.0, release 3)`; `build/BUILD-INFO` and the
 `build-info.json` inside each build record the full provenance.
 
 ## Development

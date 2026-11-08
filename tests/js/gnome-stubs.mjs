@@ -13,7 +13,35 @@ const STUBS = {
             set_position(x, y) { this.x = x; this.y = y; }
             destroy() { this.destroyed = true; globalThis.__uiGroup.delete(this); }
         }
-        export default {Widget, Side: {TOP: 0, RIGHT: 1, BOTTOM: 2, LEFT: 3}};`,
+        // A minimal actor tree for touch mode: children, style classes, heights.
+        class Actor {
+            constructor(props = {}) {
+                Object.assign(this, props);
+                this.children = []; this.height = -1; this.visible = props.visible ?? true; this.handlers = {};
+                this.destroyed = false;
+            }
+            add_child(child) { this.children.push(child); child.parent = this; }
+            insert_child_at_index(child, index) { this.children.splice(index, 0, child); child.parent = this; }
+            remove_child(child) { this.children = this.children.filter(c => c !== child); child.parent = null; }
+            get_children() { return [...this.children]; }
+            has_style_class_name(name) { return (this.style_class ?? '').split(' ').includes(name); }
+            set_height(height) { this.height = height; }
+            get_preferred_height() { return [0, this.natural ?? 30]; }
+            connect(signal, handler) { (this.handlers[signal] ??= []).push(handler); return signal + this.handlers[signal].length; }
+            disconnect() {}
+            emit(signal, ...args) { (this.handlers[signal] ?? []).forEach(h => h(this, ...args)); }
+            destroy() { this.destroyed = true; this.parent?.remove_child(this); }  // As Clutter does
+        }
+        class Button extends Actor {}
+        class Icon extends Actor {}
+        class BoxLayout extends Actor {}
+        const theme = {loaded: [], load_stylesheet(f) { this.loaded.push(f); }, unload_stylesheet(f) { this.loaded = this.loaded.filter(x => x !== f); }};
+        globalThis.__theme = theme;
+        const ThemeContext = {get_for_stage: () => ({get_theme: () => theme})};
+        export default {Widget, Actor, Button, Icon, BoxLayout, ThemeContext, Side: {TOP: 0, RIGHT: 1, BOTTOM: 2, LEFT: 3}};`,
+    'resource:///org/gnome/shell/ui/popupMenu.js': `
+        import St from 'gi://St';
+        export class PopupBaseMenuItem extends St.Actor {}`,
     'resource:///org/gnome/shell/ui/main.js': `
         globalThis.__uiGroup = new Set();
         globalThis.__notifications = [];
@@ -64,10 +92,13 @@ const STUBS = {
                 return true;
             }
         }
+        class ThemedIcon { constructor(props) { Object.assign(this, props); } }
         export default {
             _promisify() {},
             Cancellable,
             Subprocess,
+            ThemedIcon,
+            DesktopAppInfo: {new: () => null},
             SubprocessFlags: {NONE: 0, STDOUT_SILENCE: 1, STDERR_SILENCE: 2},
             IOErrorEnum: {CANCELLED: 19},
             File: {new_for_path: () => ({
