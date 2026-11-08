@@ -47,6 +47,14 @@ last_check="$(dconf read "${SETTINGS_PATH}update-last-check" 2>/dev/null | grep 
 say "Last check: $([[ -n "$last_check" && "$last_check" != 0 ]] && date -d "@$last_check" '+%Y-%m-%d %H:%M' || echo never)"
 
 say
+say "== 1Password integration =="
+if grep -q 'quickAccess: true' "$INSTALL_DIR/features.js" 2>/dev/null; then
+    say "Installed; Quick Access switch: $([[ "$(dconf read "${SETTINGS_PATH}quick-access" 2>/dev/null)" == true ]] && echo on || echo off)"
+else
+    say "Not installed (./install.sh --with-1password adds it)"
+fi
+
+say
 say "== Open at mouse pointer =="
 value="$(dconf read "$CURSOR_FOLLOW_KEY" 2>/dev/null || true)"
 case "$value" in

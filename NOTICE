@@ -26,3 +26,9 @@ This project's own files (feature/, scripts/, tests/ and the scripts in the
 root folder) are by greedgoddess, also under GPL-2.0-or-later.
 
 This project is not affiliated with or endorsed by Manouchehr Ghalevand.
+
+The optional 1Password integration (installed only with
+./install.sh --with-1password) starts the separately installed 1Password app
+(https://1password.com/) by its documented command line; no 1Password code is
+included. 1Password is a trademark of AgileBits Inc. This project is not
+affiliated with or endorsed by 1Password.

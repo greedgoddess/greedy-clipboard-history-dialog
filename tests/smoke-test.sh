@@ -26,6 +26,8 @@ trap 'rm -rf -- "$SANDBOX"' EXIT
 mkdir -p "$SANDBOX"/{home,config,cache,state,run} "$SANDBOX/data/gnome-shell/extensions"
 chmod 700 "$SANDBOX/run"
 cp -a -- "$BUILT_DIR" "$SANDBOX/data/gnome-shell/extensions/$UUID"
+# Load the optional 1Password integration too, so that its code is covered.
+echo "export const FEATURES = {quickAccess: true};" > "$SANDBOX/data/gnome-shell/extensions/$UUID/features.js"
 
 LOG="$SANDBOX/gnome-shell.log"
 TIMEOUT="${SMOKE_TEST_TIMEOUT:-60}"
@@ -83,7 +85,7 @@ fi
 report pass "headless GNOME Shell started"
 [[ "$state" == ACTIVE || "$state" == ENABLED ]] \
     && report pass "extension active" || report FAIL "extension active (state: $state)"
-if grep -qiE "($UUID|greedy|upstream-extension|cursorFollow|updateNotifier).*(error|exception)|JS ERROR.*($UUID|greedy|cursorFollow|updateNotifier|upstream-)" "$LOG"; then
+if grep -qiE "($UUID|greedy|upstream-extension|cursorFollow|updateNotifier|quickAccess|onePassword|1Password integration).*(error|exception|not loaded)|JS ERROR.*($UUID|greedy|cursorFollow|updateNotifier|quickAccess|onePassword|upstream-)" "$LOG"; then
     report FAIL "no errors from the extension"
 else
     report pass "no errors from the extension"

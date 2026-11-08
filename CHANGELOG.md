@@ -5,11 +5,13 @@ on is listed in the README under "Tested releases".
 
 ## 1.1.0 — not released yet
 
-- 1Password Quick Access (Preferences → Cursor-Follow, off by default):
+- 1Password Quick Access, optional and not installed by default
+  (`./install.sh --with-1password`; then Preferences → Cursor-Follow):
   pressing the shortcut again while the panel is open switches to Quick
   Access, placed like the panel: bottom-left corner at the pointer, or to
-  the left of it when there is no room on the right. Can only be switched on while 1Password is
-  installed and running.
+  the left of it when there is no room on the right. Can only be switched on
+  while 1Password is installed and running. Without the flag, none of its
+  code is installed. With it, About links to 1Password.
 - CI no longer runs the smoke test: it needs a real GNOME session, which a
   container does not have. It runs on a GNOME desktop, where
   `update-test-and-push.sh` requires it.

@@ -51,7 +51,8 @@ for name, data in original.items():
     check(f'original {name} carried over unchanged', target.is_file() and target.read_bytes() == expected)
 
 # This project's files are the repository's.
-for name in ('extension.js', 'prefs.js', 'cursorFollow.js', 'updateNotifier.js', 'quickAccess.js', 'onePassword.js'):
+for name in ('extension.js', 'prefs.js', 'features.js', 'cursorFollow.js', 'updateNotifier.js', 'quickAccess.js',
+             'onePassword.js'):
     check(f'{name} is this project\'s', (EXT / name).read_bytes() == (ROOT / 'feature' / name).read_bytes())
 
 # Identity.

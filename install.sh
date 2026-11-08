@@ -10,6 +10,11 @@
 # Builds first if build/ is empty (the newest tested release, or the newest
 # release when none is tested yet).
 #
+# The 1Password integration (switching to 1Password Quick Access with the
+# shortcut) is third-party integration and is left out unless installed with
+# --with-1password; --without-1password removes it again. Without either, a
+# machine keeps what it has.
+#
 # Both modes install the same build. --dev makes this a developer machine:
 # update notifications then watch Clipboard History releases, and
 # ./update-test-and-push.sh may run. --user switches back: notifications
@@ -26,6 +31,11 @@ usage() {
     say "  --dev       developer machine: notifications watch Clipboard History"
     say "              releases; ./update-test-and-push.sh may run"
     say "  --user      user machine: notifications watch this project's repository"
+    say "  --with-1password"
+    say "              include the 1Password Quick Access integration (third-party;"
+    say "              left out by default; kept on later installs)"
+    say "  --without-1password"
+    say "              leave the 1Password integration out (the default)"
     say "  --allow-untested"
     say "              install a build of a release not in tested-releases.json"
     say "              without asking (--yes alone does not allow that)"
@@ -35,12 +45,16 @@ usage() {
 
 MODE="$(current_mode)"
 ALLOW_UNTESTED=0
+# Keep what the installed copy has, unless a flag says otherwise.
+WITH_1PASSWORD="$(grep -q 'quickAccess: true' "$INSTALL_DIR/features.js" 2>/dev/null && echo true || echo false)"
 other_args=()
 for arg in "$@"; do
     case "$arg" in
         --dev) MODE=dev ;;
         --user) MODE=user ;;
         --allow-untested) ALLOW_UNTESTED=1 ;;
+        --with-1password) WITH_1PASSWORD=true ;;
+        --without-1password) WITH_1PASSWORD=false ;;
         *) other_args+=("$arg") ;;
     esac
 done
@@ -109,6 +123,16 @@ trap on_exit EXIT
 
 cp -a -- "$BUILT_DIR/." "$STAGE_DIR/"
 
+# [quick-access:install] Include the 1Password integration, or leave its files
+# out entirely. See docs/quick-access.md#quick-access-install
+cat > "$STAGE_DIR/features.js" <<FEATURES
+// Written by install.sh. See docs/quick-access.md#quick-access-install
+export const FEATURES = {quickAccess: $WITH_1PASSWORD};
+FEATURES
+if [[ "$WITH_1PASSWORD" != true ]]; then
+    rm -f -- "$STAGE_DIR/quickAccess.js" "$STAGE_DIR/onePassword.js"
+fi
+
 # ---- Swap the installed copy -----------------------------------------------
 
 gnome-extensions disable "$UUID" >/dev/null 2>&1 || true
@@ -165,7 +189,11 @@ if ! gnome-extensions enable "$UUID" >/dev/null 2>&1; then
     enable_at_next_login
 fi
 
-# ---- Mode and update notifications ---------------------------------------------
+# ---- Mode, 1Password integration and update notifications ----------------------
+
+# Without the integration, its setting is switched off, so that installing
+# it again later starts from off.
+[[ "$WITH_1PASSWORD" == true ]] || dconf write "${SETTINGS_PATH}quick-access" false
 
 # The extension reads these settings; see docs/update-notifications.md.
 # GVariant text accepts a JSON string literal for a string value.
@@ -212,6 +240,7 @@ if [[ "$MODE" == dev ]]; then
 else
     say "Mode: user. Update notifications watch this project's repository."
 fi
+say "1Password integration: $([[ "$WITH_1PASSWORD" == true ]] && echo "installed (switch it on in Preferences → Cursor-Follow)" || echo "not installed (add it with --with-1password)")"
 say "Notifications: $([[ "$(dconf read "${SETTINGS_PATH}update-notifications")" == true ]] && echo on || echo off) (Preferences → Cursor-Follow)"
 say
 say "Log out and back in now. GNOME Shell keeps running the code it loaded"

@@ -13,10 +13,12 @@ preferences:
 - **Open at mouse pointer:** the panel opens to the right of the pointer
   with its bottom edge level with it, or to the left when there is no room
   on the right.
-- **1Password Quick Access:** pressing the shortcut again while the panel is
-  open switches to 1Password Quick Access, placed at the pointer like the
-  panel; only available while 1Password is installed and running. See
-  [1Password Quick Access](docs/quick-access.md).
+- **1Password Quick Access** (optional, not installed by default):
+  pressing the shortcut again while the panel is open switches to
+  [1Password](https://1password.com/) Quick Access, placed at the pointer
+  like the panel. Install it with `./install.sh --with-1password`; see
+  [1Password Quick Access](docs/quick-access.md). Thanks to 1Password for
+  a native Linux app.
 - **Update notifications:** a notification when there is an update to
   install; see [update notifications](docs/update-notifications.md).
 
@@ -66,6 +68,9 @@ the preferences can switch them off.
 **From Clipboard History or an earlier version of this project:** run
 `./uninstall-previous-version.sh` before `./install.sh`. It copies your
 history and settings over, then removes the old extension.
+
+**1Password integration:** `./install.sh --with-1password` adds it,
+`--without-1password` removes it; it is left out by default.
 
 **Update:** `./update.sh` (pulls this repository, builds the newest tested
 release, installs), then log out and back in.

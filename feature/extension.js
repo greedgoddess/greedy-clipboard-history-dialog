@@ -17,7 +17,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import UpstreamExtension from './upstream-extension.js';
 import {CursorFollow} from './cursorFollow.js';
-import {QuickAccessSwitch} from './quickAccess.js';
+import {FEATURES} from './features.js';
 import {UpdateNotifier} from './updateNotifier.js';
 
 // [cursor-follow:entry-point]
@@ -35,13 +35,22 @@ export default class GreedyClipboardHistoryExtension extends UpstreamExtension {
         if (!this._cursorFollow.active)
             console.warn(`${this.uuid}: panel menu not found; "Open at mouse pointer" is inactive`);
 
-        // [quick-access:entry-point] See docs/quick-access.md#quick-access-entry-point
-        this._quickAccess = new QuickAccessSwitch(indicator?.menu, this.getSettings());
+        // [quick-access:entry-point] Only when installed with --with-1password;
+        // otherwise its files are not there at all.
+        // See docs/quick-access.md#quick-access-entry-point
+        this._greedyEnabled = true;
+        if (FEATURES.quickAccess) {
+            import('./quickAccess.js').then(({QuickAccessSwitch}) => {
+                if (this._greedyEnabled)
+                    this._quickAccess = new QuickAccessSwitch(indicator?.menu, this.getSettings());
+            }).catch(error => console.warn(`${this.uuid}: 1Password integration not loaded: ${error.message}`));
+        }
 
         this._updateNotifier = new UpdateNotifier(this, this.getSettings());
     }
 
     disable() {
+        this._greedyEnabled = false;
         this._updateNotifier?.destroy();
         this._updateNotifier = null;
         this._quickAccess?.destroy();

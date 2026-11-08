@@ -38,12 +38,24 @@ run "$REPO/install.sh" --yes
 check "installing never touches the original extension" 'grep -qx original "$LEGACY_EXT_DIR/extension.js"'
 rm -rf "$LEGACY_EXT_DIR"
 
+# ---- 1Password integration: left out unless asked for ----------------------------
+make_build true plain
+run "$REPO/install.sh" --yes
+check "1Password integration left out by default" '[[ ! -e "$EXT_DIR/quickAccess.js" && ! -e "$EXT_DIR/onePassword.js" ]] && grep -q "quickAccess: false" "$EXT_DIR/features.js"'
+run "$REPO/install.sh" --yes --with-1password
+check "--with-1password includes it" '[[ -f "$EXT_DIR/quickAccess.js" && -f "$EXT_DIR/onePassword.js" ]] && grep -q "quickAccess: true" "$EXT_DIR/features.js"'
+run "$REPO/install.sh" --yes
+check "a plain install keeps it" 'grep -q "quickAccess: true" "$EXT_DIR/features.js"'
+dconf write "${NEW_PATH}quick-access" true
+run "$REPO/install.sh" --yes --without-1password
+check "--without-1password removes it and switches its setting off" '[[ ! -e "$EXT_DIR/quickAccess.js" ]] && grep -q "quickAccess: false" "$EXT_DIR/features.js" && [[ $(setting "$NEW_PATH" quick-access) == false ]]'
+
 # Interrupted install: moving the new copy into place fails.
 make_build true third
 stub mv 'if [[ "$2" == *staging.* && "$3" == *'"$UUID"' ]]; then exit 1; fi; exec /bin/mv "$@"'
 run "$REPO/install.sh" --yes
 check "interrupted install fails" '[[ $? -ne 0 ]]'
-check "interrupted install restores the previous copy" 'grep -q "// fourth" "$EXT_DIR/extension.js"'
+check "interrupted install restores the previous copy" 'grep -q "// plain" "$EXT_DIR/extension.js"'
 check "interrupted install leaves no staging folder" '! ls "$XDG_DATA_HOME/greedy-clipboard-history-dialog" | grep -q staging'
 rm -f "$SANDBOX/bin/mv"
 

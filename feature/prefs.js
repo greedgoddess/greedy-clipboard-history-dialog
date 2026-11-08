@@ -16,7 +16,7 @@ import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Gtk from 'gi://Gtk';
 
-import {quickAccessAvailability} from './onePassword.js';
+import {FEATURES} from './features.js';
 
 import UpstreamPreferences from './upstream-prefs.js';
 
@@ -52,7 +52,8 @@ export default class GreedyClipboardHistoryPreferences extends UpstreamPreferenc
         settings.bind('cursor-follow', cursorFollowRow, 'active', Gio.SettingsBindFlags.DEFAULT);
         group.add(cursorFollowRow);
 
-        group.add(this._quickAccessRow(settings));
+        if (FEATURES.quickAccess)
+            group.add(this._quickAccessRow(settings));
 
         // [update-notify:preference]
         // See docs/update-notifications.md#update-notify-preference
@@ -83,7 +84,9 @@ export default class GreedyClipboardHistoryPreferences extends UpstreamPreferenc
         const build = this._readBuildInfo();
         const group = new Adw.PreferencesGroup({
             title: 'About',
-            description: 'Not affiliated with or endorsed by the author of Clipboard History.',
+            description: FEATURES.quickAccess
+                ? 'Not affiliated with or endorsed by the author of Clipboard History, or by 1Password.'
+                : 'Not affiliated with or endorsed by the author of Clipboard History.',
         });
 
         group.add(this._linkRow(
@@ -100,6 +103,19 @@ export default class GreedyClipboardHistoryPreferences extends UpstreamPreferenc
             `Cursor-Follow and update notifications by greedgoddess · ${build.project_version ?? '?'} · ` +
             'GPL-2.0-or-later',
             'https://github.com/greedgoddess/greedy-clipboard-history-dialog'));
+
+        // [quick-access:about] Only when the 1Password integration is installed.
+        // See docs/quick-access.md#quick-access-about
+        if (FEATURES.quickAccess) {
+            group.add(this._linkRow(
+                '1Password',
+                'Third-party password manager by AgileBits, used for Quick Access; thanks for a native Linux app',
+                'https://1password.com/'));
+            group.add(this._linkRow(
+                '1Password for Linux',
+                'Installing 1Password on Linux',
+                'https://support.1password.com/install-linux/'));
+        }
 
         page.add(group);
     }
@@ -118,6 +134,7 @@ export default class GreedyClipboardHistoryPreferences extends UpstreamPreferenc
 
         const update = async () => {
             checkButton.sensitive = false;
+            const {quickAccessAvailability} = await import('./onePassword.js');
             const availability = await quickAccessAvailability();
             row.subtitle = availability.available
                 ? 'Press the shortcut again while the panel is open to switch to Quick Access, placed at the pointer like the panel.'

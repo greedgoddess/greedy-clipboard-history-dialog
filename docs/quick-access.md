@@ -1,10 +1,23 @@
 # 1Password Quick Access
 
-With **1Password Quick Access** on (Preferences → Cursor-Follow), pressing the
-clipboard shortcut again while the panel is open closes the panel and opens
-1Password Quick Access, placed like the panel: its bottom-left corner at the
-pointer. Off by default; it can only be switched
-on while 1Password is installed and running.
+An optional integration with [1Password](https://1password.com/), a
+third-party password manager by AgileBits. It is **not installed by default**:
+see [installing it](#quick-access-install). Once installed, and with
+**1Password Quick Access** switched on (Preferences → Cursor-Follow), pressing
+the clipboard shortcut again while the panel is open closes the panel and
+opens 1Password Quick Access, placed like the panel: its bottom-left corner
+at the pointer. The switch is off by default and can only be turned on while
+1Password is installed and running.
+
+A thank-you to 1Password for offering a native Linux app, with a
+documented command for opening Quick Access on Wayland: that is what makes
+this integration possible. This project is not affiliated with or endorsed
+by 1Password.
+
+**1Password links:**
+[1Password](https://1password.com/) ·
+[Install 1Password on Linux](https://support.1password.com/install-linux/) ·
+[Keyboard shortcuts on Linux, including Wayland](https://support.1password.com/keyboard-shortcuts/?linux)
 
 Only one of the two can be open at a time: GNOME closes a panel menu as soon
 as another window takes the keyboard, and Quick Access hides as soon as it
@@ -20,6 +33,22 @@ section starts with a tag:
 grep -rn "\[quick-access:" feature/
 ```
 
+<a id="quick-access-install"></a>
+## `quick-access:install`
+
+```bash
+./install.sh --with-1password      # include the integration
+./install.sh --without-1password   # leave it out again (the default)
+```
+
+Without `--with-1password`, `install.sh` leaves `quickAccess.js` and
+`onePassword.js` out of the installed copy and writes
+`FEATURES = {quickAccess: false}` into its `features.js`, so no 1Password
+code is installed at all: no shortcut takeover, no switch in the
+preferences, no 1Password rows in About. The choice is kept by later installs
+and updates until changed with the other flag; removing the integration also
+switches its setting off. `./verify.sh` shows whether it is installed.
+
 <a id="quick-access-setting"></a>
 ## `quick-access:setting`
 
@@ -33,7 +62,8 @@ The installer does not switch it on.
 counts as installed when `1password` is on the `PATH`, at
 `/opt/1Password/1password`, or installed as the Flatpak
 `com.onepassword.OnePassword`; the matching command is run with
-`--quick-access`, the way 1Password documents for Wayland. It counts as
+`--quick-access`, the way 1Password
+[documents for Wayland](https://support.1password.com/keyboard-shortcuts/?linux). It counts as
 running when `pgrep -x 1password` finds a process: Quick Access only opens
 while the app runs, usually in the background. Without `pgrep` this cannot be
 checked, and the feature stays unavailable.
@@ -49,8 +79,18 @@ again** looks once more. It can always be turned off.
 <a id="quick-access-entry-point"></a>
 ## `quick-access:entry-point`
 
-`feature/extension.js` creates the `QuickAccessSwitch` after the original has
-built its panel, and destroys it first on `disable()`.
+When `features.js` says the integration is installed, `feature/extension.js`
+loads `quickAccess.js` after the original has built its panel and creates the
+`QuickAccessSwitch`; it is destroyed first on `disable()`. The module is
+loaded with a dynamic `import()`, so the extension also works when the file
+is not installed. The preferences load `onePassword.js` the same way.
+
+<a id="quick-access-about"></a>
+## `quick-access:about`
+
+With the integration installed, the About group in the preferences also links
+to 1Password and to its Linux installation page, and says that this project
+is not affiliated with 1Password.
 
 <a id="quick-access-shortcut"></a>
 ## `quick-access:shortcut`, `quick-access:shortcut-action`
