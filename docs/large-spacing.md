@@ -19,8 +19,11 @@ and switched on (Preferences → Cursor-Follow → **Large spacing**):
   Access the same way as the second press of the shortcut.
 
 The buttons trigger the original entries, so settings and clearing behave
-exactly as before; the trash can, like "Clear (except pinned)", only shows
-when there is something to clear.
+exactly as before. As in the original design, the trash can only shows when
+"Clear (except pinned)" would: the original hides it when there is nothing
+to clear (everything pinned, or the Emoji, Kaomoji and Symbols tabs). The
+bottom buttons have a background and
+outline of their own, to set them apart from the panel.
 
 The code is in `feature/largeSpacing.js` and `feature/largeSpacing.css`; each
 section starts with a tag:
@@ -126,12 +129,14 @@ so whichever the theme draws gets it. The radius sits between GNOME's 12 px
 windows and the panel's usual theme radius, closer to the former.
 
 With the 1Password integration installed, the Quick Access window gets
-rounded corners with the same radius, drawn by GNOME Shell without changing
-1Password; see
+rounded corners too, drawn by GNOME Shell without changing 1Password; see
 [Quick Access rounded corners](quick-access.md#quick-access-rounded-corners).
-The radius is set there as `CORNER_RADIUS` in `feature/roundedCorners.js`; a
-test keeps the two values equal. With Large spacing off, the panel has the
-theme's radius and Quick Access square corners.
+Its radius, `CORNER_RADIUS` in `feature/roundedCorners.js`, is 3 px larger
+than the panel's (`PANEL_CORNER_RADIUS`): the panel's outline and shadow make
+its corners look rounder than a bare window's with the same radius, so this
+way both look the same. A test keeps `PANEL_CORNER_RADIUS` equal to the
+stylesheet. With Large spacing off, the panel has the theme's radius and
+Quick Access square corners.
 
 <a id="large-spacing-rows"></a>
 ## `large-spacing:rows`
@@ -150,13 +155,14 @@ adjusted while the extension runs. Large spacing adds the class
 
 | What | Size |
 | --- | --- |
-| Panel | 345 × 410 px, the same on every tab |
+| Panel | 345 × 472 px, the same on every tab; the list takes all height the other parts leave |
 | Font | normal size (`font-size: 1em`) |
-| Tab bar and button row | the same format: buttons 40 px tall (24 px icons, 8 px above and below), 8 px corners, 4 px apart, same hover colours |
-| Clipboard entries | text 1.25 × normal; 6 px above and below it; 24 px pin and delete icons |
-| Search field | fills its row, within the panel |
-| Emoji, kaomoji | 20 px and 13 px |
-| Corner radius | 15 px, shared with Quick Access |
+| Tab bar and button row | the same format: buttons 38 px tall (24 px icons, 7 px above and below), 8 px corners, 3 px apart, same hover colours |
+| Clipboard entries | text 1.25 × normal; 5 px above and below it; 24 px pin and delete icons |
+| Search field | fills its row, within the panel; text and clear icon half as large again (1.5 em, 24 px icon) |
+| Emoji and symbols | 30 px, half as large again; natural width, narrow row margins, to fit the original's 8 (symbols 10) per row |
+| Kaomoji | 13 px |
+| Corner radius | panel 15 px; Quick Access 18 px, which looks the same |
 
 The list takes all the height the other parts leave. On tabs without the
 search row, the list gets that row's height, so the panel keeps its size.
@@ -189,11 +195,13 @@ By hand, on a GNOME desktop (with a touch screen if available):
    and trash can buttons replace the two entries. Switch between all five
    tabs: the panel keeps its size, and each tab shows its icon.
 3. Tap the gear: the preferences open. Tap the trash can: the history is
-   cleared except pinned entries, as before. With nothing to clear, the trash
-   can is hidden.
-4. With the 1Password integration installed and switched on: a 1Password
-   button comes first and opens Quick Access at the pointer.
-5. The panel has rounded corners; with the 1Password integration, Quick
+   cleared except pinned entries, as before. With nothing to clear, and on
+   the Emoji, Kaomoji and Symbols tabs, the trash can is hidden.
+4. On the Emoji and Symbols tabs, every row fits the panel without being cut
+   off on the right.
+5. With the 1Password integration installed and switched on: a 1Password
+   button comes first and opens Quick Access where the panel was.
+6. The panel has rounded corners; with the 1Password integration, Quick
    Access has the same ones.
-6. Switch large spacing off: everything is back as in step 1, and Quick
+7. Switch large spacing off: everything is back as in step 1, and Quick
    Access has square corners again (the next time it opens).

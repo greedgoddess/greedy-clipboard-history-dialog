@@ -75,6 +75,19 @@ test('large spacing on: buttons replace the entries, in their place, and trigger
     mode.destroy();
 });
 
+test("the 1Password button uses 1Password's app icon, from either package", () => {
+    const {menu, box} = fakeMenu();
+    globalThis.__apps = {'com.onepassword.OnePassword.desktop': 'flatpak-icon'};
+    const mode = new LargeSpacing(menu, fakeSettings({'large-spacing': true, 'quick-access': true}), 'css',
+        () => ({openQuickAccess() {}}));
+    assert.equal(buttonsOf(box)[0].child.gicon, 'flatpak-icon');
+    mode.destroy();
+    globalThis.__apps = {};
+    const fallback = new LargeSpacing(fakeMenu().menu, fakeSettings({'large-spacing': true, 'quick-access': true}),
+        'css', () => ({openQuickAccess() {}}));
+    fallback.destroy();
+});
+
 test('the 1Password button comes first, only with the integration and its switch on', () => {
     const {menu, box} = fakeMenu();
     let opened = 0;
@@ -90,11 +103,15 @@ test('the 1Password button comes first, only with the integration and its switch
     mode.destroy();
 });
 
-test("the clear button follows the original entry's visibility", () => {
+test("the trash can shows exactly when the original's Clear entry does", () => {
     const {menu, box, clear} = fakeMenu();
     const mode = new LargeSpacing(menu, fakeSettings({'large-spacing': true, 'quick-access': false}), 'css', () => null);
+    const trash = buttonsOf(box).at(-1);
+    assert.equal(trash.visible, true);
     clear.visible = false; clear.emit('notify::visible');
-    assert.equal(buttonsOf(box).at(-1).visible, false);
+    assert.equal(trash.visible, false);
+    clear.visible = true; clear.emit('notify::visible');
+    assert.equal(trash.visible, true);
     mode.destroy();
 });
 

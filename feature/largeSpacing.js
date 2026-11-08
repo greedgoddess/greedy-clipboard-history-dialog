@@ -17,6 +17,7 @@
 // and can maintain this code.
 
 import Gio from 'gi://Gio';
+import Shell from 'gi://Shell';
 import St from 'gi://St';
 
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
@@ -68,9 +69,13 @@ function findByStyleClass(actor, styleClass) {
     return null;
 }
 
+/** 1Password's app icon, looked up in GNOME Shell's app registry, which
+ * answers quietly when an ID is not installed (the native package and the
+ * Flatpak use different IDs). */
 function onePasswordIcon() {
+    const appSystem = Shell.AppSystem?.get_default?.();
     for (const id of ONE_PASSWORD_DESKTOP_IDS) {
-        const icon = Gio.DesktopAppInfo.new(id)?.get_icon();
+        const icon = appSystem?.lookup_app(id)?.get_icon();
         if (icon)
             return icon;
     }
@@ -135,7 +140,9 @@ export class LargeSpacing {
             'Extension Settings', () => settings.activate(null));
         const clearButton = this._button(new Gio.ThemedIcon({name: 'user-trash-symbolic'}),
             'Clear (except pinned)', () => clear.activate(null));
-        // The original shows "Clear" only when there is something to clear.
+        // As in the original design: the trash can shows exactly when the
+        // original shows "Clear", which it hides when there is nothing to
+        // clear (all pinned, or a tab without history).
         clearButton.visible = clear.visible;
         this._clearVisibleId = clear.connect('notify::visible', () => {
             clearButton.visible = clear.visible;

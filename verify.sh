@@ -19,7 +19,10 @@ say
 say "== Installed copy =="
 if [[ -f "$INSTALL_DIR/metadata.json" ]]; then
     say "$UUID, $(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("version-name","?"))' "$INSTALL_DIR/metadata.json")"
-    if [[ -f "$BUILT_DIR/metadata.json" ]] && ! diff -rq "$BUILT_DIR" "$INSTALL_DIR" >/dev/null 2>&1; then
+    # build-info.json identifies a build; other files differ on purpose
+    # (install.sh records the optional features in features.js).
+    if [[ -f "$BUILT_DIR/build-info.json" ]] \
+        && ! cmp -s "$BUILT_DIR/build-info.json" "$INSTALL_DIR/build-info.json"; then
         say "Note: build/ holds a different build than the installed one; run ./install.sh to install it."
     fi
 else
@@ -78,8 +81,10 @@ if [[ -f "$ROOT/build/BUILD-INFO" ]]; then cat "$ROOT/build/BUILD-INFO"; else sa
 
 say
 say "== Recent GNOME Shell messages about this extension (this boot) =="
+# With one line of context, so that a warning's message shows together with
+# the stack trace lines below it that name this extension's files.
 messages="$(journalctl -b --no-pager -o cat /usr/bin/gnome-shell 2>/dev/null \
-    | grep -iE 'clipboard[- ]history|greedy' | tail -n 10)"
+    | grep -iE -B1 'clipboard[- ]history|greedy' | grep -v '^--$' | tail -n 12)"
 say "${messages:-None.}"
 
 [[ -f "$INSTALL_DIR/metadata.json" ]]

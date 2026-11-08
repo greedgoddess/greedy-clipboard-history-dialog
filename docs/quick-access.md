@@ -146,8 +146,9 @@ pointer, and to the left of it when there is no room on the right.
 
 `feature/roundedCorners.js`. Rounded corners are part of
 [Large spacing](large-spacing.md#large-spacing-corners): while Large spacing
-is installed and on, the Quick Access window gets rounded corners with the
-same 15 px radius as the clipboard panel. There is no separate switch.
+is installed and on, the Quick Access window gets rounded corners that match
+the clipboard panel's: 18 px, slightly more than the panel's 15 px, because
+the panel's outline makes its corners look rounder. There is no separate switch.
 
 1Password is not changed or asked for anything: GNOME Shell draws every
 window itself, and a small shader effect on the Quick Access window, as GNOME
@@ -192,6 +193,6 @@ pointer can only be checked by hand, on a GNOME desktop with 1Password:
    stays on screen.
 5. Quit 1Password with the setting on: the second press shows a notification
    instead of Quick Access.
-6. With Large spacing installed and on, Quick Access has rounded corners with
-   the same radius as the clipboard panel; with it off, square ones (from the
+6. With Large spacing installed and on, Quick Access has rounded corners that
+   look the same as the clipboard panel's; with it off, square ones (from the
    next time it opens).

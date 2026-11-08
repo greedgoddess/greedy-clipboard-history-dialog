@@ -21,10 +21,13 @@ import Cogl from 'gi://Cogl';
 import GObject from 'gi://GObject';
 import Shell from 'gi://Shell';
 
-// Shared with the clipboard panel in Large spacing (largeSpacing.css), so that
-// both have the same corners; between GNOME's 12 px windows and the panel's
-// theme radius.
-export const CORNER_RADIUS = 15;
+// The clipboard panel's radius in Large spacing (largeSpacing.css; a test keeps
+// both equal), between GNOME's 12 px windows and the panel's theme radius.
+export const PANEL_CORNER_RADIUS = 15;
+// Quick Access's radius: slightly larger than the panel's, because the panel's
+// outline and shadow make its corners look rounder than a bare window's with
+// the same radius. With these values both look the same.
+export const CORNER_RADIUS = PANEL_CORNER_RADIUS + 3;
 
 const DECLARATIONS = `
 uniform vec4 bounds;   // the window's frame inside its actor: x1, y1, x2, y2

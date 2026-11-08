@@ -57,7 +57,11 @@ const STUBS = {
         };`,
     // As in GNOME Shell 51: no Shell.GLSLEffect.
     'gi://Shell': `
-        export default {ActionMode: {NORMAL: 1, OVERVIEW: 2, POPUP: 4}};`,
+        // AppSystem knows the apps in globalThis.__apps: {desktopId: icon}.
+        const AppSystem = {get_default: () => ({
+            lookup_app: id => (globalThis.__apps?.[id] ? {get_icon: () => globalThis.__apps[id]} : null),
+        })};
+        export default {AppSystem, ActionMode: {NORMAL: 1, OVERVIEW: 2, POPUP: 4}};`,
     // As in GNOME Shell 51: Clutter.ShaderEffect with a static snippet and
     // uniforms set by name; records what it is given, so tests can check it.
     'gi://Clutter': `

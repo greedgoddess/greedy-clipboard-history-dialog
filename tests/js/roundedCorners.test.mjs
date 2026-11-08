@@ -6,7 +6,8 @@ import assert from 'node:assert/strict';
 
 // Importing must work on GNOME Shell 51, which has no Shell.GLSLEffect (the
 // stand-ins mirror 51); this failed once and took the 1Password integration down.
-const {cornerBounds, shaderApi, CornerRounder, CORNER_RADIUS} = await import('../../feature/roundedCorners.js');
+const {cornerBounds, shaderApi, CornerRounder, CORNER_RADIUS, PANEL_CORNER_RADIUS} =
+    await import('../../feature/roundedCorners.js');
 
 test('shader API: Clutter snippet on 51, Shell.GLSLEffect before, none otherwise', () => {
     class ShaderEffect51 { set_uniform_float() {} }
@@ -70,9 +71,15 @@ test('the effect follows size changes', () => {
     rounder.destroy();
 });
 
-test('the clipboard panel in Large spacing and Quick Access share one corner radius', async () => {
+test('the panel radius in largeSpacing.css matches PANEL_CORNER_RADIUS, on both boxes', async () => {
     const {readFile} = await import('node:fs/promises');
     const css = await readFile(new URL('../../feature/largeSpacing.css', import.meta.url), 'utf8');
-    const [, panelRadius] = css.match(/-arrow-border-radius:\s*(\d+)px/);
-    assert.equal(Number(panelRadius), CORNER_RADIUS);
+    const [, outer] = css.match(/-arrow-border-radius:\s*(\d+)px/);
+    const [, inner] = css.match(/\.popup-menu-content\.greedy-large-spacing\s*\{\s*border-radius:\s*(\d+)px/);
+    assert.equal(Number(outer), PANEL_CORNER_RADIUS);
+    assert.equal(Number(inner), PANEL_CORNER_RADIUS);
+});
+
+test('Quick Access gets a slightly larger radius than the panel, so both look the same', () => {
+    assert.ok(CORNER_RADIUS > PANEL_CORNER_RADIUS && CORNER_RADIUS - PANEL_CORNER_RADIUS <= 5);
 });
