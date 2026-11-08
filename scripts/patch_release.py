@@ -164,17 +164,23 @@ def main(upstream, out, feature, report_path):
                + '\n'.join(our_texts) + '  </schema>\n</schemalist>\n')
         added = our_names
     else:
+        # Other schemas in the same file are kept as they are: only the
+        # original's <schema> tag and the end of its element are touched.
         xml = schema_file.read_text(encoding='utf-8')
-        openings = list(re.finditer(r'<schema\b[^>]*\bid="' + re.escape(legacy_schema_id) + r'"[^>]*>', xml))
+        comments = [m.span() for m in re.finditer(r'<!--.*?-->', xml, re.S)]
+        outside_comments = lambda m: not any(a <= m.start() < b for a, b in comments)
+        id_attribute = r'\bid\s*=\s*(["\'])' + re.escape(legacy_schema_id) + r'\1'
+        openings = [m for m in re.finditer(r'<schema\b[^>]*' + id_attribute + r'[^>]*>', xml) if outside_comments(m)]
         if len(openings) != 1:
             fatal(f'expected one <schema id="{legacy_schema_id}"> tag in {schema_file.name}, found {len(openings)}')
         match = openings[0]
-        new_tag = re.sub(r'\bid="[^"]*"', f'id="{SCHEMA_ID}"', match.group(0))
-        if re.search(r'\bpath="[^"]*"', new_tag):
-            new_tag = re.sub(r'\bpath="[^"]*"', f'path="{SCHEMA_PATH}"', new_tag)
+        new_tag = re.sub(r'\bid\s*=\s*(["\'])[^"\']*\1', f'id="{SCHEMA_ID}"', match.group(0))
+        if re.search(r'\bpath\s*=', new_tag):
+            new_tag = re.sub(r'\bpath\s*=\s*(["\'])[^"\']*\1', f'path="{SCHEMA_PATH}"', new_tag)
         else:
-            new_tag = new_tag[:-1] + f' path="{SCHEMA_PATH}">'
+            new_tag = re.sub(r'\s*/?>$', '', new_tag) + f' path="{SCHEMA_PATH}">'
         xml = xml[:match.start()] + new_tag + xml[match.end():]
+        comments = [m.span() for m in re.finditer(r'<!--.*?-->', xml, re.S)]
 
         added, texts = [], []
         for name, text in zip(our_names, our_texts):
@@ -183,7 +189,11 @@ def main(upstream, out, feature, report_path):
             else:
                 added.append(name)
                 texts.append(text)
-        close = xml.find('</schema>', match.start())
+        closes = [m for m in re.finditer(r'</schema\s*>', xml[match.start():])
+                  if not any(a <= match.start() + m.start() < b for a, b in comments)]
+        if not closes:
+            fatal(f'no closing </schema> for {legacy_schema_id} in {schema_file.name}')
+        close = match.start() + closes[0].start()
         line_start = xml.rfind('\n', 0, close) + 1
         xml = xml[:line_start] + '\n'.join(texts) + '\n' + xml[line_start:]
         schema_file.unlink()

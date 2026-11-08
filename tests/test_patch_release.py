@@ -94,6 +94,38 @@ class PatchReleaseTest(unittest.TestCase):
         self.assertEqual(self.schema_out(out).count('name="cursor-follow"'), 1)
         self.assertTrue(any('cursor-follow' in w for w in warnings))
 
+    def test_other_schemas_in_the_same_file_are_kept(self):
+        other = '<schema id="org.example.other" path="/org/example/other/"><key name="x" type="b"><default>true</default></key></schema>'
+        self.write(f'schemas/{LEGACY_SCHEMA}.gschema.xml', SCHEMA.replace('</schemalist>', f'  {other}\n</schemalist>'))
+        result, out, _ = self.patch()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        xml = self.schema_out(out)
+        self.assertIn(other, xml)
+        self.assertIn('<key name="cursor-follow"', xml.split('org.example.other')[0])
+
+    def test_closing_tag_inside_a_comment_is_ignored(self):
+        self.write(f'schemas/{LEGACY_SCHEMA}.gschema.xml',
+                   SCHEMA.replace('a comment the build must keep', 'ends with </schema> here'))
+        result, out, _ = self.patch()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        xml = self.schema_out(out)
+        self.assertIn('<!-- ends with </schema> here -->', xml)
+        self.assertLess(xml.index('max-history-size'), xml.index('name="cursor-follow"'))
+
+    def test_attribute_order_quotes_and_spacing(self):
+        self.write(f'schemas/{LEGACY_SCHEMA}.gschema.xml', SCHEMA.replace(
+            f'<schema id="{LEGACY_SCHEMA}" path="/org/gnome/shell/extensions/clipboard-history/">',
+            f"<schema  path = '/org/gnome/shell/extensions/clipboard-history/'\n    id = '{LEGACY_SCHEMA}' >"))
+        result, out, _ = self.patch()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        xml = self.schema_out(out)
+        self.assertIn(f'id="{SCHEMA_ID}"', xml)
+        self.assertIn('path="/org/gnome/shell/extensions/greedy-clipboard-history-dialog/"', xml)
+
+    def test_two_schema_files_with_the_original_id(self):
+        self.write('schemas/second.gschema.xml', SCHEMA)
+        self.assertRefused('exactly one settings schema')
+
     # ---- Refused releases ---------------------------------------------------------
 
     def assertRefused(self, fragment):

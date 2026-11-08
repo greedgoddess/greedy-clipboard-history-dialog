@@ -93,8 +93,10 @@ export class UpdateNotifier {
      * See docs/update-notifications.md#update-notify-developer-check */
     async _checkOriginal(tested) {
         const info = await this._fetchJson(ORIGINAL_INFO_URL + this._shellMajor);
-        const latest = info.shell_version_map?.[this._shellMajor]?.version ?? info.version;
-        if (latest && (!tested || latest > tested.version)) {
+        const latest = info?.shell_version_map?.[this._shellMajor]?.version ?? info?.version;
+        if (!Number.isInteger(latest))
+            throw new Error('extensions.gnome.org answered without a release number');
+        if (!tested || latest > tested.version) {
             this._notifyOnce(`release:${latest}`,
                 `Clipboard History release ${latest} is out`,
                 `Run ./update-test-and-push.sh in ${this._checkoutPath()} to build, test and publish it.`);
@@ -107,9 +109,13 @@ export class UpdateNotifier {
      * See docs/update-notifications.md#update-notify-user-check */
     async _checkRepository(tested) {
         const installed = await this._installedBuild();
-        const [latestFeatureCommit] = await this._fetchJson(FEATURE_COMMITS_URL);
-        const newRelease = tested && tested.version > installed.upstream_version;
-        const newFeature = latestFeatureCommit && installed.feature_commit &&
+        const commits = await this._fetchJson(FEATURE_COMMITS_URL);
+        const latestFeatureCommit = Array.isArray(commits) ? commits[0] : null;
+        if (!/^[0-9a-f]{40}$/.test(latestFeatureCommit?.sha ?? ''))
+            throw new Error('GitHub answered without a commit');
+        const newRelease = tested && Number.isInteger(installed.upstream_version) &&
+            tested.version > installed.upstream_version;
+        const newFeature = Boolean(installed.feature_commit) &&
             latestFeatureCommit.sha !== installed.feature_commit;
         if (newRelease || newFeature) {
             this._notifyOnce(`update:${tested?.version}:${latestFeatureCommit?.sha}`,
@@ -118,9 +124,15 @@ export class UpdateNotifier {
         }
     }
 
+    /** The newest release in tested-releases.json for this GNOME Shell, or
+     * null. Entries that do not have the expected shape are ignored; a file
+     * that is not a list makes the check skip. */
     async _newestTestedRelease() {
         const releases = await this._fetchJson(TESTED_RELEASES_URL);
-        const usable = releases.filter(r => r.shell_versions.includes(this._shellMajor));
+        if (!Array.isArray(releases))
+            throw new Error('tested-releases.json is not a list');
+        const usable = releases.filter(r => Number.isInteger(r?.version) &&
+            Array.isArray(r.shell_versions) && r.shell_versions.includes(this._shellMajor));
         return usable.sort((a, b) => b.version - a.version)[0] ?? null;
     }
 

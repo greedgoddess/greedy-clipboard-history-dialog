@@ -60,6 +60,14 @@ require_command glib-compile-schemas "Install it with: sudo dnf install glib2"
 
 SHELL_MAJOR="$(gnome-shell --version 2>/dev/null | grep -oE '[0-9]+' | head -n1 || true)"
 
+# A previous run interrupted while swapping in its build left build/ in
+# .build.new/previous/; put it back first.
+if [[ ! -d "$ROOT/build" && -d "$ROOT/.build.new/previous" ]]; then
+    mv -- "$ROOT/.build.new/previous" "$ROOT/build"
+    warn "Restored build/ after an interrupted build."
+fi
+rm -rf -- "$ROOT/.build.new"
+
 WORK="$(mktemp -d)"
 trap 'rm -rf -- "$WORK"' EXIT
 mkdir -p "$WORK/release"
@@ -210,18 +218,25 @@ PY
 
 # ---- 5. Put the build in place ---------------------------------------------------
 
+# The new build is assembled completely in .build.new/, next to build/, and
+# then swapped in by two directory renames: build/ becomes .build.new/previous/,
+# and .build.new/ becomes build/. A run interrupted between the two renames is
+# undone by the next run (see the start of this section) or by the trap below.
 BUILD_DIR="$ROOT/build"
-mkdir -p "$BUILD_DIR"
-rm -rf -- "$BUILD_DIR/previous"
-if [[ -d "$BUILD_DIR/$UUID" ]]; then
-    mkdir -p "$BUILD_DIR/previous"
-    mv -- "$BUILD_DIR/$UUID" "$BUILD_DIR/BUILD-INFO" "$BUILD_DIR/release.zip" \
-        "$BUILD_DIR/report.json" "$BUILD_DIR/previous/" 2>/dev/null || true
+NEXT_DIR="$ROOT/.build.new"
+rm -rf -- "$NEXT_DIR"
+mkdir -p "$NEXT_DIR"
+mv -- "$WORK/$UUID" "$NEXT_DIR/$UUID"
+mv -- "$WORK/BUILD-INFO" "$NEXT_DIR/BUILD-INFO"
+mv -- "$WORK/release.zip" "$NEXT_DIR/release.zip"   # Kept for the tests
+cp -- "$WORK/report.json" "$NEXT_DIR/report.json"
+
+trap 'rm -rf -- "$WORK"; if [[ ! -d "$BUILD_DIR" && -d "$NEXT_DIR/previous" ]]; then mv -- "$NEXT_DIR/previous" "$BUILD_DIR"; fi' EXIT
+if [[ -d "$BUILD_DIR" ]]; then
+    mv -- "$BUILD_DIR" "$NEXT_DIR/previous"
+    rm -rf -- "$NEXT_DIR/previous/previous"
 fi
-mv -- "$WORK/$UUID" "$BUILD_DIR/$UUID"
-mv -- "$WORK/BUILD-INFO" "$BUILD_DIR/BUILD-INFO"
-mv -- "$WORK/release.zip" "$BUILD_DIR/release.zip"   # Kept for the tests
-cp -- "$WORK/report.json" "$BUILD_DIR/report.json"
+mv -- "$NEXT_DIR" "$BUILD_DIR"
 
 say
 cat "$BUILD_DIR/BUILD-INFO"

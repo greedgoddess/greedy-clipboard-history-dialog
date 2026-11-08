@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # scripts/common.sh — settings and helpers shared by the scripts in the
 # repository root. Sourced, not run.
 

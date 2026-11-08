@@ -23,7 +23,8 @@ clipboard content. Like any web request, they reveal the usual connection
 details to those servers: your IP address, the time, and request headers,
 with the user agent `greedy-clipboard-history-dialog` and, for
 extensions.gnome.org, your GNOME Shell major version `N`. When a site is
-unreachable, the check is skipped until the next day. To stop all requests,
+unreachable, or answers with something unexpected, the check is skipped
+until the next day. To stop all requests,
 switch off **Update notifications** in Preferences → Cursor-Follow.
 
 The code is `feature/updateNotifier.js`; each section starts with a tag:

@@ -30,10 +30,16 @@ if [[ -f "$LEGACY_HISTORY_DIR/history.json" ]]; then
     if [[ -e "$HISTORY_DIR" ]]; then
         say "Clipboard history: $HISTORY_DIR already exists; not copied."
     else
-        cp -a -- "$LEGACY_HISTORY_DIR" "$HISTORY_DIR"
+        # Copied into a temporary folder first and moved into place only when
+        # complete, so an interrupted copy never leaves a partial history that
+        # a later run would take for a finished one.
+        PARTIAL_DIR="$HISTORY_DIR.partial"
+        rm -rf -- "$PARTIAL_DIR"
+        trap 'rm -rf -- "$PARTIAL_DIR"' EXIT
+        cp -a -- "$LEGACY_HISTORY_DIR" "$PARTIAL_DIR"
         # Image entries store absolute paths into the history folder; point
-        # them at the copy.
-        python3 - "$HISTORY_DIR/history.json" "$LEGACY_HISTORY_DIR" "$HISTORY_DIR" <<'PY'
+        # them at the new one.
+        python3 - "$PARTIAL_DIR/history.json" "$LEGACY_HISTORY_DIR" "$HISTORY_DIR" <<'PY'
 import json, sys
 index, old, new = sys.argv[1:]
 entries = json.load(open(index, encoding='utf-8'))
@@ -43,6 +49,7 @@ for entry in entries if isinstance(entries, list) else []:
         entry['imagePath'] = new + path[len(old):]
 json.dump(entries, open(index, 'w', encoding='utf-8'))
 PY
+        mv -- "$PARTIAL_DIR" "$HISTORY_DIR"
         say "Clipboard history copied to $HISTORY_DIR"
     fi
 fi

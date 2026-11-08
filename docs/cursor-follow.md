@@ -63,7 +63,9 @@ result and puts it in `build/`:
    internals described under [positioning](#cursor-follow-positioning)
    exist.
 
-A build that fails any required step leaves `build/` as it was. Each build
+A build that fails any required step leaves `build/` as it was: the new build
+is assembled next to it, in `.build.new/`, and swapped in by two directory
+renames; a run interrupted between them is undone automatically. Each build
 contains `build-info.json`, its provenance: this project's version and
 feature commit, the original's URL, release and version, where the release
 was downloaded, its content hash, whether it is tested, when and on which
@@ -221,8 +223,11 @@ affiliated with the original author.
 | Runtime | The extension loads without errors and hooks into the panel menu | Headless GNOME Shell smoke test |
 | Behavioural | The panel really opens at the pointer and flips | By hand, below |
 
-The patcher, the installer and the hook also have unit tests with made-up
-releases and stand-ins for GNOME.
+The patcher, the build swap, the installer, migration and uninstall, and the
+hook also have unit tests, with made-up releases and stand-ins for GNOME.
+The migration and uninstall tests check in particular that the original
+extension's files, history and settings are never touched. The smoke test
+reports "could not run" separately when GNOME Shell itself cannot start.
 
 **By hand,** before marking a GNOME Shell version as verified in the README:
 

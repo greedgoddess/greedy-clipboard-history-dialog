@@ -16,9 +16,11 @@ preferences:
 - **Update notifications:** a notification when there is an update to
   install; see [update notifications](docs/update-notifications.md).
 
-The repository holds only these additions. `./install.sh` downloads a tested
-release of Clipboard History and adds them without editing the original
-code; see [how it works](docs/cursor-follow.md).
+This repository contains the additions and the tooling to build and maintain
+them against tested releases of Clipboard History; it does not keep a
+modified copy of the original source. `./install.sh` downloads a tested
+release and adds them without editing the original code; see
+[how it works](docs/cursor-follow.md).
 
 ## Relationship with Clipboard History
 
@@ -94,7 +96,7 @@ The manual checks are in [the testing checklist](docs/cursor-follow.md#testing).
 
 This project's version is in [`VERSION`](VERSION) and the
 [changelog](CHANGELOG.md). The installed extension shows both, for example
-`1.0.0 (Clipboard History 1.0, release 3)`; `build/BUILD-INFO` and the
+`1.0.1 (Clipboard History 1.0, release 3)`; `build/BUILD-INFO` and the
 `build-info.json` inside each build record the full provenance.
 
 ## Development

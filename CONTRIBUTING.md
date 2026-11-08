@@ -21,7 +21,9 @@ tests/run-tests.sh         # unit tests, build checks, headless smoke test
 ```
 
 `tests/run-tests.sh --unit-only` needs no build; `--no-smoke-test` skips the
-headless GNOME Shell. The cursor-follow unit tests need Node.js
+headless GNOME Shell. The smoke test exits with 2 when GNOME Shell itself
+cannot start (for example in a container), which is not a failure of the
+extension. The cursor-follow unit tests need Node.js
 (`sudo dnf install nodejs`).
 
 Automated tests cannot see where the panel opens. Before recording a new

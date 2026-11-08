@@ -39,6 +39,10 @@ jobs:
     steps:
       - name: Tools
         run: dnf install -y --setopt=install_weak_deps=False git gnome-shell dbus-daemon python3 zip glib2 mesa-dri-drivers
+      - name: System D-Bus
+        # GNOME Shell connects to the system bus at startup (for example its
+        # time limits manager); a container has none running.
+        run: mkdir -p /run/dbus && dbus-daemon --system --fork
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -46,4 +50,6 @@ jobs:
         run: |
           git config --global --add safe.directory "$PWD"
           ./build.sh
-          tests/smoke-test.sh
+          status=0; tests/smoke-test.sh || status=$?
+          if (( status == 2 )); then echo "::warning::GNOME Shell could not start in the container"; fi
+          exit $status

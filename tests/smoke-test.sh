@@ -4,6 +4,9 @@
 #
 # Runs in a throwaway home folder and D-Bus session: your own session,
 # settings and clipboard history are not touched.
+#
+# Exit status: 0 passed, 1 the extension failed, 2 GNOME Shell itself could
+# not start here (a problem of the environment, not of the extension).
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=../scripts/common.sh
@@ -56,14 +59,27 @@ env -i PATH="$PATH" HOME="$SANDBOX/home" LANG="${LANG:-C.UTF-8}" \
 state="$(cat "$LOG.state" 2>/dev/null || true)"
 failures=0
 report() { printf '  %s  %s\n' "$1" "$2"; [[ "$1" == pass ]] || failures=$((failures + 1)); }
+show_logs() {
+    say
+    say "Last lines of the headless GNOME Shell log:"
+    tail -n 30 "$LOG" | sed 's/^/    /'
+    if [[ -s "$SANDBOX/session.log" ]]; then
+        say "Other messages from the test session:"
+        tail -n 15 "$SANDBOX/session.log" | sed 's/^/    /'
+    fi
+}
 
+# GNOME Shell never answered about any extension: it did not start, whatever
+# the extension does. Reported separately from extension failures.
 if [[ -z "$state" ]]; then
-    report FAIL "headless GNOME Shell started and reported the extension (see log below)"
-else
-    report pass "headless GNOME Shell started"
-    [[ "$state" == ACTIVE || "$state" == ENABLED ]] \
-        && report pass "extension active" || report FAIL "extension active (state: $state)"
+    say "  COULD NOT RUN  GNOME Shell did not start in this environment;"
+    say "                 this says nothing about the extension."
+    show_logs
+    exit 2
 fi
+report pass "headless GNOME Shell started"
+[[ "$state" == ACTIVE || "$state" == ENABLED ]] \
+    && report pass "extension active" || report FAIL "extension active (state: $state)"
 if grep -qiE "($UUID|greedy|upstream-extension|cursorFollow|updateNotifier).*(error|exception)|JS ERROR.*($UUID|greedy|cursorFollow|updateNotifier|upstream-)" "$LOG"; then
     report FAIL "no errors from the extension"
 else
@@ -76,12 +92,6 @@ else
 fi
 
 if (( failures > 0 )); then
-    say
-    say "Last lines of the headless GNOME Shell log:"
-    tail -n 30 "$LOG" | sed 's/^/    /'
-    if [[ -s "$SANDBOX/session.log" ]]; then
-        say "Other messages from the test session:"
-        tail -n 15 "$SANDBOX/session.log" | sed 's/^/    /'
-    fi
+    show_logs
     exit 1
 fi

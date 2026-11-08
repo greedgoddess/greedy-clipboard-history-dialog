@@ -80,3 +80,17 @@ test('BoxPointer destroyed first: cleanup does not touch it', () => {
     hook.destroy();
     assert.equal(box._userArrowSide, 'untouched');
 });
+
+test('switching the setting off between two opens restores panel placement at once', () => {
+    const box = fakeBoxPointer();
+    let on = true;
+    const hook = new CursorFollow({_boxPointer: box}, {get_boolean: () => on});
+    box.setPosition('icon', 0.5);
+    assert.equal(box._userArrowSide, LEFT);
+    on = false;
+    box.setPosition('icon', 0.5);
+    assert.deepEqual(box.calls.at(-1), {actor: 'icon', alignment: 0.5});
+    assert.equal(box._userArrowSide, TOP);
+    assert.equal(box._arrowSide, TOP);
+    hook.destroy();
+});
