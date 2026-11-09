@@ -17,6 +17,12 @@ preferences:
 - **Open at mouse pointer:** the panel opens to the right of the pointer
   with its bottom edge level with it, or to the left when there is no room
   on the right.
+- **Private history folder** (on by default): keeps the folder that
+  stores your clipboard history closed to other user accounts; see
+  [private history folder](docs/private-history.md).
+- **Clear unpinned entries at login** (off by default): each login starts
+  with only your pinned entries; see
+  [clear at login](docs/clear-at-login.md).
 - **Preview on hover:** resting the pointer on a text entry shows up to
   512 characters of it next to the panel; see
   [hover preview](docs/hover-preview.md).
@@ -97,7 +103,8 @@ release instead, add `--branch` and its tag (see
 [Releases](https://github.com/greedgoddess/greedy-clipboard-history-dialog/releases)).
 `install.sh` builds first if needed. Log out and back in, then check with
 `./verify.sh`. The first install switches **Open at mouse pointer** and
-**Update notifications** on; everything else starts off. The preferences
+**Update notifications** on, and **Private history folder** is on by
+default; everything else starts off. The preferences
 can change all of them.
 
 **From Clipboard History or an earlier version of this project:** run
@@ -125,9 +132,9 @@ any other release is marked untested, and `install.sh` asks before
 installing it.
 
 <!-- tested-releases:start -->
-| Release | GNOME Shell (release) | Tested on | Date |
-| --- | --- | --- | --- |
-| 1.0 (3) | 46, 47, 48, 49, 50, 51 | GNOME Shell 51.1 | 2026-11-08 |
+| Release | GNOME Shell (release) | Tested on | Manual checks | Date |
+| --- | --- | --- | --- | --- |
+| 1.0 (3) | 46, 47, 48, 49, 50, 51 | GNOME Shell 51.1 | not recorded | 2026-11-08 |
 <!-- tested-releases:end -->
 
 ### What is verified where
@@ -160,14 +167,15 @@ in [the testing checklist](docs/cursor-follow.md#testing).
 This project's version is in [`VERSION`](VERSION) and the
 [changelog](CHANGELOG.md); releases are tagged `vX.Y.Z` on GitHub. The
 installed extension shows both versions, for example
-`1.2.0 (Clipboard History 1.0, release 3)`; `build/BUILD-INFO` and the
+`1.3.0 (Clipboard History 1.0, release 3)`; `build/BUILD-INFO` and the
 `build-info.json` inside each build record the full provenance.
 
 ## Development
 
 See [CONTRIBUTING.md](CONTRIBUTING.md): developer machines
 (`./install.sh --dev`), testing, and adding a tested release with
-`./update-test-and-push.sh --push`. Security issues: [SECURITY.md](SECURITY.md).
+`./update-test-and-push.sh --push`, which also asks for and records the
+[manual checks](CONTRIBUTING.md#manual-checks). Security issues: [SECURITY.md](SECURITY.md).
 
 The additions were written largely by an AI assistant (Claude, by
 Anthropic), directed and tested by the author.

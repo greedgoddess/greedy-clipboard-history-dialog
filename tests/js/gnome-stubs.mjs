@@ -121,10 +121,18 @@ const STUBS = {
         globalThis.__files = {};
         export default {
             PRIORITY_LOW: 300, PRIORITY_DEFAULT: 0, SOURCE_REMOVE: false,
-            FileTest: {IS_EXECUTABLE: 1, IS_DIR: 2},
+            FileTest: {IS_EXECUTABLE: 1, IS_DIR: 2, EXISTS: 4},
             find_program_in_path: name => globalThis.__programs[name] ?? null,
-            file_test: path => Boolean(globalThis.__files[path]),
+            // __files: paths that exist; __fs: an in-memory file system with
+            // contents, for clearing the history at login.
+            file_test: path => Boolean(globalThis.__files[path]) || path in (globalThis.__fs ?? {}),
+            get_user_runtime_dir: () => '/run/user/1000',
+            mkdir_with_parents: () => 0,
+            file_set_contents: (path, text) => { globalThis.__fs[path] = String(text); return true; },
+            file_get_contents: path => [true, new TextEncoder().encode(globalThis.__fs[path])],
+            unlink: path => { delete globalThis.__fs[path]; return 0; },
             get_user_data_dir: () => '/home/user/.local/share',
+            get_user_cache_dir: () => '/home/user/.cache',
             timeout_add_seconds(priority, seconds, callback) {
                 const id = nextId++; timers.set(id, callback); globalThis.__delays[id] = seconds; return id;
             },
@@ -160,8 +168,13 @@ const STUBS = {
             DesktopAppInfo: {new: () => null},
             SubprocessFlags: {NONE: 0, STDOUT_SILENCE: 1, STDERR_SILENCE: 2},
             IOErrorEnum: {CANCELLED: 19},
-            File: {new_for_path: () => ({
+            FileQueryInfoFlags: {NOFOLLOW_SYMLINKS: 1},
+            // Files: build-info.json for the update notifier; folders with a
+            // mode in globalThis.__modes for the private history folder.
+            File: {new_for_path: path => ({
                 load_contents_async: async () => [new TextEncoder().encode(JSON.stringify(globalThis.__buildInfo))],
+                query_exists: () => path in (globalThis.__modes ?? {}),
+                set_attribute_uint32: (name, value) => { globalThis.__modes[path] = value; },
             })},
         };`,
     // Requests wait until the test answers them with globalThis.__answer(urlPart, json).

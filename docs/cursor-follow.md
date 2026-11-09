@@ -194,6 +194,8 @@ After the original has filled the window (synchronously or asynchronously),
 it adds a **Cursor-Follow** group to the page the original shows first (or
 to a page of its own if there is none), with these switches:
 **Open at mouse pointer**, bound to `cursor-follow`;
+[**Private history folder**](private-history.md#private-history-setting);
+[**Clear unpinned entries at login**](clear-at-login.md#clear-at-login-setting);
 [**Preview on hover**](hover-preview.md#hover-preview-setting);
 [**Large spacing**](large-spacing.md#large-spacing-preference), when
 installed; and

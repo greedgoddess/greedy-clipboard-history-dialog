@@ -122,12 +122,25 @@ def record_test(report_path):
     refresh_readme()
 
 
+def manual_summary(checks):
+    """[release:manual-summary] The manual checks of a test record, for the
+    README: which passed, which were not checked; older records have none.
+    See CONTRIBUTING.md#manual-checks"""
+    if not checks:
+        return 'not recorded'
+    passed = [name for name, result in checks.items() if result == 'passed']
+    skipped = [name for name, result in checks.items() if result != 'passed']
+    text = f'{len(passed)} of {len(checks)} passed'
+    return text + (f' (not checked: {", ".join(skipped)})' if skipped else '')
+
+
 def refresh_readme():
     releases = sorted(load_tested(), key=lambda r: r['version'], reverse=True)
-    rows = ['| Release | GNOME Shell (release) | Tested on | Date |', '| --- | --- | --- | --- |']
+    rows = ['| Release | GNOME Shell (release) | Tested on | Manual checks | Date |',
+            '| --- | --- | --- | --- | --- |']
     for r in releases:
         rows.append(f"| {r['version_name']} ({r['version']}) | {', '.join(r['shell_versions'])} "
-                    f"| {r['tested_on']} | {r['date']} |")
+                    f"| {r['tested_on']} | {manual_summary(r.get('manual_checks'))} | {r['date']} |")
     text = README.read_text(encoding='utf-8')
     start, end = text.index(TABLE_START) + len(TABLE_START), text.index(TABLE_END)
     README.write_text(text[:start] + '\n' + '\n'.join(rows) + '\n' + text[end:], encoding='utf-8')

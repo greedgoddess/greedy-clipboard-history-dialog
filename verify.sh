@@ -58,6 +58,15 @@ else
 fi
 
 say
+say "== Private history folder =="
+state="$([[ "$(dconf read "${SETTINGS_PATH}private-history" 2>/dev/null)" != false ]] && echo On || echo Off)"
+say "$state; folder permissions: $(stat -c '%A' "$HISTORY_DIR" 2>/dev/null || echo 'not created yet')"
+
+say
+say "== Clear unpinned entries at login =="
+say "$([[ "$(dconf read "${SETTINGS_PATH}clear-at-login" 2>/dev/null)" == true ]] && echo On || echo Off)"
+
+say
 say "== Hover preview =="
 say "$([[ "$(dconf read "${SETTINGS_PATH}hover-preview" 2>/dev/null)" == true ]] && echo On || echo "Off (Preferences → Cursor-Follow → Preview on hover)")"
 

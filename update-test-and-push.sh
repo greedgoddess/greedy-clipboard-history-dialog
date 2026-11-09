@@ -18,7 +18,8 @@ usage() {
 Usage: ./update-test-and-push.sh [options]
   --version N       test release N instead of the newest
   --force           test again even if the release is already tested
-  --push            also push the commit to GitHub (only from main)
+  --push            also push the commit to GitHub (only from main); asks for
+                    the result of each manual checklist first and records it
   --no-smoke-test   skip the headless GNOME Shell test (not with --push)
   --install         also install the tested build on this machine
   -h, --help        show this help
@@ -95,22 +96,59 @@ else
     "$ROOT/tests/run-tests.sh" --no-smoke-test || fail "Tests failed. Nothing was committed."
 fi
 
-# ---- Record, commit, push --------------------------------------------------------
+# ---- Manual checks (with --push) ------------------------------------------------
+# [release:manual-checks] Before a test record is published, the result of
+# each manual checklist is asked for and recorded with it: passed, not
+# checked this time, or failed (which stops here, with nothing recorded).
+# See CONTRIBUTING.md#manual-checks
+
+MANUAL_CHECKS=(
+    "Open at mouse pointer|docs/cursor-follow.md#testing"
+    "Private history folder|docs/private-history.md#testing"
+    "Clear unpinned entries at login|docs/clear-at-login.md#testing"
+    "Hover preview|docs/hover-preview.md#testing"
+    "Large spacing|docs/large-spacing.md#testing"
+    "Password managers (1Password)|docs/password-managers.md#testing"
+)
 
 entry="$(mktemp)"
-trap 'rm -f -- "$entry"' EXIT
+manual="$(mktemp)"
+trap 'rm -f -- "$entry" "$manual"' EXIT
+if (( PUSH == 1 )); then
+    [[ -t 0 ]] || fail "--push asks for the manual checks; run it in a terminal."
+    say "Manual checks: for each checklist, answer y (passed), n (not checked this time) or f (failed)."
+    for check in "${MANUAL_CHECKS[@]}"; do
+        name="${check%%|*}"
+        while true; do
+            read -r -p "  $name (${check#*|}) [y/n/f]: " answer
+            case "$answer" in
+                y|Y) printf '%s\tpassed\n' "$name" >>"$manual"; break ;;
+                n|N) printf '%s\tnot checked\n' "$name" >>"$manual"; break ;;
+                f|F) fail "Manual check failed: $name. Nothing was recorded or pushed." ;;
+                *) say "  Please answer y, n or f." ;;
+            esac
+        done
+    done
+fi
+
+# ---- Record, commit, push --------------------------------------------------------
+
 python3 - "$ROOT/build/report.json" "$(python3 "$UPSTREAM" content-hash "$ROOT/build/release.zip")" \
-    "$VERSION" "GNOME Shell ${SHELL_VERSION:-?}" "$(git rev-parse --short HEAD)" "$SMOKE" >"$entry" <<'PY'
+    "$VERSION" "GNOME Shell ${SHELL_VERSION:-?}" "$(git rev-parse --short HEAD)" "$SMOKE" "$manual" >"$entry" <<'PY'
 import datetime, json, sys
-report, content_hash, version, tested_on, commit, smoke = sys.argv[1:]
+report, content_hash, version, tested_on, commit, smoke, manual_file = sys.argv[1:]
 r = json.load(open(report))
+manual = dict(line.rstrip('\n').split('\t') for line in open(manual_file) if line.strip())
+passed = sum(result == 'passed' for result in manual.values())
 print(json.dumps({
     'version': int(version),
     'version_name': r['upstream_version_name'],
     'content_sha256': content_hash,
     'shell_versions': r['shell_versions'],
     'tested_on': tested_on + ('' if smoke == '1' else ', without smoke test'),
-    'evidence': ['unit tests', 'build checks'] + (['headless GNOME Shell smoke test'] if smoke == '1' else []),
+    'evidence': ['unit tests', 'build checks'] + (['headless GNOME Shell smoke test'] if smoke == '1' else [])
+                + ([f'manual checks: {passed} of {len(manual)} passed'] if manual else []),
+    'manual_checks': manual,
     'date': datetime.date.today().isoformat(),
     'feature_commit': commit,
 }))

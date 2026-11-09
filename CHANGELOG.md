@@ -3,8 +3,19 @@
 Versions of this project. The Clipboard History release each build is based
 on is listed in the README under "Tested releases".
 
-## Unreleased
+## 1.3.0 — not released yet
 
+- Private history folder (Preferences → Cursor-Follow, on by default): the
+  folder that stores the clipboard history is restricted to your user
+  account (permissions 700). The original stores the history unencrypted
+  with default permissions.
+- Clear unpinned entries at login (Preferences → Cursor-Follow, off by
+  default): each login starts with only the pinned entries; unlocking the
+  screen does not count as a login.
+- `verify.sh` shows both new settings.
+- `update-test-and-push.sh --push` asks for the result of each manual
+  checklist (passed, not checked, failed) and records it with the test; the
+  README's tested-releases table shows it. A failure stops the push.
 - Docs: screenshots of the panel, its tabs, the hover preview, the
   preferences and 1Password Quick Access, in the README and the docs.
 

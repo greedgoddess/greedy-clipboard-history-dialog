@@ -26,6 +26,24 @@
       <summary>The password manager the second press of the shortcut opens ('' for none)</summary>
     </key>
 
+    <!-- [private-history:setting]
+         Added by Greedy Clipboard History Dialog. Restricts the clipboard
+         history folder to the owner (mode 700).
+         See docs/private-history.md#private-history-setting -->
+    <key name="private-history" type="b">
+      <default>true</default>
+      <summary>Keep the clipboard history folder private to your user account</summary>
+    </key>
+
+    <!-- [clear-at-login:setting]
+         Added by Greedy Clipboard History Dialog. Removes unpinned entries
+         at each login (not at screen unlock).
+         See docs/clear-at-login.md#clear-at-login-setting -->
+    <key name="clear-at-login" type="b">
+      <default>false</default>
+      <summary>Clear unpinned entries at login</summary>
+    </key>
+
     <!-- [hover-preview:setting]
          Added by Greedy Clipboard History Dialog. Shows up to 512 characters
          of a text entry while the pointer rests on it.

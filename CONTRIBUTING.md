@@ -43,12 +43,42 @@ they pass, records the release in `tested-releases.json` (with the evidence:
 which tests ran) and the README, and commits. Publishing needs `--push`,
 works only from `main`, and never without the smoke test.
 
+<a id="manual-checks"></a>
+### Manual checks
+
+Some things only a person at a GNOME desktop can check: whether the panel
+opens at the pointer, whether 1Password Quick Access lines up, whether the
+hover preview looks right. So `--push` asks, after the automated tests have
+passed, for the result of each manual checklist:
+
+| Checklist | Where |
+| --- | --- |
+| Open at mouse pointer | [docs/cursor-follow.md](docs/cursor-follow.md#testing) |
+| Private history folder | [docs/private-history.md](docs/private-history.md#testing) |
+| Clear unpinned entries at login | [docs/clear-at-login.md](docs/clear-at-login.md#testing) |
+| Hover preview | [docs/hover-preview.md](docs/hover-preview.md#testing) |
+| Large spacing | [docs/large-spacing.md](docs/large-spacing.md#testing) |
+| Password managers (1Password) | [docs/password-managers.md](docs/password-managers.md#testing) |
+
+Answer `y` if you went through it and it passed, `n` if you did not check it
+this time, or `f` if it failed. A failure stops the push with nothing
+recorded. The answers are stored with the test record in
+`tested-releases.json` (`manual_checks`, and a line in `evidence`), and the
+README's tested-releases table shows them, for example "6 of 6 passed" or
+"4 of 6 passed (not checked: …)". `--push` needs a terminal for this; records
+from before this existed show "not recorded".
+
+Do the checklists on the build being recorded: install it first
+(`./build.sh && ./install.sh`, then log out and back in).
+
 ## Releasing
 
 Release tags are signed (SSH signing; the key must be added on GitHub as a
 signing key).
 
-1. Update `VERSION` and `CHANGELOG.md`, commit, push, and wait for CI.
+1. Update `VERSION` and `CHANGELOG.md`, commit, and record the test with
+   `./update-test-and-push.sh --push`, answering the
+   [manual checks](#manual-checks); wait for CI.
 2. Create a signed tag, check its signature, and push it:
 
    ```bash

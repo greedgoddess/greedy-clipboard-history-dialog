@@ -57,6 +57,22 @@ export default class GreedyClipboardHistoryPreferences extends UpstreamPreferenc
         settings.bind('cursor-follow', cursorFollowRow, 'active', Gio.SettingsBindFlags.DEFAULT);
         group.add(cursorFollowRow);
 
+        // [private-history:preference] See docs/private-history.md#private-history-setting
+        const privateRow = new Adw.SwitchRow({
+            title: 'Private history folder',
+            subtitle: 'Only your user account can open the folder that stores the clipboard history.',
+        });
+        settings.bind('private-history', privateRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        group.add(privateRow);
+
+        // [clear-at-login:preference] See docs/clear-at-login.md#clear-at-login-setting
+        const clearRow = new Adw.SwitchRow({
+            title: 'Clear unpinned entries at login',
+            subtitle: 'At each login, removes everything except pinned entries. Unlocking the screen does not count.',
+        });
+        settings.bind('clear-at-login', clearRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        group.add(clearRow);
+
         // [hover-preview:preference] See docs/hover-preview.md#hover-preview-setting
         const hoverRow = new Adw.SwitchRow({
             title: 'Preview on hover',

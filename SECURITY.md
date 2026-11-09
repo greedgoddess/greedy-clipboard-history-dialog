@@ -4,6 +4,12 @@ Please report security problems privately, using **Report a vulnerability**
 on this repository's Security tab on GitHub, not as a public issue.
 Responses are best effort.
 
+Clipboard history is stored unencrypted in your cache folder; the
+**Private history folder** setting (on by default) keeps that folder closed
+to other user accounts, and **Clear unpinned entries at login** (off by
+default) keeps it short. See docs/private-history.md and
+docs/clear-at-login.md.
+
 Relevant here in particular:
 
 - `build.sh` and `scripts/` download and unpack releases from

@@ -19,11 +19,21 @@ import UpstreamExtension from './upstream-extension.js';
 import {CursorFollow} from './cursorFollow.js';
 import {FEATURES} from './features.js';
 import {HoverPreview} from './hoverPreview.js';
+import {PrivateHistory} from './privateHistory.js';
+import {clearAtLogin} from './clearAtLogin.js';
 import {UpdateNotifier} from './updateNotifier.js';
 
 // [cursor-follow:entry-point]
 export default class GreedyClipboardHistoryExtension extends UpstreamExtension {
     enable() {
+        // [clear-at-login:entry-point] Before the original starts and loads
+        // the history. See docs/clear-at-login.md#clear-at-login-clear
+        try {
+            clearAtLogin(this.uuid, this.getSettings());
+        } catch (error) {
+            console.warn(`${this.uuid}: could not clear the history at login: ${error.message}`);
+        }
+
         super.enable();
 
         // [cursor-follow:find-menu]
@@ -35,6 +45,10 @@ export default class GreedyClipboardHistoryExtension extends UpstreamExtension {
         this._cursorFollow = new CursorFollow(indicator?.menu, this.getSettings());
         if (!this._cursorFollow.active)
             console.warn(`${this.uuid}: panel menu not found; "Open at mouse pointer" is inactive`);
+
+        // [private-history:entry-point] The original has created its history
+        // folder by now. See docs/private-history.md#private-history-apply
+        this._privateHistory = new PrivateHistory(this.uuid, this.getSettings());
 
         // [hover-preview:entry-point] See docs/hover-preview.md#hover-preview-entry-point
         this._hoverPreview = new HoverPreview(indicator?.menu, this.getSettings(),
@@ -79,6 +93,8 @@ export default class GreedyClipboardHistoryExtension extends UpstreamExtension {
         this._passwordManagers = null;
         this._hoverPreview?.destroy();
         this._hoverPreview = null;
+        this._privateHistory?.destroy();
+        this._privateHistory = null;
         this._cursorFollow?.destroy();
         this._cursorFollow = null;
         super.disable();

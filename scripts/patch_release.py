@@ -26,7 +26,7 @@ SCHEMA_PATH = '/org/gnome/shell/extensions/greedy-clipboard-history-dialog/'
 NAME = 'Greedy Clipboard History Dialog'
 URL = 'https://github.com/greedgoddess/greedy-clipboard-history-dialog'
 FEATURE_FILES = ['extension.js', 'prefs.js', 'features.js', 'cursorFollow.js', 'updateNotifier.js',
-                 'hoverPreview.js', 'hoverPreview.css', 'passwordManagerSwitch.js', 'passwordManagers.js',
+                 'hoverPreview.js', 'hoverPreview.css', 'privateHistory.js', 'clearAtLogin.js', 'passwordManagerSwitch.js', 'passwordManagers.js',
                  'roundedCorners.js', 'largeSpacing.js',
                  'largeSpacing.css']
 
