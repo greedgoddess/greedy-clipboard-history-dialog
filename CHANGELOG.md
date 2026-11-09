@@ -11,6 +11,9 @@ on is listed in the README under "Tested releases".
   fingers, a three-finger hold on the touchpad opens it at the pointer. Each
   has its own switch, off by default. The tap does nothing while an app on an
   editable blocklist is in focus (drawing and note apps to start with).
+- Preferences: **Second shortcut press opens** sits directly under the
+  keyboard shortcut, and the gestures join the same group (**Keyboard
+  Shortcut and Gestures**, in the shortcut's original place).
 - Tests: every tag in the code must have its entry in the docs (checked in
   CI).
 

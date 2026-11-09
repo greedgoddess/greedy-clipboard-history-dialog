@@ -11,7 +11,8 @@ Once installed, Preferences → **Password managers** has:
 - one switch per supported password manager. Any number can be on, or all of
   them. A switch can only be turned on while that app is installed and
   running;
-- **Second shortcut press opens**: which of the enabled password managers the
+- **Second shortcut press opens**, directly under the keyboard shortcut at the
+  top of the preferences: which of the enabled password managers the
   clipboard shortcut opens when pressed again while the panel is open, or
   nothing (the second press then closes the panel, as in the original).
 
@@ -116,8 +117,10 @@ The **Password managers** group in the preferences: a switch per supported
 password manager, which checks availability when the preferences open. If the
 app is missing or not running, the switch cannot be turned on, its subtitle
 says why, and **Check again** looks once more; it can always be turned off.
-Below, **Second shortcut press opens** lists "Nothing" and the enabled
-password managers.
+**Second shortcut press opens** lists "Nothing" and the enabled password
+managers. It sits directly under the keyboard shortcut, in the original's
+shortcut group, since it changes what the shortcut does; if a release of the
+original no longer has that group, it stays in the Password managers group.
 
 <a id="password-manager-entry-point"></a>
 ## `password-manager:entry-point`

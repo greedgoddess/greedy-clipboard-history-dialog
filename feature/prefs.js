@@ -224,7 +224,8 @@ export default class GreedyClipboardHistoryPreferences extends UpstreamPreferenc
         }
 
         // [password-manager:shortcut-preference] Which enabled password
-        // manager the second press of the shortcut opens, or none.
+        // manager the second press of the shortcut opens, or none; shown
+        // under the shortcut setting.
         const shortcutRow = new Adw.ComboRow({
             title: 'Second shortcut press opens',
             subtitle: 'Pressing the shortcut again while the panel is open.',
@@ -248,7 +249,10 @@ export default class GreedyClipboardHistoryPreferences extends UpstreamPreferenc
         settings.connect('changed::password-managers', fill);
         settings.connect('changed::shortcut-password-manager', fill);
         fill();
-        group.add(shortcutRow);
+        // Directly under the shortcut itself, in the original's "Keyboard
+        // Shortcut" group; in this group if a release of the original no
+        // longer has it.
+        (findGroup(page, 'Keyboard Shortcut') ?? group).add(shortcutRow);
 
         page._passwordManagerSettings = settings;    // Keep alive with the page
         page.add(group);
