@@ -66,7 +66,11 @@ signing key).
 
 `docs/images/` holds the screenshots used in the README and the docs, taken
 on GNOME Shell 51. Replace them when a change alters what they show, and keep
-them free of personal data (use example clipboard entries).
+them free of personal data (use example clipboard entries). They are shown centred, small, and
+in rows of a common size: panels 150 px wide, the panel with a hover preview
+460 px wide, other screenshots side by side at 230 px high. Store them at
+about twice that size (sharp on high-resolution screens): PNG for plain panels, JPEG (quality 90)
+for screenshots with a wallpaper gradient, which PNG compresses poorly.
 
 ## Pull requests
 

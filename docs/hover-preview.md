@@ -6,8 +6,8 @@ to 512 characters of it in an overlay with a shadow, next to the panel. It
 works with the original layout and with [Large spacing](large-spacing.md). It
 is always installed; only the switch turns it on.
 
-<p>
-  <img src="images/large-spacing-hover-preview.png" alt="A hover preview showing an entry's full text next to the clipboard panel" width="600">
+<p align="center">
+  <img src="images/large-spacing-hover-preview.jpg" alt="A hover preview showing an entry's full text next to the clipboard panel" width="460">
 </p>
 
 The code is in `feature/hoverPreview.js` and `feature/hoverPreview.css`; each

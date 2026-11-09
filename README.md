@@ -5,8 +5,8 @@
 
 **Clipboard History for GNOME Shell, with an option to open the panel at the mouse pointer.**
 
-<p>
-  <img src="docs/images/large-spacing-hover-preview.png" alt="The clipboard panel, opened at the mouse pointer in Large spacing, with a hover preview showing an entry's full text next to it" width="600">
+<p align="center">
+  <img src="docs/images/large-spacing-hover-preview.jpg" alt="The clipboard panel, opened at the mouse pointer in Large spacing, with a hover preview showing an entry's full text next to it" width="460">
 </p>
 
 An independently maintained GNOME Shell extension based on
@@ -44,16 +44,22 @@ release and adds them without editing the original code; see
 ## Screenshots
 
 On GNOME Shell 51, with Large spacing, the password manager integration and
-the hover preview switched on (the panel itself is shown at the top):
+the hover preview switched on. The panel with a hover preview is shown at the
+top.
 
-<p>
-  <img src="docs/images/large-spacing-emoji.png" alt="The Emoji tab in Large spacing, eight emoji per row, lined up from the left" width="240">
-  <img src="docs/images/large-spacing-symbols.png" alt="The Symbols tab in Large spacing, with symbols lined up from the left in each category" width="240">
-  <img src="docs/images/large-spacing-kaomoji.png" alt="The Kaomoji tab in Large spacing" width="240">
+<p align="center">
+  <img src="docs/images/large-spacing-images.png" alt="The Images tab with one copied image" width="150">
+  <img src="docs/images/large-spacing-emoji.png" alt="The Emoji tab, eight emoji per row, lined up from the left" width="150">
+  <img src="docs/images/large-spacing-symbols.png" alt="The Symbols tab, symbols lined up from the left in each category" width="150">
+  <img src="docs/images/large-spacing-kaomoji.png" alt="The Kaomoji tab" width="150">
+  <br><sub>Images · Emoji · Symbols · Kaomoji</sub>
 </p>
-<p>
-  <img src="docs/images/preferences.png" alt="The preferences window with the original settings and the Cursor-Follow group" width="420">
-  <img src="docs/images/preferences-password-managers-and-about.png" alt="The Password managers and About groups in the preferences" width="420">
+
+<p align="center">
+  <img src="docs/images/preferences.jpg" alt="The preferences window with the original settings and the Cursor-Follow group" height="230">
+  <img src="docs/images/preferences-password-managers-and-about.jpg" alt="The Password managers and About groups in the preferences" height="230">
+  <img src="docs/images/password-manager-1password-quick-access.png" alt="1Password Quick Access opened where the panel was, with rounded corners" height="230">
+  <br><sub>Preferences · Password managers and About · 1Password Quick Access</sub>
 </p>
 
 ## Relationship with Clipboard History

@@ -20,13 +20,15 @@ and switched on (Preferences → Cursor-Follow → **Large spacing**):
   For 1Password it opens Quick
   Access the same way as the second press of the shortcut.
 
-<p>
-  <img src="images/large-spacing-hover-preview.png" alt="The clipboard panel in Large spacing, with a hover preview next to it" width="600">
+<p align="center">
+  <img src="images/large-spacing-hover-preview.jpg" alt="The clipboard panel in Large spacing, with a hover preview next to it" width="460">
 </p>
-<p>
-  <img src="images/large-spacing-emoji.png" alt="The Emoji tab in Large spacing, eight emoji per row, lined up from the left" width="260">
-  <img src="images/large-spacing-symbols.png" alt="The Symbols tab in Large spacing" width="260">
-  <img src="images/large-spacing-kaomoji.png" alt="The Kaomoji tab in Large spacing" width="260">
+<p align="center">
+  <img src="images/large-spacing-images.png" alt="The Images tab" width="150">
+  <img src="images/large-spacing-emoji.png" alt="The Emoji tab, eight emoji per row, lined up from the left" width="150">
+  <img src="images/large-spacing-symbols.png" alt="The Symbols tab" width="150">
+  <img src="images/large-spacing-kaomoji.png" alt="The Kaomoji tab" width="150">
+  <br><sub>Images · Emoji · Symbols · Kaomoji</sub>
 </p>
 
 The buttons trigger the original entries, so settings and clearing behave
