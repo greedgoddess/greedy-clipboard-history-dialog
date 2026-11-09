@@ -89,6 +89,10 @@ top.
 Maintained for the author's own use and shared as is: issues are welcome,
 fixes are best effort.
 
+
+Considerations about the original's code, documented rather than patched:
+[appendix](docs/upstream-considerations.md).
+
 ## Install
 
 ```bash
@@ -167,7 +171,7 @@ in [the testing checklist](docs/cursor-follow.md#testing).
 This project's version is in [`VERSION`](VERSION) and the
 [changelog](CHANGELOG.md); releases are tagged `vX.Y.Z` on GitHub. The
 installed extension shows both versions, for example
-`1.3.0 (Clipboard History 1.0, release 3)`; `build/BUILD-INFO` and the
+`1.3.1 (Clipboard History 1.0, release 3)`; `build/BUILD-INFO` and the
 `build-info.json` inside each build record the full provenance.
 
 ## Development

@@ -31,9 +31,10 @@ with the **Private history folder** switch in the preferences.
 <a id="private-history-entry-point"></a>
 ## `private-history:apply`, `private-history:entry-point`
 
-`feature/extension.js` creates `PrivateHistory` after the original has
-started, by which time the original has created its history folder. It sets
-the folder's permissions then, and again whenever the setting changes. A
+`feature/extension.js` creates `PrivateHistory` before the original starts,
+so an existing folder is private before the original loads the history from
+it, and applies it once more right after, for a folder the original has just
+created for the first time. It applies again whenever the setting changes. A
 missing folder is left alone, and a failure is logged without affecting the
 rest of the extension. Symbolic links are not followed.
 

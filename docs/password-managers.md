@@ -144,6 +144,7 @@ This depends on the original's keybinding name; `build.sh` warns if a release
 no longer has `toggle-shortcut`.
 
 <a id="password-manager-switch"></a>
+<a id="password-manager-pending-windows"></a>
 ## `password-manager:switch`
 
 Notes where the pointer and the visible panel are, closes the panel, and
@@ -152,7 +153,9 @@ notification says why. Then it starts waiting for one of its windows and runs
 its command.
 
 The first window of that password manager shown within 15 seconds is moved
-into place. Each new window is checked when it is shown, not when it is
+into place. Windows of other apps created while waiting are watched only until
+the wait ends: their handlers are disconnected when the window appears, when
+the wait stops, and when the extension is disabled. Each new window is checked when it is shown, not when it is
 created: at creation it has no class or app ID yet. For 1.5 seconds after
 that, if the app moves or resizes its window itself, it is put back; after
 that you can move it freely. 1Password's forums report that Quick Access can

@@ -34,7 +34,14 @@ export default class GreedyClipboardHistoryExtension extends UpstreamExtension {
             console.warn(`${this.uuid}: could not clear the history at login: ${error.message}`);
         }
 
+        // [private-history:entry-point] Before the original starts, so that
+        // the folder is already private when it loads the history; applied
+        // again below for a folder the original creates for the first time.
+        // See docs/private-history.md#private-history-apply
+        this._privateHistory = new PrivateHistory(this.uuid, this.getSettings());
+
         super.enable();
+        this._privateHistory.apply();
 
         // [cursor-follow:find-menu]
         // Panel buttons are registered under the role passed to
@@ -45,10 +52,6 @@ export default class GreedyClipboardHistoryExtension extends UpstreamExtension {
         this._cursorFollow = new CursorFollow(indicator?.menu, this.getSettings());
         if (!this._cursorFollow.active)
             console.warn(`${this.uuid}: panel menu not found; "Open at mouse pointer" is inactive`);
-
-        // [private-history:entry-point] The original has created its history
-        // folder by now. See docs/private-history.md#private-history-apply
-        this._privateHistory = new PrivateHistory(this.uuid, this.getSettings());
 
         // [hover-preview:entry-point] See docs/hover-preview.md#hover-preview-entry-point
         this._hoverPreview = new HoverPreview(indicator?.menu, this.getSettings(),

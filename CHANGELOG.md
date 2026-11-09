@@ -3,7 +3,18 @@
 Versions of this project. The Clipboard History release each build is based
 on is listed in the README under "Tested releases".
 
-## 1.3.0 — not released yet
+## 1.3.1 — not released yet
+
+- The private history folder is applied before the original loads the
+  history, not only after.
+- Password managers: handlers on windows that appear while waiting for the
+  search window are removed when the wait ends.
+- Docs: an appendix of considerations about the original's code,
+  documented rather than patched
+  ([docs/upstream-considerations.md](docs/upstream-considerations.md)), and
+  the project's scope as a companion, not a fork, in CONTRIBUTING.md.
+
+## 1.3.0 — 2026-11-09
 
 - Private history folder (Preferences → Cursor-Follow, on by default): the
   folder that stores the clipboard history is restricted to your user

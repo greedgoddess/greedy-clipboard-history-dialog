@@ -71,6 +71,14 @@ from before this existed show "not recorded".
 Do the checklists on the build being recorded: install it first
 (`./build.sh && ./install.sh`, then log out and back in).
 
+## Scope: companion, not fork
+
+This project fixes its own code: its features, installer, build and patch
+scripts, and tests. It does not change the original's clipboard capture,
+history storage or pasting; considerations about those are documented in
+[docs/upstream-considerations.md](docs/upstream-considerations.md) and
+reviewed whenever a new release of the original is tested.
+
 ## Releasing
 
 Release tags are signed (SSH signing; the key must be added on GitHub as a

@@ -10,6 +10,10 @@ to other user accounts, and **Clear unpinned entries at login** (off by
 default) keeps it short. See docs/private-history.md and
 docs/clear-at-login.md.
 
+Considerations about the original's code, which this project uses as it is,
+are listed in
+[docs/upstream-considerations.md](docs/upstream-considerations.md).
+
 Relevant here in particular:
 
 - `build.sh` and `scripts/` download and unpack releases from

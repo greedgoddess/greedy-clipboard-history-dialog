@@ -172,9 +172,15 @@ export class PasswordManagerSwitch {
      * checked when it is shown. */
     _placeNextWindow(provider, anchor) {
         this._stopWaiting();
+        // [password-manager:pending-windows] Windows created while waiting
+        // that were not shown yet; their 'shown' handlers are disconnected
+        // when waiting stops, so none outlives the wait.
+        // See docs/password-managers.md#password-manager-switch
+        this._pendingShown = new Map();
         this._windowCreatedId = global.display.connect('window-created', (_display, window) => {
             const shownId = window.connect('shown', () => {
                 window.disconnect(shownId);
+                this._pendingShown?.delete(window);
                 if (!this._windowCreatedId || !isProviderWindow(provider, window.get_wm_class()))
                     return;
                 this._stopWaiting();
@@ -189,6 +195,7 @@ export class PasswordManagerSwitch {
                     }
                 }
             });
+            this._pendingShown.set(window, shownId);
         });
         this._waitTimeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, WINDOW_WAIT_SECONDS, () => {
             this._waitTimeoutId = 0;
@@ -237,6 +244,9 @@ export class PasswordManagerSwitch {
     }
 
     _stopWaiting() {
+        for (const [window, id] of this._pendingShown ?? [])
+            window.disconnect(id);
+        this._pendingShown?.clear();
         if (this._windowCreatedId) {
             global.display.disconnect(this._windowCreatedId);
             this._windowCreatedId = 0;
