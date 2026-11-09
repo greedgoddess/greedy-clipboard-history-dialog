@@ -20,6 +20,15 @@ and switched on (Preferences → Cursor-Follow → **Large spacing**):
   For 1Password it opens Quick
   Access the same way as the second press of the shortcut.
 
+<p>
+  <img src="images/large-spacing-hover-preview.png" alt="The clipboard panel in Large spacing, with a hover preview next to it" width="600">
+</p>
+<p>
+  <img src="images/large-spacing-emoji.png" alt="The Emoji tab in Large spacing, eight emoji per row, lined up from the left" width="260">
+  <img src="images/large-spacing-symbols.png" alt="The Symbols tab in Large spacing" width="260">
+  <img src="images/large-spacing-kaomoji.png" alt="The Kaomoji tab in Large spacing" width="260">
+</p>
+
 The buttons trigger the original entries, so settings and clearing behave
 exactly as before. As in the original design, the trash can only shows when
 "Clear (except pinned)" would: the original hides it when there is nothing

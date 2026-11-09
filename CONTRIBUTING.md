@@ -62,6 +62,12 @@ signing key).
 3. Create the GitHub release from that tag, with the changelog section as
    notes.
 
+## Screenshots
+
+`docs/images/` holds the screenshots used in the README and the docs, taken
+on GNOME Shell 51. Replace them when a change alters what they show, and keep
+them free of personal data (use example clipboard entries).
+
 ## Pull requests
 
 - Keep the original code unchanged: changes belong in `feature/`, the

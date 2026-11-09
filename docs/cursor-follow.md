@@ -204,6 +204,10 @@ group follows. If a release has no usable
 preferences of its own, the build supplies an empty base, so only the
 Cursor-Follow switches are shown.
 
+<p>
+  <img src="images/preferences.png" alt="The preferences window: the original's settings, then the Cursor-Follow group" width="420">
+</p>
+
 <a id="cursor-follow-setting"></a>
 ## `cursor-follow:setting`
 

@@ -3,7 +3,16 @@
 Versions of this project. The Clipboard History release each build is based
 on is listed in the README under "Tested releases".
 
-## 1.2.0 — not released yet
+## Unreleased
+
+- Docs: screenshots of the panel, its tabs, the hover preview, the
+  preferences and 1Password Quick Access, in the README and the docs.
+
+## 1.2.0 — 2026-11-09
+
+Tested on GNOME Shell 51.1 (Fedora 45) with Clipboard History 1.0 (release
+3): unit tests, build checks and smoke test, plus the manual checklists for
+large spacing, the password manager integration and the hover preview.
 
 - Large spacing, optional and not installed by default
   (`./install.sh --with-large-spacing`; then Preferences → Cursor-Follow):

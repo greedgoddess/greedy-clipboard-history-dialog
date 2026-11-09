@@ -19,6 +19,11 @@ With [Large spacing](large-spacing.md#large-spacing-provider-buttons), each
 enabled password manager also gets a button with its app icon at the bottom
 of the panel.
 
+<p>
+  <img src="images/preferences-password-managers-and-about.png" alt="The Password managers group, with the 1Password switch and the Second shortcut press opens drop-down, and the About group with links" width="420">
+  <img src="images/password-manager-1password-quick-access.png" alt="1Password Quick Access opened from the clipboard panel, with rounded corners" width="420">
+</p>
+
 Only one of the panel and a search window can be open at a time: GNOME closes
 a panel menu as soon as another window takes the keyboard, and a search
 window such as Quick Access hides as soon as it loses it. So the panel comes

@@ -5,6 +5,10 @@
 
 **Clipboard History for GNOME Shell, with an option to open the panel at the mouse pointer.**
 
+<p>
+  <img src="docs/images/large-spacing-hover-preview.png" alt="The clipboard panel, opened at the mouse pointer in Large spacing, with a hover preview showing an entry's full text next to it" width="600">
+</p>
+
 An independently maintained GNOME Shell extension based on
 [Clipboard History](https://github.com/M-ghalevand/gnome-shell-extension-clipboard-history)
 by Manouchehr Ghalevand. It adds a **Cursor-Follow** section to the
@@ -36,6 +40,21 @@ them against tested releases of Clipboard History; it does not keep a
 modified copy of the original source. `./install.sh` downloads a tested
 release and adds them without editing the original code; see
 [how it works](docs/cursor-follow.md).
+
+## Screenshots
+
+On GNOME Shell 51, with Large spacing, the password manager integration and
+the hover preview switched on (the panel itself is shown at the top):
+
+<p>
+  <img src="docs/images/large-spacing-emoji.png" alt="The Emoji tab in Large spacing, eight emoji per row, lined up from the left" width="240">
+  <img src="docs/images/large-spacing-symbols.png" alt="The Symbols tab in Large spacing, with symbols lined up from the left in each category" width="240">
+  <img src="docs/images/large-spacing-kaomoji.png" alt="The Kaomoji tab in Large spacing" width="240">
+</p>
+<p>
+  <img src="docs/images/preferences.png" alt="The preferences window with the original settings and the Cursor-Follow group" width="420">
+  <img src="docs/images/preferences-password-managers-and-about.png" alt="The Password managers and About groups in the preferences" width="420">
+</p>
 
 ## Relationship with Clipboard History
 
@@ -123,7 +142,7 @@ project is verified only where marked here:
 
 | GNOME Shell | Builds | Activates (smoke test) | Opens at pointer | Flips at screen edge | Password managers: 1Password (optional) | Large spacing (optional) | Hover preview |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 51 | yes | yes | yes, by hand | yes, by hand | yes, by hand (1.2.0) | yes, by hand (1.2.0) | not yet checked by hand |
+| 51 | yes | yes | yes, by hand | yes, by hand | yes, by hand (1.2.0) | yes, by hand (1.2.0) | yes, by hand (1.2.0) |
 | 46–50 | not tested | not tested | not tested | not tested | not tested | not tested | not tested |
 
 The smoke test needs GNOME and may fail on headless systems; it runs on a
