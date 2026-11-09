@@ -71,6 +71,14 @@ say "== Hover preview =="
 say "$([[ "$(dconf read "${SETTINGS_PATH}hover-preview" 2>/dev/null)" == true ]] && echo On || echo "Off (Preferences → Cursor-Follow → Preview on hover)")"
 
 say
+say "== Gestures =="
+if grep -q 'gestures: true' "$INSTALL_DIR/features.js" 2>/dev/null; then
+    say "Installed; three-finger tap: $(dconf read "${SETTINGS_PATH}gesture-touchscreen-tap" 2>/dev/null || echo false); three-finger hold: $(dconf read "${SETTINGS_PATH}gesture-touchpad-hold" 2>/dev/null || echo false)"
+else
+    say "Not installed (./install.sh --with-gestures adds them)"
+fi
+
+say
 say "== Large spacing =="
 if grep -q 'largeSpacing: true' "$INSTALL_DIR/features.js" 2>/dev/null; then
     say "Installed; switch: $([[ "$(dconf read "${SETTINGS_PATH}large-spacing" 2>/dev/null)" == true ]] && echo on || echo off)"

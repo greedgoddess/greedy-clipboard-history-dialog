@@ -33,6 +33,11 @@ preferences:
   it with `./install.sh --with-password-managers`; see
   [password managers](docs/password-managers.md). Thanks to 1Password for a
   native Linux app.
+- **Gestures** (optional, not installed by default): a three-finger tap on
+  the touchscreen opens the panel at the center of the fingers, a
+  three-finger hold on the touchpad at the pointer; each switchable, with a
+  blocklist for drawing apps. Install them with
+  `./install.sh --with-gestures`; see [gestures](docs/gestures.md).
 - **Large spacing** (optional, not installed by default): a compact
   fixed-size panel with icon tabs, icon buttons (password managers,
   settings, clear) instead of the menu entries at the bottom, and rounded
@@ -116,8 +121,9 @@ can change all of them.
 history and settings over, then removes the old extension.
 
 **Optional features:** `./install.sh --with-password-managers` adds the
-password manager integration and `--with-large-spacing` adds large spacing;
-`--without-…` removes them. Both are left out by default, and each is kept
+password manager integration, `--with-gestures` the gestures, and
+`--with-large-spacing` large spacing;
+`--without-…` removes them. All are left out by default, and each is kept
 by later installs. (`--with-1password` is the older name for the first.)
 
 **Update:** `./update.sh` (pulls this repository, builds the newest tested
@@ -171,7 +177,7 @@ in [the testing checklist](docs/cursor-follow.md#testing).
 This project's version is in [`VERSION`](VERSION) and the
 [changelog](CHANGELOG.md); releases are tagged `vX.Y.Z` on GitHub. The
 installed extension shows both versions, for example
-`1.3.2 (Clipboard History 1.0, release 3)`; `build/BUILD-INFO` and the
+`1.4.0 (Clipboard History 1.0, release 3)`; `build/BUILD-INFO` and the
 `build-info.json` inside each build record the full provenance.
 
 ## Development

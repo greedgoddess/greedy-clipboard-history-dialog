@@ -32,6 +32,8 @@ export default class GreedyClipboardHistoryPreferences extends UpstreamPreferenc
             const passwordManagers = FEATURES.passwordManagers ? await import('./passwordManagers.js') : null;
             if (passwordManagers)
                 this._addPasswordManagerGroup(page, passwordManagers);
+            if (FEATURES.gestures)
+                this._addGesturesGroup(page);
             this._addAboutGroup(page, passwordManagers);
         };
         if (typeof result?.then === 'function')
@@ -237,6 +239,91 @@ export default class GreedyClipboardHistoryPreferences extends UpstreamPreferenc
         group.add(shortcutRow);
 
         page._passwordManagerSettings = settings;    // Keep alive with the page
+        page.add(group);
+    }
+
+    /** [gestures:preference]
+     * The "Gestures" group: one switch per trigger, and the blocklist of apps
+     * in which the three-finger tap does nothing, with a picker of installed
+     * apps and a field for any app ID or window class.
+     * See docs/gestures.md#gestures-preference */
+    _addGesturesGroup(page) {
+        const settings = this.getSettings();
+        const group = new Adw.PreferencesGroup({
+            title: 'Gestures',
+            description: 'More ways to open the panel. Each is off until switched on here.',
+        });
+
+        const tapRow = new Adw.SwitchRow({
+            title: 'Three-finger tap on the touchscreen',
+            subtitle: 'Opens the panel at the center of the three fingers.',
+        });
+        settings.bind('gesture-touchscreen-tap', tapRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        group.add(tapRow);
+
+        const holdRow = new Adw.SwitchRow({
+            title: 'Three-finger hold on the touchpad',
+            subtitle: 'Rest three fingers for a moment, then lift them: opens the panel at the pointer.',
+        });
+        settings.bind('gesture-touchpad-hold', holdRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        group.add(holdRow);
+
+        const blocked = new Adw.ExpanderRow({
+            title: 'Apps where the tap does nothing',
+            subtitle: 'For drawing apps and the like, where three fingers are part of the work.',
+        });
+        settings.bind('gesture-touchscreen-tap', blocked, 'sensitive', Gio.SettingsBindFlags.GET);
+        group.add(blocked);
+
+        const list = () => settings.get_strv('gesture-blocklist');
+        const add = id => {
+            id = id.trim().replace(/\.desktop$/, '');
+            if (id && !list().some(other => other.toLowerCase() === id.toLowerCase()))
+                settings.set_strv('gesture-blocklist', [...list(), id]);
+        };
+
+        // Installed apps, by name, to pick from.
+        const apps = Gio.AppInfo.get_all()
+            .filter(app => app.should_show() && app.get_id())
+            .sort((a, b) => a.get_display_name().localeCompare(b.get_display_name()));
+        const picker = new Adw.ComboRow({
+            title: 'Add an installed app',
+            model: Gtk.StringList.new(apps.map(app => app.get_display_name())),
+        });
+        const pickButton = new Gtk.Button({label: 'Add', valign: Gtk.Align.CENTER});
+        pickButton.connect('clicked', () => {
+            const app = apps[picker.selected];
+            if (app)
+                add(app.get_id());
+        });
+        picker.add_suffix(pickButton);
+
+        const entry = new Adw.EntryRow({title: 'Add an app ID or window class', show_apply_button: true});
+        entry.connect('apply', () => {
+            add(entry.text);
+            entry.text = '';
+        });
+
+        let rows = [];
+        const fill = () => {
+            rows.forEach(row => blocked.remove(row));
+            rows = list().map(id => {
+                const row = new Adw.ActionRow({title: id});
+                const remove = new Gtk.Button({
+                    icon_name: 'user-trash-symbolic', valign: Gtk.Align.CENTER,
+                    tooltip_text: 'Remove', css_classes: ['flat'],
+                });
+                remove.connect('clicked', () => settings.set_strv('gesture-blocklist', list().filter(x => x !== id)));
+                row.add_suffix(remove);
+                return row;
+            });
+            [...rows, picker, entry].forEach(row => blocked.add_row(row));
+            rows.push(picker, entry);
+        };
+        settings.connect('changed::gesture-blocklist', fill);
+        fill();
+
+        page._gestureSettings = settings;    // Keep alive with the page
         page.add(group);
     }
 

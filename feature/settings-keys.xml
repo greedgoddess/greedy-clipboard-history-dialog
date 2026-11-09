@@ -48,6 +48,22 @@
       <summary>Clear unpinned entries at login</summary>
     </key>
 
+    <!-- [gestures:settings]
+         Added by Greedy Clipboard History Dialog, for the optional gestures.
+         See docs/gestures.md#gestures-settings -->
+    <key name="gesture-touchscreen-tap" type="b">
+      <default>false</default>
+      <summary>Open the panel with a three-finger tap on the touchscreen</summary>
+    </key>
+    <key name="gesture-touchpad-hold" type="b">
+      <default>false</default>
+      <summary>Open the panel with a three-finger hold on the touchpad</summary>
+    </key>
+    <key name="gesture-blocklist" type="as">
+      <default>['org.kde.krita', 'gimp', 'org.gimp.GIMP', 'org.inkscape.Inkscape', 'com.github.xournalpp.xournalpp', 'com.github.flxzt.rnote', 'com.github.maoschanz.drawing']</default>
+      <summary>Apps (app IDs or window classes) in which the three-finger tap does nothing</summary>
+    </key>
+
     <!-- [hover-preview:setting]
          Added by Greedy Clipboard History Dialog. Shows up to 512 characters
          of a text entry while the pointer rests on it.

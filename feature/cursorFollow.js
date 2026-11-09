@@ -31,6 +31,8 @@ export class CursorFollow {
      * See docs/cursor-follow.md#cursor-follow-install */
     constructor(menu, settings) {
         this._settings = settings;
+        this._menu = menu;
+        this._nextAnchor = null;
         this._active = false;
 
         const boxPointer = menu?._boxPointer;
@@ -84,16 +86,18 @@ export class CursorFollow {
      * See docs/cursor-follow.md#cursor-follow-positioning */
     _positionMenu(sourceActor, alignment) {
         const boxPointer = this._boxPointer;
+        const nextAnchor = this._nextAnchor;
+        this._nextAnchor = null;
 
-        if (!this._settings.get_boolean('cursor-follow')) {
+        if (!nextAnchor && !this._settings.get_boolean('cursor-follow')) {
             boxPointer._userArrowSide = this._panelArrowSide;
             boxPointer._arrowSide = this._panelArrowSide;
             this._originalSetPosition.call(boxPointer, sourceActor, alignment);
             return;
         }
 
-        const [pointerX, pointerY] = global.get_pointer();
-        this._pointerAnchor.set_position(pointerX, pointerY);
+        const [pointerX, pointerY] = nextAnchor ? [nextAnchor.x, nextAnchor.y] : global.get_pointer();
+        this._pointerAnchor.set_position(Math.round(pointerX), Math.round(pointerY));
 
         // Private BoxPointer fields, no public setter: _userArrowSide is the
         // preferred side (GNOME flips away from it when space runs out),
@@ -101,6 +105,16 @@ export class CursorFollow {
         boxPointer._userArrowSide = St.Side.LEFT;
         boxPointer._arrowSide = St.Side.LEFT;
         this._originalSetPosition.call(boxPointer, this._pointerAnchor, POINTER_ARROW_ALIGNMENT);
+    }
+
+    /** [cursor-follow:open-at]
+     * Opens the panel at a given point instead of the pointer, once; used by
+     * the gestures, where the point is the center of the touches. Works
+     * whether or not "Open at mouse pointer" is on.
+     * See docs/cursor-follow.md#cursor-follow-open-at */
+    openAt(point) {
+        this._nextAnchor = point;
+        this._menu.open(true);
     }
 
     /** [cursor-follow:cleanup]

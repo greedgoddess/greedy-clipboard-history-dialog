@@ -74,12 +74,12 @@ run() { "$@" </dev/null >"$SANDBOX/out" 2>&1; }
 # A minimal build in the copied repository; make_build TESTED MARKER
 make_build() {
     rm -rf "$REPO/build"; mkdir -p "$REPO/build/$UUID/schemas"
-    for f in extension.js upstream-extension.js cursorFollow.js prefs.js hoverPreview.js hoverPreview.css privateHistory.js clearAtLogin.js \
+    for f in extension.js upstream-extension.js cursorFollow.js prefs.js hoverPreview.js hoverPreview.css privateHistory.js clearAtLogin.js gestures.js \
              passwordManagerSwitch.js passwordManagers.js roundedCorners.js \
              largeSpacing.js largeSpacing.css; do
         echo "// $2" > "$REPO/build/$UUID/$f"
     done
-    echo "export const FEATURES = {passwordManagers: false, largeSpacing: false};" > "$REPO/build/$UUID/features.js"
+    echo "export const FEATURES = {passwordManagers: false, largeSpacing: false, gestures: false};" > "$REPO/build/$UUID/features.js"
     echo "{\"uuid\": \"$UUID\", \"version-name\": \"$2\"}" > "$REPO/build/$UUID/metadata.json"
     echo "{\"tested_release\": $1}" > "$REPO/build/$UUID/build-info.json"
 }

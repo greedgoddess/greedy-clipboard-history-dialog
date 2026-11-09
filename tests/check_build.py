@@ -52,7 +52,7 @@ for name, data in original.items():
 
 # This project's files are the repository's.
 for name in ('extension.js', 'prefs.js', 'features.js', 'cursorFollow.js', 'updateNotifier.js', 'hoverPreview.js',
-             'hoverPreview.css', 'privateHistory.js', 'clearAtLogin.js', 'passwordManagerSwitch.js', 'passwordManagers.js', 'roundedCorners.js',
+             'hoverPreview.css', 'privateHistory.js', 'clearAtLogin.js', 'gestures.js', 'passwordManagerSwitch.js', 'passwordManagers.js', 'roundedCorners.js',
              'largeSpacing.js', 'largeSpacing.css'):
     check(f'{name} is this project\'s', (EXT / name).read_bytes() == (ROOT / 'feature' / name).read_bytes())
 
@@ -75,7 +75,7 @@ check('cursor-follow key, off by default',
 compiled = subprocess.run(['glib-compile-schemas', '--strict', '--dry-run', str(schema.parent)],
                           capture_output=True, text=True)
 check('schema compiles', compiled.returncode == 0, compiled.stderr.strip())
-for key in ('private-history', 'private-history-previous-mode', 'clear-at-login', 'password-managers', 'shortcut-password-manager', 'hover-preview', 'large-spacing', 'update-notifications', 'developer-mode', 'checkout-path', 'update-last-check',
+for key in ('private-history', 'private-history-previous-mode', 'clear-at-login', 'gesture-touchscreen-tap', 'gesture-touchpad-hold', 'gesture-blocklist', 'password-managers', 'shortcut-password-manager', 'hover-preview', 'large-spacing', 'update-notifications', 'developer-mode', 'checkout-path', 'update-last-check',
             'update-notified'):
     check(f'{key} key', f'<key name="{key}"' in xml)
 info_file = EXT / 'build-info.json'

@@ -57,10 +57,27 @@ export default class GreedyClipboardHistoryExtension extends UpstreamExtension {
         this._hoverPreview = new HoverPreview(indicator?.menu, this.getSettings(),
             this.dir.get_child('hoverPreview.css'));
 
+        this._greedyEnabled = true;
+
+        // [gestures:entry-point] Only when installed with --with-gestures.
+        // See docs/gestures.md#gestures-install
+        if (FEATURES.gestures && indicator?.menu) {
+            const menu = indicator.menu;
+            import('./gestures.js').then(({Gestures}) => {
+                if (!this._greedyEnabled)
+                    return;
+                this._gestures = new Gestures(this.getSettings(), {
+                    openAt: point => (this._cursorFollow?.active ? this._cursorFollow.openAt(point) : menu.open(true)),
+                    open: () => menu.open(true),
+                    isOpen: () => menu.isOpen,
+                    close: () => menu.close(),
+                });
+            }).catch(error => console.warn(`${this.uuid}: gestures not loaded: ${error.message}`));
+        }
+
         // [password-manager:entry-point] Only when installed with
         // --with-password-managers; otherwise its files are not there at all.
         // See docs/password-managers.md#password-manager-entry-point
-        this._greedyEnabled = true;
         if (FEATURES.passwordManagers) {
             import('./passwordManagerSwitch.js').then(({PasswordManagerSwitch}) => {
                 if (!this._greedyEnabled)
@@ -92,6 +109,8 @@ export default class GreedyClipboardHistoryExtension extends UpstreamExtension {
         this._updateNotifier = null;
         this._largeSpacing?.destroy();
         this._largeSpacing = null;
+        this._gestures?.destroy();
+        this._gestures = null;
         this._passwordManagers?.destroy();
         this._passwordManagers = null;
         this._hoverPreview?.destroy();

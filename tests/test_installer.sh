@@ -62,6 +62,18 @@ run "$REPO/install.sh" --yes
 check "the 1Password integration carries over as password managers" 'grep -q "passwordManagers: true" "$EXT_DIR/features.js" && [[ $(setting "$NEW_PATH" password-managers) == "['"'"'1password'"'"']" && $(setting "$NEW_PATH" shortcut-password-manager) == "'"'"'1password'"'"'" && -z $(setting "$NEW_PATH" quick-access) ]]'
 run "$REPO/install.sh" --yes --without-password-managers
 
+# ---- Gestures: left out unless asked for ----------------------------------------
+make_build true plain
+run "$REPO/install.sh" --yes
+check "gestures left out by default" '[[ ! -e "$EXT_DIR/gestures.js" ]] && grep -q "gestures: false" "$EXT_DIR/features.js"'
+run "$REPO/install.sh" --yes --with-gestures
+check "--with-gestures includes them" '[[ -f "$EXT_DIR/gestures.js" ]] && grep -q "gestures: true" "$EXT_DIR/features.js"'
+run "$REPO/install.sh" --yes
+check "a plain install keeps them" 'grep -q "gestures: true" "$EXT_DIR/features.js"'
+dconf write "${NEW_PATH}gesture-touchscreen-tap" true
+run "$REPO/install.sh" --yes --without-gestures
+check "--without-gestures removes them and switches them off" '[[ ! -e "$EXT_DIR/gestures.js" && $(setting "$NEW_PATH" gesture-touchscreen-tap) == false ]]'
+
 # ---- Large spacing: left out unless asked for, independent of 1Password ------------
 run "$REPO/install.sh" --yes
 check "large spacing left out by default" '[[ ! -e "$EXT_DIR/largeSpacing.js" && ! -e "$EXT_DIR/largeSpacing.css" ]] && grep -q "largeSpacing: false" "$EXT_DIR/features.js"'

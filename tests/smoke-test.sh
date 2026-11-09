@@ -28,7 +28,7 @@ chmod 700 "$SANDBOX/run"
 cp -a -- "$BUILT_DIR" "$SANDBOX/data/gnome-shell/extensions/$UUID"
 # Load the optional features too (password manager integration, large spacing switched
 # on), so that their code is covered.
-echo "export const FEATURES = {passwordManagers: true, largeSpacing: true};" > "$SANDBOX/data/gnome-shell/extensions/$UUID/features.js"
+echo "export const FEATURES = {passwordManagers: true, largeSpacing: true, gestures: true};" > "$SANDBOX/data/gnome-shell/extensions/$UUID/features.js"
 
 LOG="$SANDBOX/gnome-shell.log"
 TIMEOUT="${SMOKE_TEST_TIMEOUT:-60}"
@@ -88,7 +88,7 @@ fi
 report pass "headless GNOME Shell started"
 [[ "$state" == ACTIVE || "$state" == ENABLED ]] \
     && report pass "extension active" || report FAIL "extension active (state: $state)"
-if grep -qiE "($UUID|greedy|upstream-extension|cursorFollow|updateNotifier|passwordManager|password manager integration|hoverPreview|largeSpacing|Large spacing|large spacing).*(error|exception|not loaded|inactive)|JS ERROR.*($UUID|greedy|cursorFollow|updateNotifier|passwordManager|hoverPreview|largeSpacing|upstream-)" "$LOG"; then
+if grep -qiE "($UUID|greedy|upstream-extension|cursorFollow|updateNotifier|passwordManager|password manager integration|hoverPreview|largeSpacing|gestures|Large spacing|large spacing).*(error|exception|not loaded|inactive)|JS ERROR.*($UUID|greedy|cursorFollow|updateNotifier|passwordManager|hoverPreview|largeSpacing|upstream-)" "$LOG"; then
     report FAIL "no errors from the extension"
 else
     report pass "no errors from the extension"

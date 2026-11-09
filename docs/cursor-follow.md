@@ -217,6 +217,14 @@ Boolean key `cursor-follow`, default `false`, in `feature/settings-keys.xml`,
 inserted into the original's settings schema by the build. It is read each time the panel opens, so it
 needs no change handler. `install.sh` switches it on at the first install.
 
+<a id="cursor-follow-open-at"></a>
+## `cursor-follow:open-at`
+
+`openAt(point)` opens the panel once at a given point instead of the pointer,
+for the [gestures](gestures.md): there, the point is the center of the
+touches. It works whether or not **Open at mouse pointer** is on; the next
+opening uses the pointer (or the panel icon) again.
+
 <a id="about-attribution"></a>
 ## `about:attribution`
 

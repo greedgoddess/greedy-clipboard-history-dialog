@@ -12,6 +12,7 @@
 #
 # Optional features are left out unless asked for, and removed again with the
 # matching --without-… flag; without either flag, a machine keeps what it has:
+#   --with-gestures           three-finger tap and hold gestures
 #   --with-password-managers  password manager integration (third-party
 #                             apps; 1Password for now). --with-1password and
 #                             --without-1password are older names for it.
@@ -39,6 +40,11 @@ usage() {
     say "  --without-password-managers"
     say "              leave the password manager integration out (the default;"
     say "              --with-1password and --without-1password still work)"
+    say "  --with-gestures"
+    say "              include the gestures: three-finger tap (touchscreen) and hold"
+    say "              (touchpad) to open the panel; each switched on in the preferences"
+    say "  --without-gestures"
+    say "              leave the gestures out (the default)"
     say "  --with-large-spacing"
     say "              include large spacing (taller tabs, icon buttons; left out by"
     say "              default; kept on later installs)"
@@ -59,6 +65,7 @@ ALLOW_UNTESTED=0
 WITH_PASSWORD_MANAGERS="$(grep -qE '(passwordManagers|quickAccess): true' "$INSTALL_DIR/features.js" 2>/dev/null && echo true || echo false)"
 # (Large spacing was called touch mode, touchMode, before 1.2.0.)
 WITH_LARGE_SPACING="$(grep -qE '(largeSpacing|touchMode): true' "$INSTALL_DIR/features.js" 2>/dev/null && echo true || echo false)"
+WITH_GESTURES="$(grep -q 'gestures: true' "$INSTALL_DIR/features.js" 2>/dev/null && echo true || echo false)"
 other_args=()
 for arg in "$@"; do
     case "$arg" in
@@ -67,6 +74,8 @@ for arg in "$@"; do
         --allow-untested) ALLOW_UNTESTED=1 ;;
         --with-password-managers|--with-1password) WITH_PASSWORD_MANAGERS=true ;;
         --without-password-managers|--without-1password) WITH_PASSWORD_MANAGERS=false ;;
+        --with-gestures) WITH_GESTURES=true ;;
+        --without-gestures) WITH_GESTURES=false ;;
         --with-large-spacing) WITH_LARGE_SPACING=true ;;
         --without-large-spacing) WITH_LARGE_SPACING=false ;;
         *) other_args+=("$arg") ;;
@@ -143,8 +152,11 @@ cp -a -- "$BUILT_DIR/." "$STAGE_DIR/"
 # docs/large-spacing.md#large-spacing-install-option
 cat > "$STAGE_DIR/features.js" <<FEATURES
 // Written by install.sh; see feature/features.js.
-export const FEATURES = {passwordManagers: $WITH_PASSWORD_MANAGERS, largeSpacing: $WITH_LARGE_SPACING};
+export const FEATURES = {passwordManagers: $WITH_PASSWORD_MANAGERS, largeSpacing: $WITH_LARGE_SPACING, gestures: $WITH_GESTURES};
 FEATURES
+if [[ "$WITH_GESTURES" != true ]]; then
+    rm -f -- "$STAGE_DIR/gestures.js"
+fi
 if [[ "$WITH_PASSWORD_MANAGERS" != true ]]; then
     rm -f -- "$STAGE_DIR/passwordManagerSwitch.js" "$STAGE_DIR/passwordManagers.js" "$STAGE_DIR/roundedCorners.js"
 fi
@@ -222,6 +234,10 @@ if [[ -n "$old_quick_access" ]]; then
     fi
     dconf reset "${SETTINGS_PATH}quick-access"
 fi
+if [[ "$WITH_GESTURES" != true ]]; then
+    dconf write "${SETTINGS_PATH}gesture-touchscreen-tap" false
+    dconf write "${SETTINGS_PATH}gesture-touchpad-hold" false
+fi
 if [[ "$WITH_PASSWORD_MANAGERS" != true ]]; then
     dconf write "${SETTINGS_PATH}password-managers" "@as []"
     dconf write "${SETTINGS_PATH}shortcut-password-manager" "''"
@@ -282,6 +298,7 @@ else
     say "Mode: user. Update notifications watch this project's repository."
 fi
 say "Password manager integration: $([[ "$WITH_PASSWORD_MANAGERS" == true ]] && echo "installed (switch password managers on in Preferences → Password managers)" || echo "not installed (add it with --with-password-managers)")"
+say "Gestures: $([[ "$WITH_GESTURES" == true ]] && echo "installed (switch them on in Preferences → Gestures)" || echo "not installed (add them with --with-gestures)")"
 say "Large spacing: $([[ "$WITH_LARGE_SPACING" == true ]] && echo "installed (switch it on in Preferences → Cursor-Follow)" || echo "not installed (add it with --with-large-spacing)")"
 say "Notifications: $([[ "$(dconf read "${SETTINGS_PATH}update-notifications")" == true ]] && echo on || echo off) (Preferences → Cursor-Follow)"
 say

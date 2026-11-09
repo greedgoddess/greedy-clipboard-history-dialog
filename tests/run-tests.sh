@@ -39,13 +39,16 @@ tests/test_installer.sh || status=1
 section "Unit tests: migration and uninstall"
 tests/test_migration.sh || status=1
 
-section "Unit tests: JavaScript (cursor-follow, private history, clear at login, password managers, rounded corners, large spacing, hover preview, update notifier)"
+section "Unit tests: JavaScript (cursor-follow, gestures, private history, clear at login, password managers, rounded corners, large spacing, hover preview, update notifier)"
 if command -v node >/dev/null; then
     node --import ./tests/js/register.mjs --test --test-reporter=dot tests/js/*.test.mjs 2>&1 | sed 's/^/  /'
     (( PIPESTATUS[0] == 0 )) && echo "  pass  all" || status=1
 else
     echo "  skipped (Node.js not installed: sudo dnf install nodejs)"
 fi
+
+section "Doc tags: every code tag has its doc entry"
+tests/check_doc_tags.py || status=1
 
 if (( BUILD_CHECKS == 1 )); then
     section "Build checks"

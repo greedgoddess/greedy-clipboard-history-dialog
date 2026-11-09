@@ -88,8 +88,12 @@ const STUBS = {
         class DesaturateEffect { constructor(props) { Object.assign(this, props); } }
         export default {
             ShaderEffect, BinLayout, DesaturateEffect,
+            Action: class Action { _init() {} },
+            EventPhase: {CAPTURE: 0, BUBBLE: 1},
+            TouchpadGesturePhase: {BEGIN: 0, UPDATE: 1, END: 2, CANCEL: 3},
             ActorAlign: {FILL: 0, START: 1, CENTER: 2, END: 3},
-            EventType: {MOTION: 3, LEAVE: 5, SCROLL: 9, BUTTON_PRESS: 6},
+            EventType: {MOTION: 3, LEAVE: 5, SCROLL: 9, BUTTON_PRESS: 6,
+                TOUCH_BEGIN: 11, TOUCH_UPDATE: 12, TOUCH_END: 13, TOUCH_CANCEL: 14, TOUCHPAD_HOLD: 20},
             PickMode: {REACTIVE: 1},
             EVENT_PROPAGATE: false,
         };`,

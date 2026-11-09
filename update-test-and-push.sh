@@ -109,6 +109,7 @@ MANUAL_CHECKS=(
     "Hover preview|docs/hover-preview.md#testing"
     "Large spacing|docs/large-spacing.md#testing"
     "Password managers (1Password)|docs/password-managers.md#testing"
+    "Gestures|docs/gestures.md#testing"
 )
 
 entry="$(mktemp)"

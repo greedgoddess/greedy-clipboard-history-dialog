@@ -59,6 +59,7 @@ passed, for the result of each manual checklist:
 | Hover preview | [docs/hover-preview.md](docs/hover-preview.md#testing) |
 | Large spacing | [docs/large-spacing.md](docs/large-spacing.md#testing) |
 | Password managers (1Password) | [docs/password-managers.md](docs/password-managers.md#testing) |
+| Gestures | [docs/gestures.md](docs/gestures.md#testing) |
 
 Answer `y` if you went through it and it passed, `n` if you did not check it
 this time, or `f` if it failed. A failure stops the push with nothing
@@ -70,6 +71,14 @@ from before this existed show "not recorded".
 
 Do the checklists on the build being recorded: install it first
 (`./build.sh && ./install.sh`, then log out and back in).
+
+## Code tags and docs
+
+Important sections of this project's code start with a tag such as
+`[gestures:tap]`, and each tag is explained in the docs under a matching
+anchor (`docs/gestures.md#gestures-tap`). `tests/check_doc_tags.py`, part of
+every test run and CI, fails when a tag has no entry in the docs or a page
+uses an anchor twice. The original's code is not tagged or documented here.
 
 ## Scope: companion, not fork
 
