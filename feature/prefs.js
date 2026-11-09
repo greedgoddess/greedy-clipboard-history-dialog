@@ -21,6 +21,18 @@ import {FEATURES} from './features.js';
 
 import UpstreamPreferences from './upstream-prefs.js';
 
+/** The preferences group with the given title, anywhere inside widget. */
+function findGroup(widget, title) {
+    if (widget instanceof Adw.PreferencesGroup && widget.title === title)
+        return widget;
+    for (let child = widget.get_first_child?.(); child; child = child.get_next_sibling()) {
+        const found = findGroup(child, title);
+        if (found)
+            return found;
+    }
+    return null;
+}
+
 export default class GreedyClipboardHistoryPreferences extends UpstreamPreferences {
     fillPreferencesWindow(window) {
         // The original may fill the window synchronously or asynchronously.
@@ -249,10 +261,21 @@ export default class GreedyClipboardHistoryPreferences extends UpstreamPreferenc
      * See docs/gestures.md#gestures-preference */
     _addGesturesGroup(page) {
         const settings = this.getSettings();
-        const group = new Adw.PreferencesGroup({
-            title: 'Gestures',
-            description: 'More ways to open the panel. Each is off until switched on here.',
-        });
+        // [gestures:shortcut-group] The gestures join the original's
+        // "Keyboard Shortcut" group, which keeps its place; without that
+        // group (a future release of the original), they get their own.
+        // See docs/gestures.md#gestures-preference
+        let group = findGroup(page.get_root?.() ?? page, 'Keyboard Shortcut') ?? findGroup(page, 'Keyboard Shortcut');
+        if (group) {
+            group.title = 'Keyboard Shortcut and Gestures';
+            group.description = 'The key, and the gestures switched on below, that open or close the clipboard history panel.';
+        } else {
+            group = new Adw.PreferencesGroup({
+                title: 'Gestures',
+                description: 'More ways to open the panel. Each is off until switched on here.',
+            });
+            page.add(group);
+        }
 
         const tapRow = new Adw.SwitchRow({
             title: 'Three-finger tap on the touchscreen',
@@ -324,7 +347,6 @@ export default class GreedyClipboardHistoryPreferences extends UpstreamPreferenc
         fill();
 
         page._gestureSettings = settings;    // Keep alive with the page
-        page.add(group);
     }
 
     _linkRow(title, subtitle, uri) {

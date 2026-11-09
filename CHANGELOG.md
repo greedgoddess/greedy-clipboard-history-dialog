@@ -6,7 +6,7 @@ on is listed in the README under "Tested releases".
 ## 1.4.0 — not released yet
 
 - Gestures, optional and not installed by default
-  (`./install.sh --with-gestures`; then Preferences → Gestures): a
+  (`./install.sh --with-gestures`; then Preferences → Keyboard Shortcut and Gestures): a
   three-finger tap on the touchscreen opens the panel at the center of the
   fingers, a three-finger hold on the touchpad opens it at the pointer. Each
   has its own switch, off by default. The tap does nothing while an app on an

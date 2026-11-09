@@ -2,7 +2,7 @@
 
 Optional, **not installed by default** (`./install.sh --with-gestures`;
 `--without-gestures` removes them again). Two more ways to open the panel,
-each with its own switch in Preferences → **Gestures**, both off until
+each with its own switch in Preferences → **Keyboard Shortcut and Gestures**, both off until
 switched on:
 
 - **Three-finger tap on the touchscreen:** opens the panel at the center of
@@ -34,13 +34,17 @@ grep -rn "\[gestures:" feature/
 
 <a id="gestures-settings"></a>
 <a id="gestures-preference"></a>
+<a id="gestures-shortcut-group"></a>
 ## `gestures:settings`, `gestures:preference`
 
 Keys in `feature/settings-keys.xml`: `gesture-touchscreen-tap` and
 `gesture-touchpad-hold` (both `false` by default) and `gesture-blocklist`
-(app IDs or window classes). The **Gestures** group in the preferences, shown
-only when installed, has a switch for each trigger and the blocklist, with a
-picker of installed apps and a field for any ID. Removing the gestures with
+(app IDs or window classes). In the preferences, the gestures join the
+original's **Keyboard Shortcut** group, which keeps its place and is called
+**Keyboard Shortcut and Gestures** while the gestures are installed: a switch
+for each trigger, and the blocklist, with a picker of installed apps and a
+field for any ID. If a release of the original no longer has that group, the
+gestures get a group of their own (`gestures:shortcut-group`). Removing the gestures with
 `--without-gestures` also switches both triggers off.
 
 <a id="gestures-install"></a>
@@ -85,7 +89,7 @@ cancelling, the center), the hold, and the blocklist.
 
 By hand, on a device with a touchscreen and a touchpad:
 
-1. Not installed: no Gestures group; three fingers do what they did before.
+1. Not installed: no gesture switches under Keyboard Shortcut; three fingers do what they did before.
 2. Installed, switches off: nothing changes.
 3. Tap switched on: a three-finger tap opens the panel at the center of the
    fingers; again, it closes it. A three-finger swipe still switches

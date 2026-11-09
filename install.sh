@@ -298,7 +298,7 @@ else
     say "Mode: user. Update notifications watch this project's repository."
 fi
 say "Password manager integration: $([[ "$WITH_PASSWORD_MANAGERS" == true ]] && echo "installed (switch password managers on in Preferences → Password managers)" || echo "not installed (add it with --with-password-managers)")"
-say "Gestures: $([[ "$WITH_GESTURES" == true ]] && echo "installed (switch them on in Preferences → Gestures)" || echo "not installed (add them with --with-gestures)")"
+say "Gestures: $([[ "$WITH_GESTURES" == true ]] && echo "installed (switch them on in Preferences → Keyboard Shortcut and Gestures)" || echo "not installed (add them with --with-gestures)")"
 say "Large spacing: $([[ "$WITH_LARGE_SPACING" == true ]] && echo "installed (switch it on in Preferences → Cursor-Follow)" || echo "not installed (add it with --with-large-spacing)")"
 say "Notifications: $([[ "$(dconf read "${SETTINGS_PATH}update-notifications")" == true ]] && echo on || echo off) (Preferences → Cursor-Follow)"
 say
