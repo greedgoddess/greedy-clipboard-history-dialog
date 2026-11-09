@@ -3,7 +3,7 @@
 Versions of this project. The Clipboard History release each build is based
 on is listed in the README under "Tested releases".
 
-## 1.3.2 — not released yet
+## 1.3.2 — 2026-11-09
 
 - Private history folder: switching it off restores the permissions the
   folder had before it was made private, instead of a fixed 755, which could
