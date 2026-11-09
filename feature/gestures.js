@@ -83,6 +83,16 @@ export class TapDetector {
     }
 }
 
+/** [gestures:touch-id]
+ * A stable key for one touch. GJS gives each event a new wrapper object for
+ * the touch's sequence, so the object itself cannot be used as a key; its
+ * slot number stays the same from the touch's begin to its end.
+ * See docs/gestures.md#gestures-touch-id */
+export function touchKey(sequence) {
+    const slot = sequence?.get_slot?.();
+    return typeof slot === 'number' ? `slot:${slot}` : String(sequence);
+}
+
 /** [gestures:hold]
  * A three-finger touchpad hold counts when it ended normally (not cancelled,
  * as when the fingers start moving into a swipe) after resting long enough.
@@ -168,7 +178,7 @@ export class Gestures {
             return;
         if (!this._settings.get_boolean('gesture-touchscreen-tap'))
             return;
-        const id = event.get_event_sequence();
+        const id = touchKey(event.get_event_sequence());
         const [x, y] = event.get_coords();
         const time = event.get_time();
         let center = null;

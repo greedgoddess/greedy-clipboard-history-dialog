@@ -60,13 +60,17 @@ away from the apps. On `disable()` it is removed again. If a GNOME Shell does
 not offer this, the gestures stay inactive and a warning is logged.
 
 <a id="gestures-tap"></a>
+<a id="gestures-touch-id"></a>
 ## `gestures:tap`
 
 `TapDetector` recognises the tap from the touch events: exactly three fingers,
 landing within 150 ms of each other, all lifted within 400 ms of the first,
 none moving more than 20 px; a cancelled touch spoils it. The anchor is the
 average of the three landing points. It is plain logic without GNOME, so the
-unit tests feed it touches directly.
+unit tests feed it touches directly. Each touch is identified by its slot
+number (`touchKey()`): GJS gives every event a new wrapper object for the
+touch's sequence, so the object itself never matches between a touch's begin
+and its end.
 
 <a id="gestures-hold"></a>
 ## `gestures:hold`

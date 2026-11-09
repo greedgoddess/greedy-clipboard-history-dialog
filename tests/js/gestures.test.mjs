@@ -4,7 +4,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-const {TapDetector, holdCounts, isBlocked} = await import('../../feature/gestures.js');
+const {TapDetector, holdCounts, isBlocked, touchKey} = await import('../../feature/gestures.js');
 
 function tap(touches, {liftAt = 120, moveBy = 0} = {}) {
     const detector = new TapDetector();
@@ -61,4 +61,16 @@ test('blocklist: app IDs with or without .desktop and window classes, without re
     assert.equal(isBlocked(list, ['org.gnome.TextEditor.desktop', 'gnome-text-editor']), false);
     assert.equal(isBlocked([], ['org.kde.krita.desktop']), false);
     assert.equal(isBlocked(list, []), false, 'nothing in focus');
+});
+
+test('touches are recognised by slot, even with a new wrapper object for every event', () => {
+    const wrapper = slot => ({get_slot: () => slot});    // A new object each time, as GJS gives them
+    assert.equal(touchKey(wrapper(4)), touchKey(wrapper(4)));
+    assert.notEqual(touchKey(wrapper(4)), touchKey(wrapper(5)));
+    const detector = new TapDetector();
+    [[0, 100, 100, 0], [1, 200, 100, 20], [2, 150, 190, 40]]
+        .forEach(([slot, x, y, t]) => detector.begin(touchKey(wrapper(slot)), x, y, t));
+    detector.end(touchKey(wrapper(0)), 120);
+    detector.end(touchKey(wrapper(1)), 130);
+    assert.deepEqual(detector.end(touchKey(wrapper(2)), 140), {x: 150, y: 130});
 });
