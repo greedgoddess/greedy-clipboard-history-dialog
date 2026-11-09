@@ -3,7 +3,7 @@
 Versions of this project. The Clipboard History release each build is based
 on is listed in the README under "Tested releases".
 
-## 1.4.0 — not released yet
+## 1.4.0 — 2026-11-09
 
 - Gestures, optional and not installed by default
   (`./install.sh --with-gestures`; then Preferences → Keyboard Shortcut and Gestures): a
