@@ -15,9 +15,18 @@
     "evidence": [
       "unit tests",
       "build checks",
-      "headless GNOME Shell smoke test"
+      "headless GNOME Shell smoke test",
+      "manual checks: 6 of 6 passed"
     ],
+    "manual_checks": {
+      "Open at mouse pointer": "passed",
+      "Private history folder": "passed",
+      "Clear unpinned entries at login": "passed",
+      "Hover preview": "passed",
+      "Large spacing": "passed",
+      "Password managers (1Password)": "passed"
+    },
     "date": "2026-11-09",
-    "feature_commit": "fb7c186"
+    "feature_commit": "e8326a1"
   }
 ]

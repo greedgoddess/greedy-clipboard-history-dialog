@@ -134,7 +134,7 @@ installing it.
 <!-- tested-releases:start -->
 | Release | GNOME Shell (release) | Tested on | Manual checks | Date |
 | --- | --- | --- | --- | --- |
-| 1.0 (3) | 46, 47, 48, 49, 50, 51 | GNOME Shell 51.1 | not recorded | 2026-11-08 |
+| 1.0 (3) | 46, 47, 48, 49, 50, 51 | GNOME Shell 51.1 | 6 of 6 passed | 2026-11-09 |
 <!-- tested-releases:end -->
 
 ### What is verified where
