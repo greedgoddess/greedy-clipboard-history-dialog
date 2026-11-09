@@ -3,7 +3,7 @@
 Versions of this project. The Clipboard History release each build is based
 on is listed in the README under "Tested releases".
 
-## 1.3.1 — not released yet
+## 1.3.1 — 2026-11-09
 
 - The private history folder is applied before the original loads the
   history, not only after.
