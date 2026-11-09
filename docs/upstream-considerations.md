@@ -16,12 +16,14 @@ original's core. Where they matter, they belong with the original's author.
 
 The review also found what is reassuring: the original makes no network
 requests, starts no programs, runs no dynamically loaded code, does not log
-clipboard contents, cleans up properly when disabled, and is not active on
-the lock screen.
+clipboard contents, and is not active on the lock screen. When disabled, it
+cancels its tracked asynchronous storage operations and pending paste timers
+and disconnects its primary signal handlers; not every asynchronous clipboard
+callback is tracked explicitly.
 
 | # | Area | Consideration | Effect |
 | --- | --- | --- | --- |
-| 1 | Loading the history | The history file's records are not checked individually; image paths and IDs from the file are used as they are. | A damaged or deliberately edited history file could make it read or delete files outside its folder. Writing that file already requires access to your account. |
+| 1 | Loading the history | The history file's records are not checked individually; image paths and IDs from the file are used as they are. | A damaged or deliberately edited history file could make it read or delete files outside its folder. This is a local data-integrity and file-boundary concern, not a remote attack: the file is in your own cache folder, so changing it already requires access to your account. The original should still not trust its contents blindly. |
 | 2 | Saving the history | Saves are not queued; two quick saves can finish in the wrong order. | Rarely, an older state of the history can overwrite a newer one. |
 | 3 | Starting up | Something copied while the history is still loading can be replaced by the loaded history. | A copy made in the first moment after login can be missing from the list. |
 | 4 | Pasting an image | If a stored image cannot be read, the paste still happens. | Whatever is on the clipboard at that moment is pasted instead. |

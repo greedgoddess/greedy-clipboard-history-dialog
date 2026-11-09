@@ -9,7 +9,9 @@ not every system is set up that way.
 With **Private history folder** on (Preferences → Cursor-Follow; **on by
 default**), the extension restricts that folder to your user account
 (permissions `700`) whenever it starts and when you switch the setting on.
-Switching it off gives the folder the usual default (`755`) back. Only the
+The permissions the folder had before are remembered, and switching the
+setting off restores exactly those, never a fixed default, so it never gives
+anyone more access than the folder had before. Only the
 folder's permissions change: the original's code and files are untouched, and
 the history stays unencrypted on disk. `./verify.sh` shows the setting and the
 folder's current permissions.
@@ -41,19 +43,30 @@ rest of the extension. Symbolic links are not followed.
 <a id="private-history-mode"></a>
 ## `private-history:mode`
 
-`folderMode()`: `700` (read, write and open for you only) when private, `755`
-(the usual default) otherwise. Restricting the folder is enough: files inside
-a folder others cannot open are out of their reach, whatever their own
-permissions.
+`nextMode()` decides, from the setting, the folder's current permissions, and
+the permissions remembered in `private-history-previous-mode` (`-1`: none):
+
+- **On:** the folder gets `700` (read, write and open for you only). The
+  first time this changes the folder, its permissions until then are
+  remembered.
+- **Off:** the remembered permissions are restored and forgotten. With
+  nothing remembered (the folder was already `700`, for example under a
+  restrictive umask), the folder is left as it is.
+
+A fixed default such as `755` is never assumed: it could be more permissive
+than the folder ever was. Restricting the folder is enough to protect what is
+in it: files inside a folder others cannot open are out of their reach,
+whatever their own permissions.
 
 ## Testing
 
-`tests/js/privateHistory.test.mjs` covers both modes, switching off and on,
-and a missing folder. By hand:
+`tests/js/privateHistory.test.mjs` covers the decision, remembering and
+restoring the previous permissions, a folder that was already private, a
+restrictive previous mode that must not widen, and a missing folder. By hand:
 
 ```bash
 ./verify.sh    # "Private history folder: On; folder permissions: drwx------"
 ```
 
 Switch the setting off in the preferences and run `./verify.sh` again: the
-folder shows `drwxr-xr-x`.
+folder shows the permissions it had before, typically `drwxr-xr-x`.

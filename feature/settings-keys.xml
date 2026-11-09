@@ -34,6 +34,10 @@
       <default>true</default>
       <summary>Keep the clipboard history folder private to your user account</summary>
     </key>
+    <key name="private-history-previous-mode" type="i">
+      <default>-1</default>
+      <summary>The folder's permissions before it was first made private (-1: none remembered)</summary>
+    </key>
 
     <!-- [clear-at-login:setting]
          Added by Greedy Clipboard History Dialog. Removes unpinned entries

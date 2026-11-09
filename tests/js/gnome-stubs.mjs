@@ -175,6 +175,7 @@ const STUBS = {
                 load_contents_async: async () => [new TextEncoder().encode(JSON.stringify(globalThis.__buildInfo))],
                 query_exists: () => path in (globalThis.__modes ?? {}),
                 set_attribute_uint32: (name, value) => { globalThis.__modes[path] = value; },
+                query_info: () => ({get_attribute_uint32: () => 0o40000 | globalThis.__modes[path]}),
             })},
         };`,
     // Requests wait until the test answers them with globalThis.__answer(urlPart, json).
